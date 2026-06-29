@@ -3,7 +3,7 @@ export default function Home() {
     <main className="w-full max-w-2xl mx-auto px-4 py-6 sm:px-4 sm:py-8">
       <article className="prose dark:prose-invert max-w-none font-sans">
         <h1 className="text-2xl font-bold mt-7 mb-2.5 leading-tight text-gray-900 dark:text-white">
-          The Complete Networking Masterclass
+          Networking 101
         </h1>
 
         <p className="my-3 text-base leading-relaxed">
