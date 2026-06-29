@@ -22,7 +22,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
       <body
         className="min-h-screen flex flex-col transition-colors duration-200"
         style={{
@@ -30,7 +33,6 @@ export default function RootLayout({
           color: 'var(--ink-primary)',
         }}
       >
-        <ThemeScript />
         <ThemeProvider>
           <Header />
           <main className="flex-1">
