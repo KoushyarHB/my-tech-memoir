@@ -1,11 +1,25 @@
 export default function Footer() {
   return (
-    <footer className="border-t border-gray-200 dark:border-gray-800 mt-12">
-      <div className="max-w-2xl mx-auto px-4 py-6 sm:px-4 sm:py-8">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+    <footer
+      style={{
+        borderTop: "1px solid var(--border)",
+        backgroundColor: "var(--bg-raised)",
+      }}
+    >
+      <div className="max-w-2xl mx-auto px-5 py-6 flex items-center justify-between">
+        <p
+          className="text-sm font-sans"
+          style={{ color: "var(--ink-tertiary)" }}
+        >
           &copy; {new Date().getFullYear()} My Tech Memoir
+        </p>
+        <p
+          className="text-xs font-sans tracking-wide uppercase"
+          style={{ color: "var(--ink-tertiary)", letterSpacing: "0.08em" }}
+        >
+          Written while learning
         </p>
       </div>
     </footer>
-  )
+  );
 }
