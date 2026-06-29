@@ -1,13 +1,19 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import ThemeToggle from '@/components/ThemeToggle'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { ThemeProvider, ThemeScript } from '@/components/theme'
 
 export const metadata: Metadata = {
-  title: 'Networking Masterclass',
-  description: 'The Complete Networking Masterclass - Learn how the internet routes data',
+  title: 'My Tech Memoir',
+  description: 'A technical memoir on networking — how the internet routes data, written as it was learned.',
+}
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)',  color: '#0d1117' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+  ],
 }
 
 export default function RootLayout({
@@ -17,10 +23,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="bg-white dark:bg-slate-950 text-gray-900 dark:text-gray-200 transition-colors min-h-screen flex flex-col">
+      <body
+        className="min-h-screen flex flex-col transition-colors duration-200"
+        style={{
+          backgroundColor: 'var(--bg-base)',
+          color: 'var(--ink-primary)',
+        }}
+      >
         <ThemeScript />
         <ThemeProvider>
-          <ThemeToggle />
           <Header />
           <main className="flex-1">
             {children}

@@ -50,5 +50,6 @@ export function persistTheme(theme: Theme): void {
 }
 
 export function getInitialTheme(): Theme {
-  return getStoredTheme() ?? "system";
+  // Default to dark if no preference has been saved
+  return getStoredTheme() ?? "dark";
 }
