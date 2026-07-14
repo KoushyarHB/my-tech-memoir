@@ -1,13 +1,35 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Lora', Georgia, ui-serif, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-accent-50:  #eef2f9;
+  --color-accent-100: #d5e0f1;
+  --color-accent-200: #aec2e3;
+  --color-accent-300: #8baed6;
+  --color-accent-400: #6b8cba;
+  --color-accent-500: #4f72a3;
+  --color-accent-600: #3d5a84;
+  --color-accent-700: #2e4465;
+  --color-accent-800: #1f2f48;
+  --color-accent-900: #121c2e;
+
+  --color-surface-base:    #0d1117;
+  --color-surface-raised:  #161b22;
+  --color-surface-overlay: #1c2330;
+  --color-surface-muted:   #21262d;
+
+  --color-ink-primary:   #e6edf3;
+  --color-ink-secondary: #8b949e;
+  --color-ink-tertiary:  #484f58;
+}
 
 /* ─── Base resets ────────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
-  /* Default to dark mode — user preference overrides via ThemeScript */
   color-scheme: dark;
 }
 
