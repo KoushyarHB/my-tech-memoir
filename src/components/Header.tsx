@@ -7,8 +7,8 @@ function SunIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
+      width="18"
+      height="18"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -27,8 +27,8 @@ function MoonIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
+      width="18"
+      height="18"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -48,27 +48,30 @@ export default function Header() {
 
   return (
     <header
+      className="sticky top-0 z-50 backdrop-blur-xl transition-all duration-300"
       style={{
         borderBottom: "1px solid var(--border)",
-        backgroundColor: "var(--bg-raised)",
+        backgroundColor: isDark
+          ? "rgba(10, 10, 15, 0.85)"
+          : "rgba(255, 255, 255, 0.85)",
       }}
     >
       <div className="max-w-2xl mx-auto px-5 py-4 flex items-center justify-between">
-        {/* Logotype — serif */}
+        {/* Logotype */}
         <Link
           href="/"
-          className="group flex flex-col gap-0"
+          className="group flex flex-col gap-0.5"
           style={{ textDecoration: "none" }}
         >
           <span
-            className="font-serif text-lg font-semibold leading-tight tracking-tight transition-colors"
-            style={{ color: "var(--ink-primary)" }}
+            className="font-serif text-lg font-semibold leading-tight tracking-tight transition-colors duration-200"
+            style={{ color: "var(--text-primary)" }}
           >
             My Tech Memoir
           </span>
           <span
-            className="text-xs font-sans font-normal tracking-wide leading-none transition-colors"
-            style={{ color: "var(--accent)" }}
+            className="text-[11px] font-sans font-medium leading-none transition-colors duration-200"
+            style={{ color: "var(--text-tertiary)" }}
           >
             Code, architecture, and the craft of building software.
           </span>
@@ -81,18 +84,17 @@ export default function Header() {
             onClick={toggleTheme}
             aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
             title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            className="flex items-center justify-center w-8 h-8 rounded-md transition-all duration-150 hover:scale-105 active:scale-95"
+            className="flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
             style={{
-              color: "var(--ink-secondary)",
-              backgroundColor: "var(--bg-muted)",
+              color: "var(--text-secondary)",
+              backgroundColor: "var(--bg-secondary)",
               border: "1px solid var(--border)",
             }}
           >
             {isDark ? <SunIcon /> : <MoonIcon />}
           </button>
         ) : (
-          /* SSR placeholder — same size, invisible */
-          <div className="w-8 h-8" aria-hidden="true" />
+          <div className="w-9 h-9" aria-hidden="true" />
         )}
       </div>
     </header>

@@ -5,13 +5,32 @@ import Footer from '@/components/Footer'
 import { ThemeProvider, ThemeScript } from '@/components/theme'
 
 export const metadata: Metadata = {
-  title: 'My Tech Memoir',
-  description: 'A technical memoir on networking — how the internet routes data, written as it was learned.',
+  title: {
+    default: 'My Tech Memoir',
+    template: '%s | My Tech Memoir',
+  },
+  description: 'A personal blog about code, architecture, and the craft of building software.',
+  metadataBase: new URL('https://my-tech-memoir.vercel.app'),
+  openGraph: {
+    title: 'My Tech Memoir',
+    description: 'A personal blog about code, architecture, and the craft of building software.',
+    type: 'website',
+    locale: 'en_US',
+    siteName: 'My Tech Memoir',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'My Tech Memoir',
+    description: 'A personal blog about code, architecture, and the craft of building software.',
+  },
 }
 
 export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
   themeColor: [
-    { media: '(prefers-color-scheme: dark)',  color: '#0d1117' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0f' },
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
   ],
 }
@@ -29,8 +48,8 @@ export default function RootLayout({
       <body
         className="min-h-screen flex flex-col transition-colors duration-200"
         style={{
-          backgroundColor: 'var(--bg-base)',
-          color: 'var(--ink-primary)',
+          backgroundColor: 'var(--bg-primary)',
+          color: 'var(--text-primary)',
         }}
       >
         <ThemeProvider>
