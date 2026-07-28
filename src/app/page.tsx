@@ -178,6 +178,44 @@ export default function Home() {
         </ol>
 
       </article>
+
+      <section className="mt-16 border-t border-neutral-200 dark:border-neutral-700 pt-10">
+        <h2 className="text-2xl font-serif font-bold mb-6">Recent Posts</h2>
+
+        <div className="space-y-6">
+          <article className="group">
+            <a href="/posts/understanding-reacts-state-tree-and-closures" className="block no-underline">
+              <time className="text-sm text-neutral-500 dark:text-neutral-400">
+                July 28, 2026
+              </time>
+              <h3 className="text-lg font-serif font-semibold mt-1 group-hover:underline">
+                Understanding React&apos;s State Tree and Closures
+              </h3>
+              <p className="text-neutral-600 dark:text-neutral-300 mt-1">
+                A deep dive into how React tracks state internally and why closures matter for understanding hooks behavior.
+              </p>
+            </a>
+          </article>
+
+          <article className="group">
+            <a href="/posts/why-you-cant-call-usestate-inside-useeffect" className="block no-underline">
+              <time className="text-sm text-neutral-500 dark:text-neutral-400">
+                July 25, 2026
+              </time>
+              <h3 className="text-lg font-serif font-semibold mt-1 group-hover:underline">
+                Why You Can&apos;t Call useState Inside useEffect
+              </h3>
+              <p className="text-neutral-600 dark:text-neutral-300 mt-1">
+                React&apos;s Rules of Hooks exist for a reason. Here&apos;s what happens when you break them — and how to fix it.
+              </p>
+            </a>
+          </article>
+        </div>
+
+        <a href="/posts" className="inline-block mt-6 text-sm font-medium hover:underline">
+          View all posts →
+        </a>
+      </section>
     </div>
   );
 }

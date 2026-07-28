@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     description:
       "React's Rules of Hooks exist for a reason. Here's what happens when you break them — and how to fix it.",
     type: "article",
+    publishedTime: "2026-07-25T10:00:00Z",
   },
 };
 
@@ -165,6 +166,14 @@ useEffect(() => {
           <em>This post was born from a self-quiz session. Sometimes the best
           way to learn something is to realize you can&apos;t explain it — then
           fix that.</em>
+        </p>
+
+        <p>
+          <strong>Next up:</strong>{" "}
+          <a href="/posts/understanding-reacts-state-tree-and-closures">
+            Understanding React&apos;s State Tree and Closures
+          </a>{" "}
+          — a deeper dive into the two concepts that make this rule make sense.
         </p>
       </article>
     </div>
