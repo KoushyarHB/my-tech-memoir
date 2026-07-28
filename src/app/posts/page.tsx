@@ -22,6 +22,14 @@ const posts = [
       "React's Rules of Hooks exist for a reason. Here's what happens when you break them — and the one fix that makes it all click.",
     tags: ["React", "Hooks", "Gotchas"],
   },
+  {
+    slug: "networking-101",
+    title: "Networking 101",
+    date: "July 20, 2026",
+    excerpt:
+      "A complete breakdown of how the internet works — from IPv4 addresses and binary logic to public vs private classes.",
+    tags: ["Networking", "Fundamentals"],
+  },
 ];
 
 export default function PostsPage() {
