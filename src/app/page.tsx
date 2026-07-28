@@ -35,13 +35,6 @@ const posts = [
 export default function Home() {
   return (
     <div className="max-w-2xl mx-auto px-5 py-10 sm:py-14">
-      <header className="mb-10">
-        <h1 className="text-3xl font-serif font-bold">My Tech Memoir</h1>
-        <p className="text-neutral-500 dark:text-neutral-400 mt-2">
-          Code, architecture, and the craft of building software.
-        </p>
-      </header>
-
       <div className="space-y-6">
         {posts.map((post) => (
           <a

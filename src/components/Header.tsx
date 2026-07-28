@@ -67,10 +67,10 @@ export default function Header() {
             My Tech Memoir
           </span>
           <span
-            className="text-xs font-sans font-normal tracking-wide uppercase leading-none transition-colors"
-            style={{ color: "var(--accent)", letterSpacing: "0.1em" }}
+            className="text-xs font-sans font-normal tracking-wide leading-none transition-colors"
+            style={{ color: "var(--accent)" }}
           >
-            Networking &amp; Protocols
+            Code, architecture, and the craft of building software.
           </span>
         </Link>
 
