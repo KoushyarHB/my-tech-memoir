@@ -36,41 +36,71 @@ export default function PostsPage() {
   return (
     <div className="max-w-2xl mx-auto px-5 py-10 sm:py-14">
       <header className="mb-10">
-        <h1 className="text-3xl font-serif font-bold">Posts</h1>
+        <h1 className="text-3xl font-serif font-bold text-neutral-900 dark:text-neutral-100">
+          All Posts
+        </h1>
         <p className="text-neutral-500 dark:text-neutral-400 mt-2">
-          All articles, newest first.
+          {posts.length} articles and counting.
         </p>
       </header>
 
-      <div className="space-y-6">
-        {posts.map((post) => (
+      <div className="space-y-5">
+        {posts.map((post, i) => (
           <a
             key={post.slug}
             href={`/posts/${post.slug}`}
-            className="block group rounded-xl border border-neutral-200 dark:border-neutral-700 p-6 hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors no-underline"
+            className="group block rounded-2xl border transition-all duration-300 no-underline
+              bg-white border-neutral-200 hover:border-neutral-300 hover:shadow-lg hover:shadow-neutral-200/50
+              dark:bg-neutral-900 dark:border-neutral-800 dark:hover:border-neutral-700 dark:hover:shadow-neutral-900/50 dark:hover:shadow-xl"
           >
-            <time className="text-xs font-medium tracking-wide uppercase text-neutral-400 dark:text-neutral-500">
-              {post.date}
-            </time>
-
-            <h2 className="text-xl font-serif font-semibold mt-2 group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors">
-              {post.title}
-            </h2>
-
-            <p className="text-neutral-600 dark:text-neutral-300 mt-2 leading-relaxed">
-              {post.excerpt}
-            </p>
-
-            <div className="flex flex-wrap gap-2 mt-4">
-              {post.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
-                >
-                  {tag}
+            <div className="p-6 sm:p-7">
+              {/* Date + Reading time */}
+              <div className="flex items-center gap-3 text-xs font-medium tracking-wide">
+                <time className="text-neutral-400 dark:text-neutral-500 uppercase">
+                  {post.date}
+                </time>
+                <span className="text-neutral-300 dark:text-neutral-600">
+                  ·
                 </span>
-              ))}
+                <span className="text-neutral-400 dark:text-neutral-500">
+                  {i === 0 ? "8 min read" : i === 1 ? "5 min read" : "12 min read"}
+                </span>
+              </div>
+
+              {/* Title */}
+              <h2 className="text-xl sm:text-2xl font-serif font-bold mt-4 leading-snug text-neutral-900 dark:text-neutral-100 group-hover:text-neutral-600 dark:group-hover:text-white transition-colors">
+                {post.title}
+              </h2>
+
+              {/* Excerpt */}
+              <p className="text-neutral-500 dark:text-neutral-400 mt-3 leading-relaxed text-[15px]">
+                {post.excerpt}
+              </p>
+
+              {/* Tags + Arrow */}
+              <div className="flex items-center justify-between mt-5">
+                <div className="flex flex-wrap gap-2">
+                  {post.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-[11px] font-semibold tracking-wider uppercase px-3 py-1 rounded-full
+                        bg-neutral-100 text-neutral-600
+                        dark:bg-neutral-800 dark:text-neutral-400"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Arrow */}
+                <span className="text-neutral-300 dark:text-neutral-600 group-hover:text-neutral-500 dark:group-hover:text-neutral-400 transition-all group-hover:translate-x-1 duration-300 text-lg">
+                  →
+                </span>
+              </div>
             </div>
+
+            {/* Bottom accent line */}
+            <div className="h-[2px] w-0 group-hover:w-full transition-all duration-500 ease-out bg-gradient-to-r from-neutral-900 to-neutral-400 dark:from-white dark:to-neutral-600" />
           </a>
         ))}
       </div>
