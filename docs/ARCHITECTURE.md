@@ -17,22 +17,23 @@
 | Database | Neon PostgreSQL (serverless) | — |
 | Styling | Tailwind CSS | 4.1.11 |
 | Components | shadcn/ui | latest |
+| Icons | lucide-react | latest |
 
 ### Content & Editing
 
 | Purpose | Technology |
 |---------|-----------|
-| Rich text editor | Tiptap (WYSIWYG → Markdown output) |
-| Content storage | Markdown/MDX stored in PostgreSQL |
-| Image uploads | Vercel Blob or S3 |
+| Rich text editor | Tiptap (WYSIWYG → HTML output) — *deferred* |
+| Content storage | HTML stored in PostgreSQL |
+| Image uploads | Vercel Blob or S3 — *deferred* |
 | Multilingual | next-intl |
-| Comments | Custom (anonymous + authenticated) |
+| Comments | Custom (anonymous + authenticated, threaded) |
 
 ### Auth & Hosting
 
 | Purpose | Technology |
 |---------|-----------|
-| Authentication | NextAuth.js (Auth.js) — Google, Email, Phone, Magic link |
+| Authentication | Auth.js v5 (NextAuth) — GitHub, Google |
 | Hosting | Vercel |
 | Analytics | Vercel Analytics |
 
@@ -41,8 +42,60 @@
 | Purpose | Technology |
 |---------|-----------|
 | Package manager | npm |
-| Linting | ESLint + Prettier (strict, zero warnings) |
-| Testing | Vitest (unit) + Playwright (e2e) |
+| Linting | ESLint flat config (strict, zero warnings) |
+| Testing | Vitest (unit) + Playwright (e2e) — *planned* |
+
+---
+
+## Design System
+
+### Token Architecture (Two-Layer)
+
+Our design tokens are the **source of truth**. shadcn/ui tokens are **aliases** that reference our tokens. Both coexist:
+
+```
+Our tokens (source of truth)        shadcn aliases (reference our tokens)
+─────────────────────────────       ───────────────────────────────────
+--bg-base: #fafafa          ←→     --background: var(--bg-base)
+--bg-raised: #f4f4f4        ←→     --card: var(--bg-raised)
+--ink-primary: #1a1a1a      ←→     --foreground: var(--ink-primary)
+--accent: #2563eb           ←→     --primary: var(--accent)
+--bg-muted: #e9e9e9         ←→     --secondary: var(--bg-muted)
+                                ←→ --accent: var(--bg-muted) [shadcn's accent ≠ ours]
+```
+
+> **Warning:** shadcn's `--accent` token has a different meaning than our `--accent`. shadcn's `accent` = subtle hover background. Our `accent` = brand blue. The alias layer maps them correctly. Components using `bg-primary` get our blue. Components using `bg-accent` (shadcn) get muted background.
+
+### Primitives (Phase 0)
+
+| Component | Location | Used By |
+|-----------|----------|---------|
+| `<Button>` | `src/components/ui/button.tsx` | Auth (2), Comments (5), Bookmarks (6), About (7) |
+| `<Card>` | `src/components/ui/card.tsx` | Blog cards (4), Comments (5), About (7) |
+| `<Badge>` | `src/components/ui/badge.tsx` | Tags (4), Skills (7) |
+| `<Input>` | `src/components/ui/input.tsx` | Comments (5) |
+| `<Textarea>` | `src/components/ui/textarea.tsx` | Comments (5) |
+| `<Label>` | `src/components/ui/label.tsx` | Comments (5) |
+| `<Avatar>` | `src/components/ui/avatar.tsx` | Header (2), Comments (5) |
+| `<Skeleton>` | `src/components/ui/skeleton.tsx` | Loading states (8) |
+| `<Separator>` | `src/components/ui/separator.tsx` | Dividers |
+| `<Spinner>` | `src/components/ui/spinner.tsx` | Loading states (8) |
+
+### Layout Helpers
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `<Container size>` | `src/components/layout/container.tsx` | Max-width wrapper (sm/md/lg) |
+| `<Section>` | `src/components/layout/section.tsx` | Semantic `<section>` wrapper |
+| `<PageHeader>` | `src/components/layout/page-header.tsx` | Title + optional description |
+
+### Icon System
+
+All icons come from `lucide-react`. No inline SVGs except for brand icons not in lucide (Google logo).
+
+```typescript
+import { Sun, Moon, Github, Bookmark, ArrowRight } from "lucide-react";
+```
 
 ---
 

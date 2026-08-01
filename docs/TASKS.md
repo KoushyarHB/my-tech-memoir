@@ -1,563 +1,215 @@
 # TASKS.md — my-tech-memoir
 
-> Granular, sequential implementation checklist with explicit dependencies.
+> Contract-Driven implementation checklist with explicit dependencies and status tracking.
 
 ---
 
-## Task Granularity
+## Phase Overview
 
-Each task is **2-5 minutes** of focused work.
-
-## Task Ordering
-
-**Infrastructure first** — DB, auth, layout → then features.
-
-## Dependencies
-
-Each task lists what must be done first.
+| Phase | Status | Description |
+|-------|--------|-------------|
+| 0 | ⏳ PLANNED | Design System — tokens, shadcn/ui primitives, layout helpers |
+| 1 | ✅ COMPLETED | Infrastructure — Prisma schema, DB client, API helpers |
+| 2 | ✅ COMPLETED | Authentication — Auth.js v5, GitHub + Google, sign-in page |
+| 3 | ⏳ PLANNED | Layout & i18n — next-intl, route restructure, language switcher |
+| 4 | ⏳ PLANNED | Blog — post service, components, pages, seed migration |
+| 5 | ⏳ PLANNED | Comments — threaded comments, anonymous + authenticated |
+| 6 | ⏳ PLANNED | Bookmarks — toggle, listing page, API routes |
+| 7 | ⏳ PLANNED | Home & About — DB-driven homepage, about page |
+| 8 | ⏳ PLANNED | Polish — ESLint, error boundaries, loading states, SEO |
 
 ---
 
-## Phase 1: Infrastructure
+## Phase 0: Design System ⏳
 
-### Task 1.1: Prisma Schema Setup
-**Objective:** Set up Prisma with all database models
+### Task 0.1: shadcn/ui Init + Primitives
 **Dependencies:** None
-**Files:** `prisma/schema.prisma`, `.env`, `.env.example`
+**Files:** `components.json`, `src/lib/utils.ts`, `src/components/ui/*`
 
-**Steps:**
-1. Configure `prisma/schema.prisma` with all models
-2. Add `DATABASE_URL` and `DIRECT_URL` to `.env.example`
-3. Run `npx prisma generate`
-4. Run `npx prisma migrate dev --name init`
+- [ ] Run `npx shadcn@latest init`
+- [ ] Add: `button card input label badge textarea avatar separator skeleton spinner`
+- [ ] Install `lucide-react`, `tw-animate-css`
 
-**Models to create:**
-- User (managed by NextAuth)
-- Post
-- PostAuthor (junction)
-- Category
-- Tag
-- PostCategory (junction)
-- PostTag (junction)
-- Comment
-- Bookmark
-- Translation
+### Task 0.2: Token Alias Layer
+**Dependencies:** Task 0.1
+**Files:** `src/app/globals.css`
 
----
+- [ ] Add shadcn alias layer mapping to our tokens
+- [ ] Add `@theme inline` block for Tailwind utilities
+- [ ] Add `@import "tw-animate-css"`
 
-### Task 1.2: Prisma Client Singleton
-**Objective:** Create reusable Prisma client
-**Dependencies:** Task 1.1
-**Files:** `src/lib/db.ts`
+### Task 0.3: Layout Primitives
+**Dependencies:** Task 0.1
+**Files:** `src/components/layout/*`
 
-**Steps:**
-1. Create `src/lib/db.ts` with Prisma singleton pattern
-2. Handle hot-reload in development
+- [ ] Create `Container`, `Section`, `PageHeader`
+- [ ] Create barrel export `index.ts`
 
----
+### Task 0.4: Refactor Existing Components
+**Dependencies:** Task 0.1, 0.2, 0.3
+**Files:** Header, sign-in page, sign-in buttons, home page, posts page
 
-### Task 1.3: API Response Helper
-**Objective:** Create standardized API response utility
-**Dependencies:** None
-**Files:** `src/lib/api-response.ts`
-
-**Steps:**
-1. Create `ApiResponse<T>` type
-2. Create `apiResponse()` helper function
-3. Support success and error responses
+- [ ] Replace inline-styled buttons with `<Button>`
+- [ ] Replace card divs with `<Card>`
+- [ ] Replace tag spans with `<Badge>`
+- [ ] Replace inline SVGs with lucide icons
 
 ---
 
-### Task 1.4: Path Aliases
-**Objective:** Configure TypeScript path aliases
-**Dependencies:** None
-**Files:** `tsconfig.json`
+## Phase 1: Infrastructure ✅
 
-**Steps:**
-1. Add `@/*` path alias mapping to `./src/*`
-2. Verify imports work correctly
-
----
-
-## Phase 2: Auth Setup
-
-### Task 2.1: NextAuth Configuration
-**Objective:** Set up NextAuth.js with all providers
-**Dependencies:** Task 1.1, Task 1.2
-**Files:** `src/features/auth/config/auth-options.ts`
-
-**Steps:**
-1. Install `next-auth` and `@next-auth/prisma-adapter`
-2. Configure auth options with:
-   - Google OAuth provider
-   - Email provider (magic link)
-   - Prisma adapter
-3. Create auth options file
+- [x] Task 1.1: Prisma schema (10 models + 3 enums)
+- [x] Task 1.2: Prisma client singleton (`src/lib/db.ts`)
+- [x] Task 1.3: API response helpers (`src/lib/api-response.ts`)
+- [x] Task 1.4: `.env.example` with `DATABASE_URL` + `DIRECT_URL`
+- [x] Task 1.5: Migration reset (stale baseline deleted)
+- [ ] Task 1.6: **Pending user** — create `.env`, run `npx prisma migrate dev --name init`
 
 ---
 
-### Task 2.2: Auth API Route
-**Objective:** Create NextAuth API route handler
-**Dependencies:** Task 2.1
-**Files:** `src/app/api/auth/[...nextauth]/route.ts`
+## Phase 2: Authentication ✅
 
-**Steps:**
-1. Create dynamic route handler
-2. Import auth options
-3. Export GET and POST handlers
-
----
-
-### Task 2.3: Session Provider
-**Objective:** Create session provider wrapper
-**Dependencies:** Task 2.1
-**Files:** `src/components/providers/session-provider.tsx`
-
-**Steps:**
-1. Create client component wrapper
-2. Wrap children with SessionProvider
-3. Export for use in layout
+- [x] Task 2.1: Auth.js v5 config (`src/auth.ts`)
+- [x] Task 2.2: Route handler (`src/app/api/auth/[...nextauth]/route.ts`)
+- [x] Task 2.3: SessionProvider wrapper
+- [x] Task 2.4: Type augmentation (`next-auth.d.ts`)
+- [x] Task 2.5: Sign-in page + buttons
+- [x] Task 2.6: Header auth integration
+- [x] Task 2.7: Proxy file (`src/proxy.ts` — Next.js 16 rename)
+- [ ] Task 2.8: **Pending user** — OAuth credentials + `AUTH_SECRET`
 
 ---
 
-## Phase 3: Layout & Providers
+## Phase 3: Layout & i18n ⏳
 
-### Task 3.1: Root Layout
-**Objective:** Create root layout with providers
-**Dependencies:** Task 2.3
-**Files:** `src/app/layout.tsx`
+### Task 3.1: next-intl Setup
+**Dependencies:** Phase 2
+**Files:** `src/i18n/*`, `messages/*`, `next.config.js`
 
-**Steps:**
-1. Import fonts (Inter)
-2. Wrap with ThemeProvider
-3. Wrap with SessionProvider
-4. Add metadata
+- [ ] Install `next-intl`
+- [ ] Create `routing.ts`, `request.ts`
+- [ ] Create `messages/en.json`, `messages/fa.json`
+- [ ] Wrap `next.config.js` with `withNextIntl`
 
----
+### Task 3.2: Route Restructure
+**Dependencies:** Task 3.1
+**Files:** `src/app/[locale]/*`
 
-### Task 3.2: Theme Provider
-**Objective:** Create dark/light mode provider
-**Dependencies:** None
-**Files:** `src/components/providers/theme-provider.tsx`
+- [ ] Move all pages under `[locale]/`
+- [ ] Create `[locale]/(main)/layout.tsx`
 
-**Steps:**
-1. Install `next-themes`
-2. Create ThemeProvider wrapper
-3. Export for use in layout
+### Task 3.3: Header + Footer Updates
+**Dependencies:** Phase 0, Task 3.1
 
----
+- [ ] Add LanguageSwitcher to Header
+- [ ] Translate Header strings
+- [ ] Add social links to Footer
 
-### Task 3.3: Theme Toggle
-**Objective:** Create theme toggle component
-**Dependencies:** Task 3.2
-**Files:** `src/components/layout/theme-toggle.tsx`
+### Task 3.4: Merge Proxy
+**Dependencies:** Task 3.1, Phase 2
 
-**Steps:**
-1. Create toggle button
-2. Use `useTheme()` hook
-3. Add sun/moon icons
+- [ ] Merge auth + i18n middleware in `src/proxy.ts`
 
 ---
 
-### Task 3.4: Header Component
-**Objective:** Create site header with navigation
-**Dependencies:** Task 3.3
-**Files:** `src/components/layout/header.tsx`
+## Phase 4: Blog ⏳
 
-**Steps:**
-1. Create header layout
-2. Add logo/site name
-3. Add navigation links (Home, Blog, About)
-4. Add theme toggle
-5. Add sign-in button
+### Task 4.1: Types + Service
+**Dependencies:** Phase 1
+**Files:** `src/features/blog/types/`, `src/features/blog/server/`, `src/features/blog/lib/`
 
----
+- [ ] Create `PostSummary`, `PostWithTags`, `CreatePostInput`, `UpdatePostInput`
+- [ ] Create `reading-time.ts`
+- [ ] Create `post-service.ts` (CRUD + search + by-tag)
 
-### Task 3.5: Footer Component
-**Objective:** Create site footer
-**Dependencies:** None
-**Files:** `src/components/layout/footer.tsx`
+### Task 4.2: Components
+**Dependencies:** Task 4.1, Phase 0
+**Files:** `src/features/blog/components/`
 
-**Steps:**
-1. Create footer layout
-2. Add social links (GitHub, LinkedIn, Twitter)
-3. Add copyright text
+- [ ] Create `PostCard` (uses `<Card>`, `<Badge>`)
+- [ ] Create `PostHeader` (uses `<Badge>`)
 
----
-
-### Task 3.6: i18n Setup
-**Objective:** Configure next-intl for multilingual support
-**Dependencies:** None
-**Files:** `src/i18n/request.ts`, `src/i18n/routing.ts`, `messages/en.json`, `messages/fa.json`
-
-**Steps:**
-1. Install `next-intl`
-2. Create i18n configuration files
-3. Create translation JSON files
-4. Configure middleware for locale routing
-
----
-
-### Task 3.7: Middleware
-**Objective:** Create middleware for auth + i18n
-**Dependencies:** Task 2.1, Task 3.6
-**Files:** `middleware.ts`
-
-**Steps:**
-1. Create middleware function
-2. Add i18n locale detection
-3. Add auth protection for protected routes
-4. Configure matcher
-
----
-
-## Phase 4: Blog Feature
-
-### Task 4.1: Post Service
-**Objective:** Create database service for posts
-**Dependencies:** Task 1.2
-**Files:** `src/features/blog/server/post-service.ts`
-
-**Steps:**
-1. Create `getPostBySlug()` function
-2. Create `getPostById()` function
-3. Create `getPosts()` function with pagination
-4. Create `createPost()` function
-5. Create `updatePost()` function
-6. Create `deletePost()` function
-
----
-
-### Task 4.2: Post Types
-**Objective:** Define TypeScript types for posts
-**Dependencies:** None
-**Files:** `src/features/blog/types/index.ts`
-
-**Steps:**
-1. Create `Post` interface
-2. Create `PostWithAuthor` interface
-3. Create `PostWithTranslations` interface
-4. Create `CreatePostInput` type
-5. Create `UpdatePostInput` type
-
----
-
-### Task 4.3: Reading Time Utility
-**Objective:** Calculate reading time for posts
-**Dependencies:** None
-**Files:** `src/features/blog/utils/calculate-reading-time.ts`
-
-**Steps:**
-1. Create function to count words
-2. Calculate reading time (avg 200 words/min)
-3. Return formatted string
-
----
-
-### Task 4.4: Post Card Component
-**Objective:** Create reusable post card
+### Task 4.3: Pages
 **Dependencies:** Task 4.2
-**Files:** `src/features/blog/components/post-card.tsx`
+**Files:** `src/app/[locale]/(main)/blog/*`
 
-**Steps:**
-1. Create card layout
-2. Display title, excerpt, date, reading time
-3. Add link to post detail
-4. Style with Tailwind
+- [ ] Blog list page
+- [ ] Blog post detail page
+- [ ] Tag filter page
 
----
-
-### Task 4.5: Post Header Component
-**Objective:** Create post header with metadata
-**Dependencies:** Task 4.2
-**Files:** `src/features/blog/components/post-header.tsx`
-
-**Steps:**
-1. Create header layout
-2. Display title, author, date, reading time
-3. Add tags
-4. Add cover image
-
----
-
-### Task 4.6: Blog List Page
-**Objective:** Create blog listing page
-**Dependencies:** Task 4.1, Task 4.4
-**Files:** `src/app/[locale]/(main)/blog/page.tsx`
-
-**Steps:**
-1. Create page component (Server Component)
-2. Fetch posts from database
-3. Render PostCard for each post
-4. Add pagination
-
----
-
-### Task 4.7: Blog Post Page
-**Objective:** Create individual post page
-**Dependencies:** Task 4.1, Task 4.5
-**Files:** `src/app/[locale]/(main)/blog/[slug]/page.tsx`
-
-**Steps:**
-1. Create page component (Server Component)
-2. Fetch post by slug
-3. Render PostHeader
-4. Render markdown content
-5. Add generateMetadata for SEO
-
----
-
-### Task 4.8: Posts API Route
-**Objective:** Create REST API for posts
+### Task 4.4: API Routes
 **Dependencies:** Task 4.1
-**Files:** `src/app/api/posts/route.ts`
+**Files:** `src/app/api/posts/*`
 
-**Steps:**
-1. Create GET handler (list posts)
-2. Create POST handler (create post)
-3. Add authentication check
-4. Add input validation
+- [ ] `GET/POST /api/posts`
+- [ ] `GET/PUT/DELETE /api/posts/[id]`
 
----
+### Task 4.5: Seed Migration
+**Dependencies:** Task 4.1 (needs DB)
 
-### Task 4.9: Post API Route
-**Objective:** Create REST API for single post
-**Dependencies:** Task 4.1
-**Files:** `src/app/api/posts/[id]/route.ts`
-
-**Steps:**
-1. Create GET handler (get post)
-2. Create PUT handler (update post)
-3. Create DELETE handler (delete post)
-4. Add authentication check
+- [ ] Write `prisma/seed.ts`
+- [ ] Delete static `.tsx` post files
+- [ ] Add `/posts/*` → `/blog/*` redirect
 
 ---
 
-## Phase 5: Comments Feature
+## Phase 5: Comments ⏳
 
-### Task 5.1: Comment Service
-**Objective:** Create database service for comments
-**Dependencies:** Task 1.2
-**Files:** `src/features/comments/server/comment-service.ts`
+### Task 5.1: Types + Service
+- [ ] Create comment types (`CommentPayload`, `CommentFormData`)
+- [ ] Create `comment-service.ts` (threaded, `body` field)
 
-**Steps:**
-1. Create `getCommentsByPostId()` function
-2. Create `createComment()` function
-3. Create `deleteComment()` function
-4. Add moderation status handling
+### Task 5.2: Components
+- [ ] Create `CommentForm` (uses `<Input>`, `<Textarea>`, `<Button>`)
+- [ ] Create `CommentList` (uses `<Card>`, `<Avatar>`, `<Skeleton>`)
+- [ ] Create `CommentSection` (orchestrator)
 
----
-
-### Task 5.2: Comment Types
-**Objective:** Define TypeScript types for comments
-**Dependencies:** None
-**Files:** `src/features/comments/types/index.ts`
-
-**Steps:**
-1. Create `Comment` interface
-2. Create `CommentWithAuthor` interface
-3. Create `CreateCommentInput` type
+### Task 5.3: API Route + Integration
+- [ ] Create `GET/POST /api/comments`
+- [ ] Add `<CommentSection>` to blog post page
 
 ---
 
-### Task 5.3: Comment List Component
-**Objective:** Display comments for a post
-**Dependencies:** Task 5.2
-**Files:** `src/features/comments/components/comment-list.tsx`
+## Phase 6: Bookmarks ⏳
 
-**Steps:**
-1. Create list layout
-2. Render each comment
-3. Show author name/avatar
-4. Show timestamp
+### Task 6.1: Types + Service
+- [ ] Create bookmark types
+- [ ] Create `bookmark-service.ts` (toggle, check, list)
 
----
+### Task 6.2: Component + API
+- [ ] Create `BookmarkButton` (uses `<Button>`, lucide `Bookmark` icon)
+- [ ] Create `GET/POST /api/bookmarks` (uses `apiSuccess`/`apiError`)
 
-### Task 5.4: Comment Form Component
-**Objective:** Create comment submission form
-**Dependencies:** Task 5.2
-**Files:** `src/features/comments/components/comment-form.tsx`
-
-**Steps:**
-1. Create form with textarea
-2. Handle anonymous vs authenticated
-3. Add submit handler
-4. Add loading state
+### Task 6.3: Page + Integration
+- [ ] Create `/bookmarks` page (uses `<PostCard>`)
+- [ ] Add `<BookmarkButton>` to blog post header
+- [ ] Add "Bookmarks" link to Header (authenticated only)
 
 ---
 
-### Task 5.5: Comments API Route
-**Objective:** Create REST API for comments
-**Dependencies:** Task 5.1
-**Files:** `src/app/api/posts/[id]/comments/route.ts`
-
-**Steps:**
-1. Create GET handler (list comments)
-2. Create POST handler (create comment)
-3. Add input validation
-4. Sanitize content
-
----
-
-### Task 5.6: Integrate Comments in Post Page
-**Objective:** Add comments section to blog post
-**Dependencies:** Task 4.7, Task 5.3, Task 5.4
-**Files:** `src/app/[locale]/(main)/blog/[slug]/page.tsx`
-
-**Steps:**
-1. Import CommentList and CommentForm
-2. Add comments section below post content
-3. Fetch comments for the post
-4. Render components
-
----
-
-## Phase 6: Bookmarks Feature
-
-### Task 6.1: Bookmark Service
-**Objective:** Create database service for bookmarks
-**Dependencies:** Task 1.2
-**Files:** `src/features/bookmarks/server/bookmark-service.ts`
-
-**Steps:**
-1. Create `getBookmarksByUserId()` function
-2. Create `toggleBookmark()` function
-3. Create `isBookmarked()` function
-
----
-
-### Task 6.2: Bookmark Button Component
-**Objective:** Create bookmark toggle button
-**Dependencies:** Task 6.1
-**Files:** `src/features/bookmarks/components/bookmark-button.tsx`
-
-**Steps:**
-1. Create button with heart/bookmark icon
-2. Handle toggle state
-3. Add loading state
-4. Show filled/outline based on state
-
----
-
-### Task 6.3: Bookmarks API Route
-**Objective:** Create REST API for bookmarks
-**Dependencies:** Task 6.1
-**Files:** `src/app/api/bookmarks/route.ts`
-
-**Steps:**
-1. Create GET handler (list bookmarks)
-2. Create POST handler (toggle bookmark)
-3. Add authentication check
-
----
-
-### Task 6.4: Bookmarks Page
-**Objective:** Create bookmarks listing page
-**Dependencies:** Task 6.1, Task 4.4
-**Files:** `src/app/[locale]/(main)/bookmarks/page.tsx`
-
-**Steps:**
-1. Create page component
-2. Fetch user's bookmarks
-3. Render PostCard for each bookmarked post
-4. Add empty state
-
----
-
-### Task 6.5: Integrate Bookmark Button in Post
-**Objective:** Add bookmark button to blog post
-**Dependencies:** Task 4.7, Task 6.2
-**Files:** `src/app/[locale]/(main)/blog/[slug]/page.tsx`
-
-**Steps:**
-1. Import BookmarkButton
-2. Add to post header
-3. Pass postId to component
-
----
-
-## Phase 7: Home Page
+## Phase 7: Home & About ⏳
 
 ### Task 7.1: Home Page
-**Objective:** Create homepage with intro and recent posts
-**Dependencies:** Task 4.1, Task 4.4
-**Files:** `src/app/[locale]/(main)/page.tsx`
+- [ ] Replace with DB-driven page using `<PostCard>` from Phase 4
 
-**Steps:**
-1. Create page component (Server Component)
-2. Add personal intro/greeting
-3. Fetch recent posts
-4. Render PostCard for each post
-5. Add "View All Posts" link
+### Task 7.2: About Page
+- [ ] Create bio, skills (`<Badge>`), social links, contact (`<Button>`)
 
 ---
 
-## Phase 8: About Page
+## Phase 8: Polish ⏳
 
-### Task 8.1: About Page
-**Objective:** Create about page with author info
-**Dependencies:** None
-**Files:** `src/app/[locale]/(main)/about/page.tsx`
+### Task 8.1: ESLint Setup
+- [ ] Install `eslint`, `eslint-config-next`, `@eslint/eslintrc`
+- [ ] Create `eslint.config.mjs` (flat config)
+- [ ] Fix `lint` script in `package.json`
 
-**Steps:**
-1. Create page layout
-2. Add author photo placeholder
-3. Add bio text
-4. Add skills/tech stack section
-5. Add social links
-6. Add contact form or email link
+### Task 8.2: Error + Loading
+- [ ] Create `not-found.tsx`
+- [ ] Create `global-error.tsx`
+- [ ] Create segment `error.tsx`
+- [ ] Create `loading.tsx` files (using `<Skeleton>`, `<Spinner>`)
 
----
-
-## Phase 9: Polish
-
-### Task 9.1: SEO Metadata
-**Objective:** Add metadata to all pages
-**Dependencies:** All feature tasks
-**Files:** Various `page.tsx` files
-
-**Steps:**
-1. Add `generateMetadata()` to each page
-2. Add Open Graph images
-3. Add canonical URLs
-4. Add JSON-LD structured data
-
----
-
-### Task 9.2: Error Handling
-**Objective:** Add error boundaries and 404 page
-**Dependencies:** None
-**Files:** `src/app/not-found.tsx`, `src/app/error.tsx`
-
-**Steps:**
-1. Create custom 404 page
-2. Create error boundary
-3. Add loading states
-
----
-
-### Task 9.3: Loading States
-**Objective:** Add loading indicators
-**Dependencies:** None
-**Files:** Various `loading.tsx` files
-
-**Steps:**
-1. Create loading skeletons
-2. Add loading.tsx for routes
-3. Add Suspense boundaries
-
----
-
-## Verification Checklist
-
-After completing all tasks, verify:
-
-- [ ] `npm run lint` passes with zero warnings
-- [ ] `npm run build` succeeds
-- [ ] All pages render correctly
-- [ ] Auth flow works (sign in/sign out)
-- [ ] Bookmarks toggle correctly
-- [ ] Comments submit successfully
-- [ ] Dark/light mode toggles
-- [ ] i18n locale switching works
-- [ ] Responsive on mobile/tablet/desktop
+### Task 8.3: SEO
+- [ ] Enhance root metadata
+- [ ] Verify all pages have titles + descriptions
