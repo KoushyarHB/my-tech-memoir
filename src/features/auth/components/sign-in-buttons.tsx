@@ -1,13 +1,14 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import { Button } from "@/components/ui/button";
 
-function GitHubIcon() {
+function GithubIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="currentColor"
       aria-hidden="true"
@@ -21,8 +22,8 @@ function GoogleIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="currentColor"
       aria-hidden="true"
@@ -38,33 +39,23 @@ function GoogleIcon() {
 export default function SignInButtons() {
   return (
     <div className="space-y-3">
-      <button
-        type="button"
+      <Button
+        variant="outline"
+        className="w-full"
         onClick={() => signIn("github", { callbackUrl: "/" })}
-        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]"
-        style={{
-          backgroundColor: "var(--bg-muted)",
-          color: "var(--ink-primary)",
-          border: "1px solid var(--border)",
-        }}
       >
-        <GitHubIcon />
+        <GithubIcon />
         Continue with GitHub
-      </button>
+      </Button>
 
-      <button
-        type="button"
+      <Button
+        variant="outline"
+        className="w-full"
         onClick={() => signIn("google", { callbackUrl: "/" })}
-        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]"
-        style={{
-          backgroundColor: "var(--bg-muted)",
-          color: "var(--ink-primary)",
-          border: "1px solid var(--border)",
-        }}
       >
         <GoogleIcon />
         Continue with Google
-      </button>
+      </Button>
     </div>
   );
 }

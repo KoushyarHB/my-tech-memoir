@@ -3,45 +3,10 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "@/components/theme";
-
-function SunIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-    </svg>
-  );
-}
-
-function MoonIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-    </svg>
-  );
-}
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Sun, Moon, LogOut, LogIn } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function Header() {
   const { resolvedTheme, toggleTheme, mounted } = useTheme();
@@ -56,81 +21,68 @@ export default function Header() {
         borderBottom: "1px solid var(--border)",
         backgroundColor: isDark
           ? "rgba(18, 18, 18, 0.85)"
-          : "rgba(250, 250, 250, 0.85)",
+          : "var(--bg-overlay)",
       }}
     >
-      <div className="max-w-2xl mx-auto px-5 py-4 flex items-center justify-between">
-        {/* Logotype */}
+      <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-4">
         <Link
           href="/"
-          className="group flex items-baseline gap-3"
-          style={{ textDecoration: "none" }}
+          className="group flex items-baseline gap-3 no-underline"
         >
-          <span
-            className="font-serif text-lg font-semibold leading-tight tracking-tight transition-colors duration-200"
-            style={{ color: "var(--ink-primary)" }}
-          >
+          <span className="font-serif text-lg font-semibold leading-tight tracking-tight text-ink-primary transition-colors duration-200">
             My Tech Memoir
           </span>
         </Link>
 
-        {/* Right side: auth + theme */}
         <div className="flex items-center gap-2">
-          {/* Auth */}
           {!mounted ? (
-            <div className="w-8 h-8" aria-hidden="true" />
+            <div className="size-8" aria-hidden="true" />
           ) : isAuthenticated && session?.user ? (
-            <>
-              {session.user.image && (
-                <img
-                  src={session.user.image}
-                  alt={session.user.name ?? "User avatar"}
-                  className="w-7 h-7 rounded-full"
-                />
-              )}
-              <button
-                type="button"
+            <div className="flex items-center gap-2">
+              <Avatar size="sm">
+                {session.user.image ? (
+                  <AvatarImage
+                    src={session.user.image}
+                    alt={session.user.name ?? "User avatar"}
+                  />
+                ) : null}
+                <AvatarFallback>
+                  {session.user.name?.charAt(0).toUpperCase() ?? "?"}
+                </AvatarFallback>
+              </Avatar>
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="text-xs px-2.5 py-1 rounded-md transition-all duration-150 hover:opacity-80 active:scale-95"
-                style={{
-                  color: "var(--ink-secondary)",
-                  backgroundColor: "var(--bg-muted)",
-                  border: "1px solid var(--border)",
-                }}
               >
+                <LogOut className="size-3.5" />
                 Sign out
-              </button>
-            </>
+              </Button>
+            </div>
           ) : (
             <Link
               href="/signin"
-              className="text-xs px-2.5 py-1 rounded-md transition-all duration-150 hover:opacity-80 active:scale-95"
-              style={{
-                color: "var(--ink-inverse)",
-                backgroundColor: "var(--accent)",
-                border: "1px solid var(--accent)",
-              }}
+              className={cn(buttonVariants({ variant: "default", size: "sm" }))}
             >
+              <LogIn className="size-3.5" />
               Sign in
             </Link>
           )}
 
-          {/* Theme toggle */}
           {mounted ? (
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleTheme}
-              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label={
+                isDark ? "Switch to light mode" : "Switch to dark mode"
+              }
               title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-              className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
-              style={{
-                color: "var(--ink-secondary)",
-              }}
             >
-              {isDark ? <SunIcon /> : <MoonIcon />}
-            </button>
+              {isDark ? <Sun /> : <Moon />}
+            </Button>
           ) : (
-            <div className="w-8 h-8" aria-hidden="true" />
+            <div className="size-8" aria-hidden="true" />
           )}
         </div>
       </div>

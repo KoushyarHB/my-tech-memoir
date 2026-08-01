@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { PostDate } from "@/components/post-date";
+import { PostTag } from "@/components/post-tag";
 
 export const metadata: Metadata = {
   title: "Posts",
@@ -34,62 +37,38 @@ const posts = [
 
 export default function PostsPage() {
   return (
-    <div className="max-w-2xl mx-auto px-5 py-12 sm:py-16">
-      <h1
-        className="text-3xl font-serif font-bold mb-10"
-        style={{ color: "var(--ink-primary)" }}
-      >
+    <div className="mx-auto max-w-2xl px-5 py-12 sm:py-16">
+      <h1 className="mb-10 font-serif text-3xl font-bold text-ink-primary">
         Posts
       </h1>
 
       <div className="divide-y" style={{ borderColor: "var(--border)" }}>
         {posts.map((post) => (
-          <a
+          <Link
             key={post.slug}
             href={`/posts/${post.slug}`}
-            className="group block py-8 first:pt-0 last:pb-0 transition-opacity duration-200"
-            style={{ textDecoration: "none" }}
+            className="group block py-8 first:pt-0 last:pb-0 no-underline transition-opacity duration-200"
           >
-            <div className="flex items-center gap-3 mb-3">
-              <time
-                className="text-xs font-medium tracking-wider uppercase"
-                style={{ color: "var(--ink-tertiary)" }}
-              >
-                {post.date}
-              </time>
+            <div className="mb-3 flex items-center gap-3">
+              <PostDate>{post.date}</PostDate>
             </div>
 
-            <h2
-              className="text-xl sm:text-2xl font-serif font-semibold leading-snug transition-colors duration-200"
-              style={{ color: "var(--ink-primary)" }}
-            >
-              <span className="border-b border-transparent group-hover:border-current pb-0.5 transition-all duration-200">
+            <h2 className="font-serif text-xl font-semibold leading-snug tracking-tight text-ink-primary transition-colors duration-200 sm:text-2xl">
+              <span className="border-b border-transparent pb-0.5 transition-all duration-200 group-hover:border-current">
                 {post.title}
               </span>
             </h2>
 
-            <p
-              className="mt-3 text-[15px] leading-relaxed"
-              style={{ color: "var(--ink-secondary)" }}
-            >
+            <p className="mt-3 text-[15px] leading-relaxed text-ink-secondary">
               {post.excerpt}
             </p>
 
-            <div className="flex flex-wrap gap-2 mt-4">
+            <div className="mt-4 flex flex-wrap gap-2">
               {post.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-[11px] font-medium tracking-wider uppercase px-2.5 py-1 rounded-md"
-                  style={{
-                    color: "var(--ink-tertiary)",
-                    backgroundColor: "var(--bg-muted)",
-                  }}
-                >
-                  {tag}
-                </span>
+                <PostTag key={tag}>{tag}</PostTag>
               ))}
             </div>
-          </a>
+          </Link>
         ))}
       </div>
     </div>
