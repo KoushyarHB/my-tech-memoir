@@ -37,7 +37,7 @@ export default function PostsPage() {
     <div className="max-w-2xl mx-auto px-5 py-12 sm:py-16">
       <h1
         className="text-3xl font-serif font-bold mb-10"
-        style={{ color: "var(--text-primary)" }}
+        style={{ color: "var(--ink-primary)" }}
       >
         Posts
       </h1>
@@ -53,7 +53,7 @@ export default function PostsPage() {
             <div className="flex items-center gap-3 mb-3">
               <time
                 className="text-xs font-medium tracking-wider uppercase"
-                style={{ color: "var(--text-tertiary)" }}
+                style={{ color: "var(--ink-tertiary)" }}
               >
                 {post.date}
               </time>
@@ -61,7 +61,7 @@ export default function PostsPage() {
 
             <h2
               className="text-xl sm:text-2xl font-serif font-semibold leading-snug transition-colors duration-200"
-              style={{ color: "var(--text-primary)" }}
+              style={{ color: "var(--ink-primary)" }}
             >
               <span className="border-b border-transparent group-hover:border-current pb-0.5 transition-all duration-200">
                 {post.title}
@@ -70,7 +70,7 @@ export default function PostsPage() {
 
             <p
               className="mt-3 text-[15px] leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
+              style={{ color: "var(--ink-secondary)" }}
             >
               {post.excerpt}
             </p>
@@ -81,8 +81,8 @@ export default function PostsPage() {
                   key={tag}
                   className="text-[11px] font-medium tracking-wider uppercase px-2.5 py-1 rounded-md"
                   style={{
-                    color: "var(--text-tertiary)",
-                    backgroundColor: "var(--bg-tertiary)",
+                    color: "var(--ink-tertiary)",
+                    backgroundColor: "var(--bg-muted)",
                   }}
                 >
                   {tag}

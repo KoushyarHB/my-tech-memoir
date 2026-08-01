@@ -3,6 +3,7 @@ import './globals.css'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { ThemeProvider, ThemeScript } from '@/components/theme'
+import SessionProvider from '@/components/providers/session-provider'
 
 export const metadata: Metadata = {
   title: {
@@ -48,17 +49,19 @@ export default function RootLayout({
       <body
         className="min-h-screen flex flex-col transition-colors duration-200"
         style={{
-          backgroundColor: 'var(--bg-primary)',
-          color: 'var(--text-primary)',
+          backgroundColor: 'var(--bg-base)',
+          color: 'var(--ink-primary)',
         }}
       >
-        <ThemeProvider>
-          <Header />
-          <main className="flex-1">
-            {children}
-          </main>
-          <Footer />
-        </ThemeProvider>
+        <SessionProvider>
+          <ThemeProvider>
+            <Header />
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </ThemeProvider>
+        </SessionProvider>
       </body>
     </html>
   )

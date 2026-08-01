@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { useTheme } from "@/components/theme";
 
 function SunIcon() {
@@ -44,7 +45,9 @@ function MoonIcon() {
 
 export default function Header() {
   const { resolvedTheme, toggleTheme, mounted } = useTheme();
+  const { data: session, status } = useSession();
   const isDark = resolvedTheme === "dark";
+  const isAuthenticated = status === "authenticated";
 
   return (
     <header
@@ -65,29 +68,72 @@ export default function Header() {
         >
           <span
             className="font-serif text-lg font-semibold leading-tight tracking-tight transition-colors duration-200"
-            style={{ color: "var(--text-primary)" }}
+            style={{ color: "var(--ink-primary)" }}
           >
             My Tech Memoir
           </span>
         </Link>
 
-        {/* Theme toggle */}
-        {mounted ? (
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
-            style={{
-              color: "var(--text-secondary)",
-            }}
-          >
-            {isDark ? <SunIcon /> : <MoonIcon />}
-          </button>
-        ) : (
-          <div className="w-8 h-8" aria-hidden="true" />
-        )}
+        {/* Right side: auth + theme */}
+        <div className="flex items-center gap-2">
+          {/* Auth */}
+          {!mounted ? (
+            <div className="w-8 h-8" aria-hidden="true" />
+          ) : isAuthenticated && session?.user ? (
+            <>
+              {session.user.image && (
+                <img
+                  src={session.user.image}
+                  alt={session.user.name ?? "User avatar"}
+                  className="w-7 h-7 rounded-full"
+                />
+              )}
+              <button
+                type="button"
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="text-xs px-2.5 py-1 rounded-md transition-all duration-150 hover:opacity-80 active:scale-95"
+                style={{
+                  color: "var(--ink-secondary)",
+                  backgroundColor: "var(--bg-muted)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => signIn()}
+              className="text-xs px-2.5 py-1 rounded-md transition-all duration-150 hover:opacity-80 active:scale-95"
+              style={{
+                color: "var(--ink-inverse)",
+                backgroundColor: "var(--accent)",
+                border: "1px solid var(--accent)",
+              }}
+            >
+              Sign in
+            </button>
+          )}
+
+          {/* Theme toggle */}
+          {mounted ? (
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
+              style={{
+                color: "var(--ink-secondary)",
+              }}
+            >
+              {isDark ? <SunIcon /> : <MoonIcon />}
+            </button>
+          ) : (
+            <div className="w-8 h-8" aria-hidden="true" />
+          )}
+        </div>
       </div>
     </header>
   );

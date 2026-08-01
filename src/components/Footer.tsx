@@ -10,13 +10,13 @@ export default function Footer() {
         <div className="flex items-center justify-between">
           <span
             className="text-sm font-sans"
-            style={{ color: "var(--text-tertiary)" }}
+            style={{ color: "var(--ink-tertiary)" }}
           >
             &copy; {new Date().getFullYear()} My Tech Memoir
           </span>
           <span
             className="text-xs font-sans tracking-widest uppercase"
-            style={{ color: "var(--text-tertiary)" }}
+            style={{ color: "var(--ink-tertiary)" }}
           >
             Written while learning
           </span>
