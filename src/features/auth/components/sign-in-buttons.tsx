@@ -1,6 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 function GithubIcon() {
@@ -37,6 +38,8 @@ function GoogleIcon() {
 }
 
 export default function SignInButtons() {
+  const t = useTranslations("signIn");
+
   return (
     <div className="space-y-3">
       <Button
@@ -45,7 +48,7 @@ export default function SignInButtons() {
         onClick={() => signIn("github", { callbackUrl: "/" })}
       >
         <GithubIcon />
-        Continue with GitHub
+        {t("github")}
       </Button>
 
       <Button
@@ -54,7 +57,7 @@ export default function SignInButtons() {
         onClick={() => signIn("google", { callbackUrl: "/" })}
       >
         <GoogleIcon />
-        Continue with Google
+        {t("google")}
       </Button>
     </div>
   );

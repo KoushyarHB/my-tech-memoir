@@ -1,16 +1,20 @@
 "use client";
 
-import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "@/components/theme";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Sun, Moon, LogOut, LogIn } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
+import LanguageSwitcher from "@/components/language-switcher";
 
 export default function Header() {
   const { resolvedTheme, toggleTheme, mounted } = useTheme();
   const { data: session, status } = useSession();
+  const tCommon = useTranslations("common");
+  const tHome = useTranslations("home");
   const isDark = resolvedTheme === "dark";
   const isAuthenticated = status === "authenticated";
 
@@ -30,11 +34,13 @@ export default function Header() {
           className="group flex items-baseline gap-3 no-underline"
         >
           <span className="font-serif text-lg font-semibold leading-tight tracking-tight text-ink-primary transition-colors duration-200">
-            My Tech Memoir
+            {tHome("title")}
           </span>
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <LanguageSwitcher />
+
           {!mounted ? (
             <div className="size-8" aria-hidden="true" />
           ) : isAuthenticated && session?.user ? (
@@ -56,7 +62,7 @@ export default function Header() {
                 onClick={() => signOut({ callbackUrl: "/" })}
               >
                 <LogOut className="size-3.5" />
-                Sign out
+                {tCommon("signOut")}
               </Button>
             </div>
           ) : (
@@ -65,7 +71,7 @@ export default function Header() {
               className={cn(buttonVariants({ variant: "default", size: "sm" }))}
             >
               <LogIn className="size-3.5" />
-              Sign in
+              {tCommon("signIn")}
             </Link>
           )}
 
@@ -74,10 +80,8 @@ export default function Header() {
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
-              aria-label={
-                isDark ? "Switch to light mode" : "Switch to dark mode"
-              }
-              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label={isDark ? tCommon("theme.light") : tCommon("theme.dark")}
+              title={isDark ? tCommon("theme.light") : tCommon("theme.dark")}
             >
               {isDark ? <Sun /> : <Moon />}
             </Button>

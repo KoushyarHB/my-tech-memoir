@@ -1,13 +1,13 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
 import { ThemeProvider, ThemeScript } from '@/components/theme'
 import SessionProvider from '@/components/providers/session-provider'
-import { Geist } from "next/font/google";
-import { cn } from "@/lib/utils";
+import { Geist, Lora, JetBrains_Mono } from "next/font/google"
+import { cn } from "@/lib/utils"
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ['latin'], variable: '--font-sans' })
+const lora = Lora({ subsets: ['latin'], variable: '--font-serif', display: 'swap' })
+const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' })
 
 export const metadata: Metadata = {
   title: {
@@ -46,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={cn("dark", "font-sans", geist.variable)} suppressHydrationWarning>
+    <html lang="en" className={cn("dark font-sans", geist.variable, lora.variable, jetbrainsMono.variable)} suppressHydrationWarning>
       <head>
         <ThemeScript />
       </head>
@@ -59,11 +59,7 @@ export default function RootLayout({
       >
         <SessionProvider>
           <ThemeProvider>
-            <Header />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
+            {children}
           </ThemeProvider>
         </SessionProvider>
       </body>

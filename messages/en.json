@@ -1,0 +1,34 @@
+{
+  "common": {
+    "home": "Home",
+    "about": "About",
+    "blog": "Blog",
+    "posts": "Posts",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "theme": {
+      "light": "Switch to light mode",
+      "dark": "Switch to dark mode"
+    },
+    "language": "Language"
+  },
+  "home": {
+    "title": "My Tech Memoir",
+    "subtitle": "Networking & Protocols"
+  },
+  "footer": {
+    "copyright": "© {year} My Tech Memoir",
+    "tagline": "Written while learning"
+  },
+  "signIn": {
+    "title": "Welcome back",
+    "subtitle": "Sign in to leave comments and bookmark posts.",
+    "terms": "By signing in you agree to the site's terms.",
+    "github": "Continue with GitHub",
+    "google": "Continue with Google"
+  },
+  "posts": {
+    "title": "Posts",
+    "subtitle": "All posts, sorted by most recent."
+  }
+}
