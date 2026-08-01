@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "@/components/theme";
 
 function SunIcon() {
@@ -102,9 +102,8 @@ export default function Header() {
               </button>
             </>
           ) : (
-            <button
-              type="button"
-              onClick={() => signIn()}
+            <Link
+              href="/signin"
               className="text-xs px-2.5 py-1 rounded-md transition-all duration-150 hover:opacity-80 active:scale-95"
               style={{
                 color: "var(--ink-inverse)",
@@ -113,7 +112,7 @@ export default function Header() {
               }}
             >
               Sign in
-            </button>
+            </Link>
           )}
 
           {/* Theme toggle */}
