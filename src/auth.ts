@@ -6,7 +6,15 @@ import { db } from "@/lib/db";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db),
-  providers: [GitHub, Google],
+  providers: [
+    GitHub({
+      issuer: "https://github.com/login/oauth",
+    }),
+    Google({
+      issuer: "https://accounts.google.com",
+    }),
+  ],
+  trustHost: true,
   pages: {
     signIn: "/signin",
   },
