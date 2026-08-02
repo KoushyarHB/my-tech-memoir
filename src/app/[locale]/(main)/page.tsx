@@ -43,7 +43,7 @@ export default function Home() {
         {posts.map((post) => (
           <Link
             key={post.slug}
-            href={`/posts/${post.slug}`}
+            href={`/blog/${post.slug}`}
             className="group block py-8 first:pt-0 last:pb-0 no-underline transition-opacity duration-200"
           >
             <div className="mb-3 flex items-center gap-3">
