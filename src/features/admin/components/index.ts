@@ -6,6 +6,7 @@ export { AdminSidebar } from "./admin-sidebar";
 export { AdminShell } from "./admin-shell";
 export { AdminTopbar } from "./admin-topbar";
 export { AdminUsersTable } from "./admin-users-table";
+export { RolePicker } from "./role-picker";
 export { AdminComingSoon } from "./admin-coming-soon";
 export { AdminPostGrowthChart } from "./admin-post-growth-chart";
 export { AdminCommentsTrendChart } from "./admin-comments-trend-chart";

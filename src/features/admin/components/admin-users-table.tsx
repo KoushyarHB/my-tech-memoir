@@ -6,13 +6,7 @@ import { toast } from "sonner";
 import { Search } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { RolePicker } from "@/features/admin/components/role-picker";
 import {
   Table,
   TableBody,
@@ -22,7 +16,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  ASSIGNABLE_ROLES,
   ROLE_LABELS,
   type UserRole,
 } from "@/features/admin/types/roles";
@@ -163,27 +156,11 @@ export function AdminUsersTable({ users, currentUserId }: AdminUsersTableProps) 
                       {formatDate(user.createdAt)}
                     </TableCell>
                     <TableCell>
-                      <Select
+                      <RolePicker
                         value={user.role}
                         disabled={busy}
-                        onValueChange={(value) => {
-                          if (!value || value === user.role) return;
-                          void handleRoleChange(user.id, value as UserRole);
-                        }}
-                      >
-                        <SelectTrigger size="sm" className="w-36">
-                          <SelectValue>
-                            {ROLE_LABELS[user.role]}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ASSIGNABLE_ROLES.map((role) => (
-                            <SelectItem key={role} value={role}>
-                              {ROLE_LABELS[role]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onChange={(role) => void handleRoleChange(user.id, role)}
+                      />
                     </TableCell>
                   </TableRow>
                 );
