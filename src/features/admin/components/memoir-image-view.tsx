@@ -21,8 +21,16 @@ const ALIGN_OPTIONS: {
   { value: "left", label: "Align left", icon: AlignLeft },
   { value: "center", label: "Align center", icon: AlignCenter },
   { value: "right", label: "Align right", icon: AlignRight },
-  { value: "wrap-left", label: "Float left (text wraps)", icon: PanelLeft },
-  { value: "wrap-right", label: "Float right (text wraps)", icon: PanelRight },
+  {
+    value: "wrap-left",
+    label: "Float left — text wraps on the right",
+    icon: PanelLeft,
+  },
+  {
+    value: "wrap-right",
+    label: "Float right — text wraps on the left",
+    icon: PanelRight,
+  },
 ];
 
 function clampWidth(value: number) {
@@ -99,16 +107,12 @@ export function MemoirImageView(props: ReactNodeViewProps) {
 
   return (
     <NodeViewWrapper
-      as="figure"
+      as="div"
       className={cn(
-        "memoir-figure",
-        `memoir-figure--${align}`,
-        selected && "memoir-figure--selected",
-        dragging && "memoir-figure--dragging"
+        "memoir-figure__chrome",
+        selected && "memoir-figure__chrome--selected",
+        dragging && "memoir-figure__chrome--dragging"
       )}
-      style={{ width: `${width}%` }}
-      data-width={width}
-      data-align={align}
       data-drag-handle
     >
       {selected && editor.isEditable && (
@@ -163,7 +167,7 @@ export function MemoirImageView(props: ReactNodeViewProps) {
 
       {editor.isEditable ? (
         selected || caption ? (
-          <figcaption contentEditable={false}>
+          <div className="memoir-figure__caption" contentEditable={false}>
             <input
               type="text"
               value={captionDraft}
@@ -179,10 +183,10 @@ export function MemoirImageView(props: ReactNodeViewProps) {
                 }
               }}
             />
-          </figcaption>
+          </div>
         ) : null
       ) : caption ? (
-        <figcaption>{caption}</figcaption>
+        <div className="memoir-figure__caption">{caption}</div>
       ) : null}
     </NodeViewWrapper>
   );

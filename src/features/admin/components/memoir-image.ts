@@ -233,7 +233,21 @@ export const MemoirImage = Image.extend({
 
   addNodeView() {
     return ReactNodeViewRenderer(MemoirImageView, {
+      // Layout (width / float / centering) must live on this outer element —
+      // TipTap's React renderer DOM is what ProseMirror lays out with siblings.
+      as: "figure",
       className: "memoir-image-node",
+      attrs: ({ node }) => {
+        const width = clampWidth(node.attrs.width);
+        const align = parseAlign(node.attrs.align);
+        return {
+          // Keep TipTap's node-* class; attrs.class replaces the element's classList
+          class: `node-image memoir-image-node memoir-figure memoir-figure--${align}`,
+          style: `width: ${width}%`,
+          "data-width": String(width),
+          "data-align": align,
+        };
+      },
     });
   },
 });

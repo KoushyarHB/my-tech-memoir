@@ -423,16 +423,19 @@ body {
 
 /* ─── Memoir figures (editor + published posts) ─────────────────── */
 .memoir-figure,
-.prose-memoir .memoir-figure {
+.prose-memoir .memoir-figure,
+.ProseMirror figure.node-image {
   position: relative;
   display: block;
   max-width: 100%;
   margin: 1.5rem 0;
   clear: both;
+  box-sizing: border-box;
 }
 
 .memoir-figure img,
-.prose-memoir .memoir-figure img {
+.prose-memoir .memoir-figure img,
+.ProseMirror figure.node-image img {
   display: block;
   width: 100%;
   height: auto;
@@ -441,7 +444,8 @@ body {
 }
 
 .memoir-figure figcaption,
-.prose-memoir .memoir-figure figcaption {
+.prose-memoir .memoir-figure figcaption,
+.ProseMirror .memoir-figure__caption {
   margin-top: 0.5rem;
   text-align: center;
   font-size: 0.8125rem;
@@ -449,28 +453,39 @@ body {
   color: var(--ink-tertiary);
 }
 
-.memoir-figure--center {
+.memoir-figure--center,
+.ProseMirror figure.node-image.memoir-figure--center {
   margin-left: auto;
   margin-right: auto;
+  float: none;
+  clear: both;
 }
 
-.memoir-figure--left {
+.memoir-figure--left,
+.ProseMirror figure.node-image.memoir-figure--left {
   margin-right: auto;
   margin-left: 0;
+  float: none;
+  clear: both;
 }
 
-.memoir-figure--right {
+.memoir-figure--right,
+.ProseMirror figure.node-image.memoir-figure--right {
   margin-left: auto;
   margin-right: 0;
+  float: none;
+  clear: both;
 }
 
-.memoir-figure--wrap-left {
+.memoir-figure--wrap-left,
+.ProseMirror figure.node-image.memoir-figure--wrap-left {
   float: left;
   clear: none;
   margin: 0.35rem 1.25rem 1rem 0;
 }
 
-.memoir-figure--wrap-right {
+.memoir-figure--wrap-right,
+.ProseMirror figure.node-image.memoir-figure--wrap-right {
   float: right;
   clear: none;
   margin: 0.35rem 0 1rem 1.25rem;
@@ -479,21 +494,31 @@ body {
 .prose-memoir h2,
 .prose-memoir h3,
 .prose-memoir h4,
-.prose-memoir hr {
+.prose-memoir hr,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror hr {
   clear: both;
 }
 
-.prose-memoir::after {
+.prose-memoir::after,
+.ProseMirror::after {
   content: "";
   display: table;
   clear: both;
 }
 
 /* Editor chrome for selected / resizing images */
-.ProseMirror .memoir-figure--selected {
+.ProseMirror figure.node-image.ProseMirror-selectednode {
   outline: 2px solid var(--border-focus);
   outline-offset: 3px;
   border-radius: 0.5rem;
+}
+
+.ProseMirror .memoir-figure__chrome {
+  position: relative;
+  width: 100%;
 }
 
 .ProseMirror .memoir-figure__media {
@@ -566,7 +591,7 @@ body {
   touch-action: none;
 }
 
-.ProseMirror .memoir-figure--dragging {
+.ProseMirror .memoir-figure__chrome--dragging {
   user-select: none;
 }
 
