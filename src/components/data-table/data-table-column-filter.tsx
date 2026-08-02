@@ -11,13 +11,13 @@ type DataTableColumnFilterProps<TData, TValue> = {
 };
 
 const filterControlClass =
-  "h-7 w-full min-w-0 rounded-md border border-border/70 bg-transparent px-2.5 text-left text-[11px] text-ink-secondary shadow-none placeholder:text-ink-tertiary/80 hover:border-border focus-visible:border-border focus-visible:ring-1 focus-visible:ring-border/40 dark:bg-transparent";
+  "h-7 w-full min-w-0 rounded-md border border-border/70 bg-transparent px-2.5 text-left text-[11px] text-ink-secondary shadow-none outline-none placeholder:text-ink-tertiary/80 hover:border-border focus-visible:border-border focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent";
 
 export function DataTableColumnFilter<TData, TValue>({
   column,
 }: DataTableColumnFilterProps<TData, TValue>) {
   if (!column.getCanFilter()) {
-    return <div className="h-7" aria-hidden />;
+    return null;
   }
 
   const meta = column.columnDef.meta;
