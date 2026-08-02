@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: '%s | My Tech Memoir',
   },
   description: 'A personal blog about code, architecture, and the craft of building software.',
-  metadataBase: new URL('https://my-tech-memoir.vercel.app'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://my-tech-memoir.vercel.app'),
   openGraph: {
     title: 'My Tech Memoir',
     description: 'A personal blog about code, architecture, and the craft of building software.',

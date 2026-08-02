@@ -44,6 +44,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const initialTheme = getInitialTheme();
+    // Reading from localStorage requires client-side effect — this is an
+    // external system sync, not a derived state calculation.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     applyTheme(initialTheme);
     setMounted(true);
   }, [applyTheme]);
