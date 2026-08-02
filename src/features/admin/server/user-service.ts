@@ -10,25 +10,87 @@ export type AdminUser = {
   email: string;
   name: string | null;
   image: string | null;
+  bio: string | null;
   role: UserRole;
+  emailVerified: Date | null;
   createdAt: Date;
+  updatedAt: Date;
+  providers: string[];
+  postCount: number;
+  bookmarkCount: number;
+  commentCount: number;
+  translationCount: number;
 };
 
 export { ASSIGNABLE_ROLES, ROLE_LABELS, isUserRole } from "@/features/admin/types/roles";
 export type { UserRole } from "@/features/admin/types/roles";
 
-export async function listUsers(): Promise<AdminUser[]> {
-  return db.user.findMany({
+const userSelect = {
+  id: true,
+  email: true,
+  name: true,
+  image: true,
+  bio: true,
+  role: true,
+  emailVerified: true,
+  createdAt: true,
+  updatedAt: true,
+  accounts: {
+    select: { provider: true },
+  },
+  _count: {
     select: {
-      id: true,
-      email: true,
-      name: true,
-      image: true,
-      role: true,
-      createdAt: true,
+      authoredPosts: true,
+      bookmarks: true,
+      comments: true,
+      translations: true,
     },
+  },
+} as const;
+
+function mapUser(user: {
+  id: string;
+  email: string;
+  name: string | null;
+  image: string | null;
+  bio: string | null;
+  role: UserRole;
+  emailVerified: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  accounts: { provider: string }[];
+  _count: {
+    authoredPosts: number;
+    bookmarks: number;
+    comments: number;
+    translations: number;
+  };
+}): AdminUser {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    image: user.image,
+    bio: user.bio,
+    role: user.role,
+    emailVerified: user.emailVerified,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    providers: Array.from(new Set(user.accounts.map((a) => a.provider))),
+    postCount: user._count.authoredPosts,
+    bookmarkCount: user._count.bookmarks,
+    commentCount: user._count.comments,
+    translationCount: user._count.translations,
+  };
+}
+
+export async function listUsers(): Promise<AdminUser[]> {
+  const users = await db.user.findMany({
+    select: userSelect,
     orderBy: { createdAt: "desc" },
   });
+
+  return users.map(mapUser);
 }
 
 export async function updateUserRole(
@@ -60,16 +122,11 @@ export async function updateUserRole(
     }
   }
 
-  return db.user.update({
+  const user = await db.user.update({
     where: { id: userId },
     data: { role },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      image: true,
-      role: true,
-      createdAt: true,
-    },
+    select: userSelect,
   });
+
+  return mapUser(user);
 }

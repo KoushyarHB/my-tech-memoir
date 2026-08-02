@@ -15,11 +15,18 @@ export default async function AdminUsersPage() {
     USER: users.filter((u) => u.role === "USER").length,
   };
 
+  const totalPosts = users.reduce((sum, u) => sum + u.postCount, 0);
+  const totalBookmarks = users.reduce((sum, u) => sum + u.bookmarkCount, 0);
+  const totalComments = users.reduce((sum, u) => sum + u.commentCount, 0);
+
   const metrics = [
     { label: "Total users", value: users.length },
     { label: ROLE_LABELS.ADMIN, value: roleCounts.ADMIN },
     { label: ROLE_LABELS.EDITOR, value: roleCounts.EDITOR },
     { label: ROLE_LABELS.USER, value: roleCounts.USER },
+    { label: "Posts", value: totalPosts },
+    { label: "Bookmarks", value: totalBookmarks },
+    { label: "Comments", value: totalComments },
   ];
 
   const tableUsers = users.map((user) => ({
@@ -27,8 +34,16 @@ export default async function AdminUsersPage() {
     email: user.email,
     name: user.name,
     image: user.image,
+    bio: user.bio,
     role: user.role,
+    emailVerified: Boolean(user.emailVerified),
     createdAt: user.createdAt.toISOString(),
+    updatedAt: user.updatedAt.toISOString(),
+    providers: user.providers,
+    postCount: user.postCount,
+    bookmarkCount: user.bookmarkCount,
+    commentCount: user.commentCount,
+    translationCount: user.translationCount,
   }));
 
   return (
@@ -41,16 +56,15 @@ export default async function AdminUsersPage() {
           Users
         </h1>
         <p className="mt-1 max-w-xl text-sm text-ink-secondary">
-          View everyone with an account and promote them to Writer or Admin.
-          Readers are the default role after sign-in.
+          Everything we know about each account from sign-in and site activity.
         </p>
       </div>
 
-      <dl className="mb-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--border)] sm:grid-cols-4">
+      <dl className="mb-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4 lg:grid-cols-7">
         {metrics.map((metric) => (
           <div
             key={metric.label}
-            className="bg-[var(--bg-elevated)] px-4 py-4 sm:px-5"
+            className="bg-(--bg-elevated) px-4 py-4 sm:px-5"
           >
             <dt className="text-[11px] font-medium uppercase tracking-[0.12em] text-ink-tertiary">
               {metric.label}
@@ -63,7 +77,7 @@ export default async function AdminUsersPage() {
       </dl>
 
       {users.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--border)] px-6 py-16 text-center">
+        <div className="rounded-xl border border-dashed border-border px-6 py-16 text-center">
           <p className="mb-1 font-serif text-xl text-ink-primary">No users yet</p>
           <p className="text-sm text-ink-secondary">
             Users appear here after they sign in for the first time.
