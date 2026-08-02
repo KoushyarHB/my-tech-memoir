@@ -3,9 +3,17 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import * as XLSX from "xlsx";
-import { ArrowDown, ArrowUp, ArrowUpDown, Download, Eye, Pencil } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Download,
+  Eye,
+  Pencil,
+  Search,
+} from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -32,13 +40,7 @@ export type AdminPostRow = {
   tags: { id: string; name: string; slug: string }[];
 };
 
-type SortKey =
-  | "title"
-  | "status"
-  | "date"
-  | "views"
-  | "comments";
-
+type SortKey = "title" | "status" | "date" | "views" | "comments";
 type SortDir = "asc" | "desc";
 
 function formatDate(value: string) {
@@ -64,12 +66,30 @@ function comparePosts(a: AdminPostRow, b: AdminPostRow, key: SortKey): number {
   }
 }
 
+function matchesQuery(post: AdminPostRow, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+
+  const haystack = [
+    post.title,
+    post.slug,
+    post.excerpt ?? "",
+    post.published ? "published" : "draft",
+    ...post.tags.map((tag) => tag.name),
+    ...post.tags.map((tag) => tag.slug),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return haystack.includes(q);
+}
+
 function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
-  if (!active) return <ArrowUpDown className="size-3.5 opacity-50" />;
+  if (!active) return <ArrowUpDown className="size-3 opacity-40" />;
   return dir === "asc" ? (
-    <ArrowUp className="size-3.5" />
+    <ArrowUp className="size-3" />
   ) : (
-    <ArrowDown className="size-3.5" />
+    <ArrowDown className="size-3" />
   );
 }
 
@@ -80,6 +100,7 @@ function SortableHead({
   dir,
   onSort,
   className,
+  align = "left",
 }: {
   label: string;
   sortKey: SortKey;
@@ -87,16 +108,18 @@ function SortableHead({
   dir: SortDir;
   onSort: (key: SortKey) => void;
   className?: string;
+  align?: "left" | "right";
 }) {
   const active = activeKey === sortKey;
   return (
-    <TableHead className={className}>
+    <TableHead className={cn("h-11 px-3", className)}>
       <button
         type="button"
         onClick={() => onSort(sortKey)}
         className={cn(
-          "inline-flex items-center gap-1.5 text-left font-medium transition-colors hover:text-foreground",
-          active ? "text-foreground" : "text-muted-foreground"
+          "inline-flex w-full items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.1em] transition-colors hover:text-ink-primary",
+          align === "right" && "justify-end",
+          active ? "text-ink-primary" : "text-ink-tertiary"
         )}
       >
         {label}
@@ -111,6 +134,7 @@ type AdminPostsTableProps = {
 };
 
 export function AdminPostsTable({ posts }: AdminPostsTableProps) {
+  const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
@@ -123,18 +147,23 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
     setSortDir(key === "title" ? "asc" : "desc");
   }
 
+  const filteredPosts = useMemo(
+    () => posts.filter((post) => matchesQuery(post, query)),
+    [posts, query]
+  );
+
   const sortedPosts = useMemo(() => {
-    const next = [...posts];
+    const next = [...filteredPosts];
     next.sort((a, b) => {
       const result = comparePosts(a, b, sortKey);
       return sortDir === "asc" ? result : -result;
     });
     return next;
-  }, [posts, sortKey, sortDir]);
+  }, [filteredPosts, sortKey, sortDir]);
 
   function exportMetadata() {
     const rows = sortedPosts.map((post) => ({
-      Title: post.title,
+      Title: post.title || "(untitled)",
       Slug: post.slug,
       Status: post.published ? "Published" : "Draft",
       "Created At": formatDate(post.createdAt),
@@ -156,134 +185,217 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
     );
   }
 
+  const hasQuery = query.trim().length > 0;
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-semibold">All Posts</h2>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={exportMetadata}
-          disabled={posts.length === 0}
-        >
-          <Download className="size-4" />
-          Export metadata
-        </Button>
+    <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]">
+      <div className="flex flex-col gap-4 border-b border-[var(--border)] px-5 py-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-sm font-medium text-ink-primary">All posts</h2>
+            <p className="text-xs text-ink-tertiary">
+              {hasQuery
+                ? `${sortedPosts.length} of ${posts.length} matching`
+                : `${posts.length} ${posts.length === 1 ? "entry" : "entries"}`}
+              {" · "}sorted by {sortKey}
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={exportMetadata}
+            disabled={sortedPosts.length === 0}
+            className="shrink-0"
+          >
+            <Download className="size-3.5" />
+            Export metadata
+          </Button>
+        </div>
+
+        <div className="relative max-w-md">
+          <Search
+            className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-ink-tertiary"
+            aria-hidden
+          />
+          <Input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search title, slug, tags, status…"
+            aria-label="Search posts"
+            className="h-9 border-[var(--border)] bg-[var(--bg-base)] pl-8 text-sm dark:bg-[var(--bg-base)]"
+          />
+        </div>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <SortableHead
-              label="Title"
-              sortKey="title"
-              activeKey={sortKey}
-              dir={sortDir}
-              onSort={handleSort}
-            />
-            <SortableHead
-              label="Status"
-              sortKey="status"
-              activeKey={sortKey}
-              dir={sortDir}
-              onSort={handleSort}
-              className="w-[100px]"
-            />
-            <SortableHead
-              label="Date"
-              sortKey="date"
-              activeKey={sortKey}
-              dir={sortDir}
-              onSort={handleSort}
-              className="w-[130px]"
-            />
-            <SortableHead
-              label="Views"
-              sortKey="views"
-              activeKey={sortKey}
-              dir={sortDir}
-              onSort={handleSort}
-              className="w-[90px]"
-            />
-            <SortableHead
-              label="Comments"
-              sortKey="comments"
-              activeKey={sortKey}
-              dir={sortDir}
-              onSort={handleSort}
-              className="w-[110px]"
-            />
-            <TableHead className="w-[120px]">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sortedPosts.map((post) => (
-            <TableRow key={post.id}>
-              <TableCell>
-                <Link
-                  href={`/admin/${post.id}`}
-                  className="font-medium text-foreground hover:text-primary"
-                >
-                  {post.title}
-                </Link>
-                {post.tags.length > 0 && (
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {post.tags.slice(0, 3).map((tag) => (
-                      <Badge key={tag.id} variant="secondary">
-                        {tag.name}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </TableCell>
-              <TableCell>
-                <Badge variant={post.published ? "default" : "outline"}>
-                  {post.published ? "Published" : "Draft"}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
-                {formatDate(post.createdAt)}
-              </TableCell>
-              <TableCell className="text-sm tabular-nums text-muted-foreground">
-                {post.viewCount.toLocaleString()}
-              </TableCell>
-              <TableCell className="text-sm tabular-nums text-muted-foreground">
-                {post.commentCount.toLocaleString()}
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-1">
-                  {post.published && (
-                    <Link
-                      href={`/blog/${post.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(
-                        buttonVariants({ variant: "ghost", size: "icon-sm" })
-                      )}
-                      title="View published post"
-                      aria-label="View published post"
-                    >
-                      <Eye className="size-3.5" />
-                    </Link>
-                  )}
-                  <Link
-                    href={`/admin/${post.id}`}
-                    className={cn(
-                      buttonVariants({ variant: "ghost", size: "icon-sm" })
-                    )}
-                    title="Edit post"
-                    aria-label="Edit post"
-                  >
-                    <Pencil className="size-3.5" />
-                  </Link>
-                  <PostDeleteButton postId={post.id} postTitle={post.title} />
-                </div>
-              </TableCell>
+      {sortedPosts.length === 0 ? (
+        <div className="px-5 py-14 text-center">
+          <p className="text-sm text-ink-primary">
+            {hasQuery ? "No posts match your search" : "No posts yet"}
+          </p>
+          {hasQuery && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              className="mt-2 text-xs text-ink-secondary underline-offset-2 hover:underline"
+            >
+              Clear search
+            </button>
+          )}
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow className="border-[var(--border)] hover:bg-transparent">
+              <SortableHead
+                label="Title"
+                sortKey="title"
+                activeKey={sortKey}
+                dir={sortDir}
+                onSort={handleSort}
+                className="min-w-[220px]"
+              />
+              <SortableHead
+                label="Status"
+                sortKey="status"
+                activeKey={sortKey}
+                dir={sortDir}
+                onSort={handleSort}
+                className="w-[120px]"
+              />
+              <SortableHead
+                label="Date"
+                sortKey="date"
+                activeKey={sortKey}
+                dir={sortDir}
+                onSort={handleSort}
+                className="w-[120px]"
+              />
+              <SortableHead
+                label="Views"
+                sortKey="views"
+                activeKey={sortKey}
+                dir={sortDir}
+                onSort={handleSort}
+                className="w-[88px]"
+                align="right"
+              />
+              <SortableHead
+                label="Comments"
+                sortKey="comments"
+                activeKey={sortKey}
+                dir={sortDir}
+                onSort={handleSort}
+                className="w-[100px]"
+                align="right"
+              />
+              <TableHead className="h-11 w-[120px] px-3 text-right text-[11px] font-medium uppercase tracking-[0.1em] text-ink-tertiary">
+                Actions
+              </TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {sortedPosts.map((post) => {
+              const displayTitle = post.title.trim() || "Untitled draft";
+              const tagPreview = post.tags.slice(0, 2);
+              const extraTags = Math.max(0, post.tags.length - tagPreview.length);
+
+              return (
+                <TableRow
+                  key={post.id}
+                  className="border-[var(--border)] hover:bg-[var(--bg-muted)]/60"
+                >
+                  <TableCell className="max-w-[360px] whitespace-normal px-3 py-3.5">
+                    <div className="min-w-0 space-y-1">
+                      <Link
+                        href={`/admin/${post.id}`}
+                        className="block truncate font-medium text-ink-primary transition-colors hover:text-[var(--accent)]"
+                      >
+                        {displayTitle}
+                      </Link>
+                      <p className="truncate font-mono text-[11px] text-ink-tertiary">
+                        /{post.slug}
+                      </p>
+                      {tagPreview.length > 0 && (
+                        <p className="truncate text-[11px] text-ink-tertiary">
+                          {tagPreview.map((tag) => tag.name).join(" · ")}
+                          {extraTags > 0 ? ` · +${extraTags}` : ""}
+                        </p>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-3 py-3.5">
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 text-xs font-medium",
+                        post.published ? "text-ink-primary" : "text-ink-tertiary"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "size-1.5 rounded-full",
+                          post.published
+                            ? "bg-emerald-500"
+                            : "bg-ink-tertiary/60"
+                        )}
+                        aria-hidden
+                      />
+                      {post.published ? "Published" : "Draft"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-3 py-3.5 text-sm text-ink-secondary">
+                    {formatDate(post.createdAt)}
+                  </TableCell>
+                  <TableCell className="px-3 py-3.5 text-right text-sm tabular-nums text-ink-secondary">
+                    {post.viewCount.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="px-3 py-3.5 text-right text-sm tabular-nums text-ink-secondary">
+                    {post.commentCount.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="px-3 py-3.5">
+                    <div className="flex items-center justify-end gap-0.5">
+                      {post.published && (
+                        <Link
+                          href={`/blog/${post.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn(
+                            buttonVariants({
+                              variant: "ghost",
+                              size: "icon-sm",
+                            }),
+                            "text-ink-tertiary hover:text-ink-primary"
+                          )}
+                          title="View published post"
+                          aria-label="View published post"
+                        >
+                          <Eye className="size-3.5" />
+                        </Link>
+                      )}
+                      <Link
+                        href={`/admin/${post.id}`}
+                        className={cn(
+                          buttonVariants({ variant: "ghost", size: "icon-sm" }),
+                          "text-ink-tertiary hover:text-ink-primary"
+                        )}
+                        title="Edit post"
+                        aria-label="Edit post"
+                      >
+                        <Pencil className="size-3.5" />
+                      </Link>
+                      <PostDeleteButton
+                        postId={post.id}
+                        postTitle={displayTitle}
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      )}
+    </section>
   );
 }

@@ -2,11 +2,7 @@ import Link from "next/link";
 import { getAllPosts } from "@/features/blog/server/post-service";
 import { db } from "@/lib/db";
 import { buttonVariants } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
-import { Plus, FileText, CheckCircle, Clock, Tag } from "lucide-react";
+import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdminPostsTable } from "@/features/admin/components";
 
@@ -18,6 +14,8 @@ export default async function AdminDashboard() {
 
   const publishedCount = posts.filter((p) => p.published).length;
   const draftCount = posts.filter((p) => !p.published).length;
+  const totalViews = posts.reduce((sum, post) => sum + post.viewCount, 0);
+  const totalComments = posts.reduce((sum, post) => sum + post.commentCount, 0);
 
   const tablePosts = posts.map((post) => ({
     id: post.id,
@@ -34,83 +32,71 @@ export default async function AdminDashboard() {
     tags: post.tags,
   }));
 
+  const metrics = [
+    { label: "Posts", value: posts.length },
+    { label: "Published", value: publishedCount },
+    { label: "Drafts", value: draftCount },
+    { label: "Views", value: totalViews },
+    { label: "Comments", value: totalComments },
+    { label: "Tags", value: tagCount },
+  ];
+
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8">
-      {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="font-serif text-2xl font-bold text-ink-primary">
-            Admin Dashboard
+    <div className="mx-auto max-w-6xl px-5 py-10">
+      <div className="mb-10 flex flex-col gap-6 border-b border-[var(--border)] pb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-ink-tertiary">
+            Content
+          </p>
+          <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink-primary sm:text-4xl">
+            Posts
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your posts and content
+          <p className="max-w-xl text-sm leading-relaxed text-ink-secondary">
+            Create, publish, and track performance across your memoir.
           </p>
         </div>
-        <Link className={cn(buttonVariants({ variant: "default" }))} href="/admin/new">
+        <Link
+          href="/admin/new"
+          className={cn(buttonVariants({ variant: "default", size: "default" }), "shrink-0")}
+        >
           <Plus className="size-4" />
-          New Post
+          New post
         </Link>
       </div>
 
-      {/* Stats */}
-      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-0">
-            <FileText className="size-5 text-muted-foreground" />
-            <div>
-              <p className="text-2xl font-bold">{posts.length}</p>
-              <p className="text-xs text-muted-foreground">Total posts</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-0">
-            <CheckCircle className="size-5 text-green-500" />
-            <div>
-              <p className="text-2xl font-bold">{publishedCount}</p>
-              <p className="text-xs text-muted-foreground">Published</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-0">
-            <Clock className="size-5 text-orange-500" />
-            <div>
-              <p className="text-2xl font-bold">{draftCount}</p>
-              <p className="text-xs text-muted-foreground">Drafts</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-0">
-            <Tag className="size-5 text-blue-500" />
-            <div>
-              <p className="text-2xl font-bold">{tagCount}</p>
-              <p className="text-xs text-muted-foreground">Tags</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <dl className="mb-10 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--border)] sm:grid-cols-3 lg:grid-cols-6">
+        {metrics.map((metric) => (
+          <div
+            key={metric.label}
+            className="bg-[var(--bg-elevated)] px-4 py-4 sm:px-5 sm:py-5"
+          >
+            <dt className="text-[11px] font-medium uppercase tracking-[0.12em] text-ink-tertiary">
+              {metric.label}
+            </dt>
+            <dd className="mt-2 font-serif text-2xl font-semibold tabular-nums tracking-tight text-ink-primary">
+              {metric.value.toLocaleString()}
+            </dd>
+          </div>
+        ))}
+      </dl>
 
-      {/* Post table */}
-      <Card>
-        <CardContent>
-          {posts.length === 0 ? (
-            <div className="py-12 text-center">
-              <p className="mb-2 text-muted-foreground">No posts yet</p>
-              <Link
-                href="/admin/new"
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-              >
-                <Plus className="size-4" />
-                Create your first post
-              </Link>
-            </div>
-          ) : (
-            <AdminPostsTable posts={tablePosts} />
-          )}
-        </CardContent>
-      </Card>
+      {posts.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-[var(--border)] px-6 py-16 text-center">
+          <p className="mb-1 font-serif text-xl text-ink-primary">No posts yet</p>
+          <p className="mb-6 text-sm text-ink-secondary">
+            Start with a draft — you can publish when it&apos;s ready.
+          </p>
+          <Link
+            href="/admin/new"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            <Plus className="size-4" />
+            Create your first post
+          </Link>
+        </div>
+      ) : (
+        <AdminPostsTable posts={tablePosts} />
+      )}
     </div>
   );
 }
