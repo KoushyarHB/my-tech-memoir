@@ -46,8 +46,17 @@ export async function POST(request: Request) {
     return apiSuccess({ url: blob.url });
   } catch (error) {
     console.error("Upload failed:", error);
-    const message =
+    const raw =
       error instanceof Error ? error.message : "Failed to upload image";
-    return apiError(message, { status: 500 });
+
+    // Private stores cannot serve public blog <img> URLs — guide the fix.
+    if (/private store/i.test(raw) || /public access on a private/i.test(raw)) {
+      return apiError(
+        "Your Vercel Blob store is Private. Create a new Public Blob store in Vercel Storage, connect it to this project, then redeploy.",
+        { status: 500 }
+      );
+    }
+
+    return apiError(raw, { status: 500 });
   }
 }

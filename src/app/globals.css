@@ -421,6 +421,170 @@ body {
   color: var(--ink-secondary);
 }
 
+/* ─── Memoir figures (editor + published posts) ─────────────────── */
+.memoir-figure,
+.prose-memoir .memoir-figure {
+  position: relative;
+  display: block;
+  max-width: 100%;
+  margin: 1.5rem 0;
+  clear: both;
+}
+
+.memoir-figure img,
+.prose-memoir .memoir-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+}
+
+.memoir-figure figcaption,
+.prose-memoir .memoir-figure figcaption {
+  margin-top: 0.5rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ink-tertiary);
+}
+
+.memoir-figure--center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.memoir-figure--left {
+  margin-right: auto;
+  margin-left: 0;
+}
+
+.memoir-figure--right {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.memoir-figure--wrap-left {
+  float: left;
+  clear: none;
+  margin: 0.35rem 1.25rem 1rem 0;
+}
+
+.memoir-figure--wrap-right {
+  float: right;
+  clear: none;
+  margin: 0.35rem 0 1rem 1.25rem;
+}
+
+.prose-memoir h2,
+.prose-memoir h3,
+.prose-memoir h4,
+.prose-memoir hr {
+  clear: both;
+}
+
+.prose-memoir::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Editor chrome for selected / resizing images */
+.ProseMirror .memoir-figure--selected {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 3px;
+  border-radius: 0.5rem;
+}
+
+.ProseMirror .memoir-figure__media {
+  position: relative;
+}
+
+.ProseMirror .memoir-figure__toolbar {
+  position: absolute;
+  top: -2.5rem;
+  left: 50%;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-md);
+  white-space: nowrap;
+}
+
+.ProseMirror .memoir-figure__toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.ProseMirror .memoir-figure__tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+
+.ProseMirror .memoir-figure__tool:hover {
+  background: var(--bg-muted);
+  color: var(--ink-primary);
+}
+
+.ProseMirror .memoir-figure__tool--active {
+  background: var(--accent-subtle);
+  color: var(--ink-primary);
+}
+
+.ProseMirror .memoir-figure__width {
+  min-width: 2.5rem;
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-tertiary);
+}
+
+.ProseMirror .memoir-figure__resize {
+  position: absolute;
+  right: 0.35rem;
+  bottom: 0.35rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid var(--bg-elevated);
+  border-radius: 2px;
+  background: var(--border-focus);
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.ProseMirror .memoir-figure--dragging {
+  user-select: none;
+}
+
+.ProseMirror .memoir-figure__caption-input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: center;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+  outline: none;
+}
+
+.ProseMirror .memoir-figure__caption-input::placeholder {
+  color: var(--ink-tertiary);
+}
+
 /* ─── Focus, selection, scrollbar ────────────────────────────────── */
 :focus-visible {
   outline: 2px solid var(--border-focus);

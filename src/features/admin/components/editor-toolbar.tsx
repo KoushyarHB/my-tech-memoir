@@ -92,7 +92,11 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           throw new Error("Upload response missing image URL");
         }
 
-        editor.chain().focus().setImage({ src: url }).run();
+        editor.chain().focus().setMemoirImage({
+          src: url,
+          align: "center",
+          width: 100,
+        }).run();
         toast.success("Image uploaded");
       } catch (err) {
         console.error("Image upload failed:", err);

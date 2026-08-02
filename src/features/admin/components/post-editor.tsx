@@ -5,9 +5,9 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import Typography from "@tiptap/extension-typography";
-import Image from "@tiptap/extension-image";
 import { useEffect, useRef } from "react";
 import { EditorToolbar } from "./editor-toolbar";
+import { MemoirImage } from "./memoir-image";
 
 type PostEditorProps = {
   initialContent?: string;
@@ -44,12 +44,7 @@ export function PostEditor({
         placeholder: "Start writing your post…",
       }),
       Typography,
-      Image.configure({
-        inline: false,
-        HTMLAttributes: {
-          class: "rounded-lg border border-border",
-        },
-      }),
+      MemoirImage,
     ],
     content: initialContent,
     editable,
