@@ -94,15 +94,15 @@ export function AdminSidebar({
     <div className="flex h-full flex-col">
       <div
         className={cn(
-          "border-b border-[var(--border)] py-5",
-          iconOnly ? "px-2" : "px-4"
+          "flex h-12 shrink-0 items-center border-b border-[var(--border)] lg:h-14",
+          iconOnly ? "justify-center px-2" : "flex-col justify-center px-4"
         )}
       >
         {iconOnly ? (
           <button
             type="button"
             onClick={onExpand}
-            className="mx-auto flex size-9 items-center justify-center rounded-lg text-ink-secondary hover:bg-[var(--bg-muted)] hover:text-ink-primary"
+            className="flex size-8 items-center justify-center rounded-lg text-ink-secondary hover:bg-[var(--bg-muted)] hover:text-ink-primary"
             aria-label="Expand sidebar"
             title="Expand sidebar"
           >
@@ -113,11 +113,11 @@ export function AdminSidebar({
             <Link
               href="/admin"
               onClick={() => onMobileOpenChange(false)}
-              className="font-serif text-lg font-semibold tracking-tight text-ink-primary"
+              className="font-serif text-lg font-semibold leading-tight tracking-tight text-ink-primary"
             >
               My Tech Memoir
             </Link>
-            <p className="mt-1 text-xs text-ink-tertiary">Admin</p>
+            <p className="mt-0.5 text-xs text-ink-tertiary">Admin</p>
           </>
         )}
       </div>

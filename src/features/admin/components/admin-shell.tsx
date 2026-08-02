@@ -59,6 +59,7 @@ export function AdminShell({ userName, userRole, children }: AdminShellProps) {
         <AdminTopbar
           userName={userName}
           sidebarOpen={sidebarOpen}
+          showSidebarToggle={!isDesktop || !sidebarCollapsed}
           onToggleSidebar={toggleSidebar}
         />
         <main className="min-h-[calc(100vh-3rem)] lg:min-h-[calc(100vh-3.5rem)]">

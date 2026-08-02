@@ -7,12 +7,14 @@ import { useTheme } from "@/components/theme";
 type AdminTopbarProps = {
   userName?: string | null;
   sidebarOpen: boolean;
+  showSidebarToggle?: boolean;
   onToggleSidebar: () => void;
 };
 
 export function AdminTopbar({
   userName,
   sidebarOpen,
+  showSidebarToggle = true,
   onToggleSidebar,
 }: AdminTopbarProps) {
   const { resolvedTheme, toggleTheme, mounted } = useTheme();
@@ -21,21 +23,23 @@ export function AdminTopbar({
   return (
     <header className="sticky top-0 z-30 flex h-12 items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--bg-overlay)] px-4 backdrop-blur-xl lg:h-14 lg:px-6">
       <div className="flex min-w-0 items-center gap-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onToggleSidebar}
-          aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-          title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-          className="shrink-0"
-        >
-          {sidebarOpen ? (
-            <PanelLeftClose className="size-4" />
-          ) : (
-            <PanelLeft className="size-4" />
-          )}
-        </Button>
+        {showSidebarToggle ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onToggleSidebar}
+            aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+            title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+            className="shrink-0"
+          >
+            {sidebarOpen ? (
+              <PanelLeftClose className="size-4" />
+            ) : (
+              <PanelLeft className="size-4" />
+            )}
+          </Button>
+        ) : null}
         <p className="truncate text-sm text-ink-secondary">
           Welcome
           {userName ? (
