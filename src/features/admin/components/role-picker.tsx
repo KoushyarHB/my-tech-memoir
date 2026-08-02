@@ -75,11 +75,13 @@ export function RolePicker({ value, disabled, onChange }: RolePickerProps) {
                   closeOnClick
                   label={ROLE_LABELS[role]}
                   className={cn(
-                    "flex w-full cursor-default items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm outline-none select-none transition-colors",
-                    "text-ink-secondary data-highlighted:bg-(--bg-muted)/70 data-highlighted:text-ink-primary",
+                    "flex w-full cursor-default items-center gap-2 rounded-lg border border-transparent px-2.5 py-2 text-left text-sm outline-none! select-none transition-colors",
+                    "text-ink-secondary data-highlighted:bg-(--bg-muted)/70 data-highlighted:text-ink-primary data-highlighted:outline-none!",
                     "data-checked:bg-(--bg-muted) data-checked:font-medium data-checked:text-ink-primary",
-                    "data-disabled:pointer-events-none data-disabled:opacity-50"
+                    "data-disabled:pointer-events-none data-disabled:opacity-50",
+                    "focus:outline-none! focus-visible:outline-none! ring-0!"
                   )}
+                  style={{ outline: "none", boxShadow: "none" }}
                 >
                   <span
                     className={cn(

@@ -10,17 +10,17 @@ type DataTableColumnFilterProps<TData, TValue> = {
   column: Column<TData, TValue>;
 };
 
-/** Kill Input/Button default focus rings — muted border only. */
+/** Kill every focus/highlight ring — muted chrome only. */
 const noRing =
-  "shadow-none outline-none ring-0 ring-offset-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border";
+  "shadow-none! outline-none! ring-0! ring-offset-0 border-transparent focus:border-transparent focus:outline-none! focus:ring-0! focus-visible:border-transparent focus-visible:outline-none! focus-visible:ring-0! focus-visible:ring-offset-0 data-highlighted:outline-none! data-highlighted:ring-0! data-highlighted:shadow-none!";
 
 const filterControlClass = cn(
   "h-7 w-full min-w-0 rounded-md border border-border/70 bg-transparent px-2.5 text-left text-[11px] text-ink-secondary placeholder:text-ink-tertiary/80 hover:border-border dark:bg-transparent",
-  noRing
+  "shadow-none outline-none! ring-0 ring-offset-0 focus:outline-none! focus:ring-0 focus-visible:border-border focus-visible:outline-none! focus-visible:ring-0 focus-visible:ring-offset-0"
 );
 
 const menuItemClass = cn(
-  "flex w-full cursor-default items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs outline-none select-none",
+  "flex w-full cursor-default items-center gap-2 rounded-lg border border-transparent px-2.5 py-1.5 text-left text-xs select-none",
   "text-ink-secondary data-highlighted:bg-(--bg-muted) data-highlighted:text-ink-primary",
   "data-checked:bg-(--bg-muted) data-checked:font-medium data-checked:text-ink-primary",
   noRing
@@ -89,6 +89,7 @@ export function DataTableColumnFilter<TData, TValue>({
                   closeOnClick
                   label="All"
                   className={menuItemClass}
+                  style={{ outline: "none", boxShadow: "none" }}
                 >
                   <span className="flex-1">All</span>
                   <Menu.RadioItemIndicator className="flex size-3.5 items-center justify-center text-ink-tertiary">
@@ -102,6 +103,7 @@ export function DataTableColumnFilter<TData, TValue>({
                     closeOnClick
                     label={option.label}
                     className={menuItemClass}
+                    style={{ outline: "none", boxShadow: "none" }}
                   >
                     <span className="flex-1">{option.label}</span>
                     <Menu.RadioItemIndicator className="flex size-3.5 items-center justify-center text-ink-tertiary">

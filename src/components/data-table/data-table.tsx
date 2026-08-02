@@ -205,7 +205,7 @@ export function DataTable<TData>({
                   <TableHead
                     key={header.id}
                     className={cn(
-                      "h-auto px-3 pt-3.5 pb-1.5",
+                      "h-auto px-3 pt-4 pb-1.5",
                       align === "right" && "text-right",
                       align === "center" && "text-center"
                     )}
@@ -233,7 +233,7 @@ export function DataTable<TData>({
                   <TableHead
                     key={`${header.id}-filter`}
                     className={cn(
-                      "h-auto px-3 pt-0.5 pb-3.5 align-top font-normal",
+                      "h-auto px-3 pt-0.5 pb-4 align-top font-normal",
                       align === "right" && "text-right",
                       align === "center" && "text-center"
                     )}
