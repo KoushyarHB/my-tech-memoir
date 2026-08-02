@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { getPostBySlug, getPublishedPosts } from "@/features/blog/server/post-service";
 import { PostHeader } from "@/features/blog/components";
+import { CommentSection } from "@/features/comments/components";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
@@ -53,6 +54,7 @@ export default async function BlogPostPage({ params }: Props) {
         className="prose-memoir"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
+      <CommentSection postId={post.id} />
     </article>
   );
 }
