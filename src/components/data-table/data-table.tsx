@@ -197,7 +197,7 @@ export function DataTable<TData>({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow
               key={`${headerGroup.id}-labels`}
-              className="border-border hover:bg-transparent"
+              className="border-border hover:bg-transparent has-aria-expanded:bg-transparent"
             >
               {headerGroup.headers.map((header) => {
                 const align = header.column.columnDef.meta?.align ?? "left";
@@ -225,7 +225,7 @@ export function DataTable<TData>({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow
               key={`${headerGroup.id}-filters`}
-              className="border-b border-border hover:bg-transparent"
+              className="border-b border-border bg-transparent hover:bg-transparent has-aria-expanded:bg-transparent"
             >
               {headerGroup.headers.map((header) => {
                 const align = header.column.columnDef.meta?.align ?? "left";

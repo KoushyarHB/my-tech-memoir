@@ -1,14 +1,9 @@
 "use client";
 
 import type { Column } from "@tanstack/react-table";
+import { Check, ChevronDown } from "lucide-react";
+import { Menu } from "@base-ui/react/menu";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 type DataTableColumnFilterProps<TData, TValue> = {
@@ -16,10 +11,7 @@ type DataTableColumnFilterProps<TData, TValue> = {
 };
 
 const filterControlClass =
-  "h-7 w-full min-w-0 rounded-md border border-border/70 bg-transparent px-2 text-[11px] text-ink-secondary shadow-none placeholder:text-ink-tertiary/80 hover:border-border focus-visible:border-border focus-visible:ring-1 focus-visible:ring-border/40 dark:bg-transparent";
-
-const selectItemClass =
-  "rounded-md text-xs text-ink-secondary focus:bg-(--bg-muted) focus:text-ink-primary data-highlighted:bg-(--bg-muted) data-highlighted:text-ink-primary";
+  "h-7 w-full min-w-0 rounded-md border border-border/70 bg-transparent px-2.5 text-left text-[11px] text-ink-secondary shadow-none placeholder:text-ink-tertiary/80 hover:border-border focus-visible:border-border focus-visible:ring-1 focus-visible:ring-border/40 dark:bg-transparent";
 
 export function DataTableColumnFilter<TData, TValue>({
   column,
@@ -31,7 +23,6 @@ export function DataTableColumnFilter<TData, TValue>({
   const meta = column.columnDef.meta;
   const variant = meta?.filterVariant ?? "text";
   const value = (column.getFilterValue() as string | undefined) ?? "";
-  const align = meta?.align ?? "left";
   const title =
     typeof column.columnDef.header === "string"
       ? column.columnDef.header
@@ -40,85 +31,95 @@ export function DataTableColumnFilter<TData, TValue>({
 
   if (variant === "select") {
     const options = meta?.filterOptions ?? [];
-    const ALL = "__all__";
+    const selectedLabel =
+      options.find((o) => o.value === value)?.label ?? "All";
 
     return (
-      <div
-        className={cn(
-          "w-full min-w-0",
-          align === "right" && "flex justify-end",
-          align === "center" && "flex justify-center"
-        )}
-      >
-        <Select
-          value={value || ALL}
-          onValueChange={(next) => {
-            if (!next || next === ALL) {
-              column.setFilterValue(undefined);
-              return;
-            }
-            column.setFilterValue(next);
-          }}
+      <Menu.Root>
+        <Menu.Trigger
+          className={cn(
+            filterControlClass,
+            "inline-flex items-center justify-between gap-1.5 outline-none"
+          )}
         >
-          <SelectTrigger
-            size="sm"
-            className={cn(
-              filterControlClass,
-              "justify-between [&_svg]:size-3 [&_svg]:opacity-50"
-            )}
-          >
-            <SelectValue>
-              {value
-                ? (options.find((o) => o.value === value)?.label ?? value)
-                : "All"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent
-            align="start"
+          <span className="truncate">{selectedLabel}</span>
+          <ChevronDown className="size-3 shrink-0 opacity-50" />
+        </Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner
             side="bottom"
+            align="start"
             sideOffset={6}
-            alignItemWithTrigger={false}
-            className="z-100 min-w-40 border-border bg-(--bg-elevated) p-1 text-ink-primary shadow-(--shadow-lg) ring-1 ring-border/60"
+            className="isolate z-50"
           >
-            <SelectItem value={ALL} className={selectItemClass}>
-              All
-            </SelectItem>
-            {options.map((option) => (
-              <SelectItem
-                key={option.value}
-                value={option.value}
-                className={selectItemClass}
+            <Menu.Popup
+              className={cn(
+                "min-w-40 origin-(--transform-origin) overflow-hidden rounded-xl border border-border bg-(--bg-elevated) p-1 shadow-(--shadow-lg) outline-none",
+                "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95",
+                "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
+              )}
+            >
+              <Menu.RadioGroup
+                value={value || "__all__"}
+                onValueChange={(next) => {
+                  if (typeof next !== "string" || next === "__all__") {
+                    column.setFilterValue(undefined);
+                    return;
+                  }
+                  column.setFilterValue(next);
+                }}
               >
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+                <Menu.RadioItem
+                  value="__all__"
+                  closeOnClick
+                  label="All"
+                  className={cn(
+                    "flex w-full cursor-default items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs outline-none select-none",
+                    "text-ink-secondary data-highlighted:bg-(--bg-muted) data-highlighted:text-ink-primary",
+                    "data-checked:bg-(--bg-muted) data-checked:font-medium data-checked:text-ink-primary"
+                  )}
+                >
+                  <span className="flex-1">All</span>
+                  <Menu.RadioItemIndicator className="flex size-3.5 items-center justify-center text-ink-tertiary">
+                    <Check className="size-3.5" />
+                  </Menu.RadioItemIndicator>
+                </Menu.RadioItem>
+                {options.map((option) => (
+                  <Menu.RadioItem
+                    key={option.value}
+                    value={option.value}
+                    closeOnClick
+                    label={option.label}
+                    className={cn(
+                      "flex w-full cursor-default items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs outline-none select-none",
+                      "text-ink-secondary data-highlighted:bg-(--bg-muted) data-highlighted:text-ink-primary",
+                      "data-checked:bg-(--bg-muted) data-checked:font-medium data-checked:text-ink-primary"
+                    )}
+                  >
+                    <span className="flex-1">{option.label}</span>
+                    <Menu.RadioItemIndicator className="flex size-3.5 items-center justify-center text-ink-tertiary">
+                      <Check className="size-3.5" />
+                    </Menu.RadioItemIndicator>
+                  </Menu.RadioItem>
+                ))}
+              </Menu.RadioGroup>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
     );
   }
 
   return (
-    <div
-      className={cn(
-        "w-full min-w-0",
-        align === "right" && "flex justify-end",
-        align === "center" && "flex justify-center"
-      )}
-    >
-      <Input
-        value={value}
-        onChange={(e) => {
-          const next = e.target.value;
-          column.setFilterValue(next || undefined);
-        }}
-        placeholder={placeholder}
-        aria-label={`Filter ${column.id}`}
-        className={cn(
-          filterControlClass,
-          align === "right" && "text-right"
-        )}
-      />
-    </div>
+    <Input
+      value={value}
+      onChange={(e) => {
+        const next = e.target.value;
+        column.setFilterValue(next || undefined);
+      }}
+      placeholder={placeholder}
+      aria-label={`Filter ${column.id}`}
+      className={filterControlClass}
+    />
   );
 }

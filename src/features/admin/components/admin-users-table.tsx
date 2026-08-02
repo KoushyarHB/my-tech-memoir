@@ -227,7 +227,7 @@ export function AdminUsersTable({ users, currentUserId }: AdminUsersTableProps) 
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Posts" />
         ),
-        meta: { align: "right", filterPlaceholder: "Search Posts" },
+        meta: { filterPlaceholder: "Search Posts" },
         filterFn: includesString,
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">
@@ -240,7 +240,7 @@ export function AdminUsersTable({ users, currentUserId }: AdminUsersTableProps) 
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Bookmarks" />
         ),
-        meta: { align: "right", filterPlaceholder: "Search Bookmarks" },
+        meta: { filterPlaceholder: "Search Bookmarks" },
         filterFn: includesString,
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">
@@ -253,7 +253,7 @@ export function AdminUsersTable({ users, currentUserId }: AdminUsersTableProps) 
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Comments" />
         ),
-        meta: { align: "right", filterPlaceholder: "Search Comments" },
+        meta: { filterPlaceholder: "Search Comments" },
         filterFn: includesString,
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">

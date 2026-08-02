@@ -188,7 +188,7 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Views" />
         ),
-        meta: { align: "right", filterPlaceholder: "Search Views" },
+        meta: { filterPlaceholder: "Search Views" },
         filterFn: includesString,
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">
@@ -202,7 +202,7 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Comments" />
         ),
-        meta: { align: "right", filterPlaceholder: "Search Comments" },
+        meta: { filterPlaceholder: "Search Comments" },
         filterFn: includesString,
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">
@@ -218,13 +218,12 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Actions" />
         ),
-        meta: { align: "right" },
         cell: ({ row }) => {
           const post = row.original;
           const displayTitle = post.title.trim() || "Untitled draft";
 
           return (
-            <div className="flex items-center justify-end gap-0.5">
+            <div className="flex items-center gap-0.5">
               {post.published ? (
                 <Link
                   href={`/blog/${post.slug}`}
