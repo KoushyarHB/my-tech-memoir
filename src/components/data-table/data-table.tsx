@@ -76,8 +76,8 @@ type DataTableProps<TData> = {
   searchPlaceholder?: string;
   searchAriaLabel?: string;
   toolbar?:
-    | React.ReactNode
-    | ((ctx: DataTableToolbarContext<TData>) => React.ReactNode);
+  | React.ReactNode
+  | ((ctx: DataTableToolbarContext<TData>) => React.ReactNode);
   title?: string;
   description?: string;
   emptyMessage?: string;
@@ -98,10 +98,13 @@ export function DataTable<TData>({
   emptyFilteredMessage = "No results match your filters",
   className,
 }: DataTableProps<TData>) {
+  "use no memo";
+
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table v8 is not React Compiler–safe yet
   const table = useReactTable({
     data,
     columns,
@@ -127,10 +130,10 @@ export function DataTable<TData>({
   const toolbarContent =
     typeof toolbar === "function"
       ? toolbar({
-          rows: rows.map((row) => row.original),
-          filteredCount: rows.length,
-          totalCount: data.length,
-        })
+        rows: rows.map((row) => row.original),
+        filteredCount: rows.length,
+        totalCount: data.length,
+      })
       : toolbar;
 
   const countLabel = useMemo(() => {
@@ -214,9 +217,9 @@ export function DataTable<TData>({
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                   </TableHead>
                 );
               })}
@@ -233,7 +236,7 @@ export function DataTable<TData>({
                   <TableHead
                     key={`${header.id}-filter`}
                     className={cn(
-                      "h-auto px-3 pt-0.5 pb-4 align-top font-normal",
+                      "h-auto px-3 py-2 align-top font-normal",
                       align === "right" && "text-right",
                       align === "center" && "text-center"
                     )}

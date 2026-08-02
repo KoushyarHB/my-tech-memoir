@@ -62,7 +62,7 @@ export function DataTableColumnFilter<TData, TValue>({
           <Menu.Positioner
             side="bottom"
             align="start"
-            sideOffset={6}
+            sideOffset={4}
             className="isolate z-50 outline-none"
           >
             <Menu.Popup
