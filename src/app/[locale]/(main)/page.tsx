@@ -37,13 +37,6 @@ export default async function HomePage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-12 sm:py-16">
-      <section className="mb-12">
-        <h1 className="mb-3 font-serif text-3xl font-bold tracking-tight text-ink-primary sm:text-4xl">
-          {t("title")}
-        </h1>
-        <p className="text-lg text-ink-secondary">{t("subtitle")}</p>
-      </section>
-
       <section aria-label="Recent posts">
         {recentPosts.length === 0 ? (
           <p className="py-12 text-center text-ink-tertiary">
