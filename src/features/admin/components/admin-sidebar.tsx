@@ -23,13 +23,13 @@ import { cn } from "@/lib/utils";
 const MAIN_NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/posts", label: "Posts", icon: FileText },
-  { href: "/admin/tags", label: "Tags", icon: Tags },
   { href: "/admin/media", label: "Media", icon: ImageIcon },
   { href: "/admin/pages", label: "Pages", icon: File },
   { href: "/admin/comments", label: "Comments", icon: MessageSquare },
 ] as const;
 
 const ADMIN_NAV = [
+  { href: "/admin/tags", label: "Tags", icon: Tags },
   { href: "/admin/users", label: "Users", icon: Users },
 ] as const;
 
