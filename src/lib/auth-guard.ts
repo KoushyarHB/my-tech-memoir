@@ -21,6 +21,20 @@ export async function requireEditor(): Promise<Session> {
 }
 
 /**
+ * Server Component guard — redirects if not ADMIN.
+ * Use for privileged admin pages (e.g. user management).
+ */
+export async function requireAdmin(): Promise<Session> {
+  const session = await requireEditor();
+
+  if (session.user.role !== "ADMIN") {
+    redirect("/admin");
+  }
+
+  return session;
+}
+
+/**
  * API Route guard — returns null if not EDITOR or ADMIN.
  * Use in route handlers to return 403.
  */
@@ -32,6 +46,20 @@ export async function requireEditorApi(): Promise<Session | null> {
   }
 
   if (session.user.role !== "EDITOR" && session.user.role !== "ADMIN") {
+    return null;
+  }
+
+  return session;
+}
+
+/**
+ * API Route guard — returns null if not ADMIN.
+ * Use in route handlers to return 403.
+ */
+export async function requireAdminApi(): Promise<Session | null> {
+  const session = await requireEditorApi();
+
+  if (!session || session.user.role !== "ADMIN") {
     return null;
   }
 
