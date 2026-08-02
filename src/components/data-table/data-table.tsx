@@ -192,63 +192,81 @@ export function DataTable<TData>({
         </div>
       </div>
 
-      {rows.length === 0 ? (
-        <div className="px-5 py-14 text-center">
-          <p className="text-sm text-ink-primary">
-            {hasActiveFilters ? emptyFilteredMessage : emptyMessage}
-          </p>
-          {hasActiveFilters ? (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="mt-2 text-xs text-ink-secondary underline-offset-2 hover:underline"
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow
+              key={`${headerGroup.id}-labels`}
+              className="border-border hover:bg-transparent"
             >
-              Clear filters
-            </button>
-          ) : null}
-        </div>
-      ) : (
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow
-                key={headerGroup.id}
-                className="border-border hover:bg-transparent"
+              {headerGroup.headers.map((header) => {
+                const align = header.column.columnDef.meta?.align ?? "left";
+                return (
+                  <TableHead
+                    key={header.id}
+                    className={cn(
+                      "h-10 px-3",
+                      align === "right" && "text-right",
+                      align === "center" && "text-center"
+                    )}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                );
+              })}
+            </TableRow>
+          ))}
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow
+              key={`${headerGroup.id}-filters`}
+              className="border-border hover:bg-transparent"
+            >
+              {headerGroup.headers.map((header) => {
+                const align = header.column.columnDef.meta?.align ?? "left";
+                return (
+                  <TableHead
+                    key={`${header.id}-filter`}
+                    className={cn(
+                      "h-auto px-3 pb-3 pt-0 font-normal",
+                      align === "right" && "text-right",
+                      align === "center" && "text-center"
+                    )}
+                  >
+                    <DataTableColumnFilter column={header.column} />
+                  </TableHead>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {rows.length === 0 ? (
+            <TableRow className="hover:bg-transparent">
+              <TableCell
+                colSpan={Math.max(columns.length, 1)}
+                className="h-28 px-5 py-10 text-center"
               >
-                {headerGroup.headers.map((header) => {
-                  const align = header.column.columnDef.meta?.align ?? "left";
-                  return (
-                    <TableHead
-                      key={header.id}
-                      className={cn(
-                        "h-11 px-3 align-bottom",
-                        align === "right" && "text-right",
-                        align === "center" && "text-center"
-                      )}
-                      style={{
-                        width:
-                          header.getSize() !== 150
-                            ? header.getSize()
-                            : undefined,
-                      }}
-                    >
-                      {header.isPlaceholder ? null : (
-                        <div className="space-y-2 pb-1">
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                          <DataTableColumnFilter column={header.column} />
-                        </div>
-                      )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {rows.map((row) => (
+                <p className="text-sm text-ink-primary">
+                  {hasActiveFilters ? emptyFilteredMessage : emptyMessage}
+                </p>
+                {hasActiveFilters ? (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="mt-2 text-xs text-ink-secondary underline-offset-2 hover:underline"
+                  >
+                    Clear filters
+                  </button>
+                ) : null}
+              </TableCell>
+            </TableRow>
+          ) : (
+            rows.map((row) => (
               <TableRow
                 key={row.id}
                 className="border-border hover:bg-(--bg-muted)/60"
@@ -272,10 +290,10 @@ export function DataTable<TData>({
                   );
                 })}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+            ))
+          )}
+        </TableBody>
+      </Table>
     </section>
   );
 }

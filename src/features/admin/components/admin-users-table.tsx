@@ -119,7 +119,7 @@ export function AdminUsersTable({ users, currentUserId }: AdminUsersTableProps) 
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="User" />
         ),
-        meta: { filterPlaceholder: "Name…" },
+        meta: { filterPlaceholder: "Search Name" },
         filterFn: includesString,
         cell: ({ row }) => {
           const user = row.original;
@@ -159,7 +159,7 @@ export function AdminUsersTable({ users, currentUserId }: AdminUsersTableProps) 
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Email" />
         ),
-        meta: { filterPlaceholder: "Email…" },
+        meta: { filterPlaceholder: "Search Email" },
         filterFn: includesString,
         cell: ({ row }) => (
           <div className="flex min-w-0 items-center gap-1.5">
@@ -203,7 +203,7 @@ export function AdminUsersTable({ users, currentUserId }: AdminUsersTableProps) 
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Joined" />
         ),
-        meta: { filterPlaceholder: "Date…" },
+        meta: { filterPlaceholder: "Search Date" },
         filterFn: (row, _id, filterValue) => {
           const query = String(filterValue ?? "")
             .trim()
@@ -227,7 +227,7 @@ export function AdminUsersTable({ users, currentUserId }: AdminUsersTableProps) 
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Posts" />
         ),
-        meta: { align: "right", filterPlaceholder: "…" },
+        meta: { align: "right", filterPlaceholder: "Search Posts" },
         filterFn: includesString,
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">
@@ -240,7 +240,7 @@ export function AdminUsersTable({ users, currentUserId }: AdminUsersTableProps) 
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Bookmarks" />
         ),
-        meta: { align: "right", filterPlaceholder: "…" },
+        meta: { align: "right", filterPlaceholder: "Search Bookmarks" },
         filterFn: includesString,
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">
@@ -253,7 +253,7 @@ export function AdminUsersTable({ users, currentUserId }: AdminUsersTableProps) 
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Comments" />
         ),
-        meta: { align: "right", filterPlaceholder: "…" },
+        meta: { align: "right", filterPlaceholder: "Search Comments" },
         filterFn: includesString,
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">

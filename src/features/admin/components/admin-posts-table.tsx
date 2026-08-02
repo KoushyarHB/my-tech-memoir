@@ -88,7 +88,7 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Title" />
         ),
-        meta: { filterPlaceholder: "Title, slug…" },
+        meta: { filterPlaceholder: "Search Title" },
         filterFn: includesString,
         cell: ({ row }) => {
           const post = row.original;
@@ -161,7 +161,7 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Date" />
         ),
-        meta: { filterPlaceholder: "Date…" },
+        meta: { filterPlaceholder: "Search Date" },
         filterFn: (row, _id, filterValue) => {
           const query = String(filterValue ?? "")
             .trim()
@@ -185,7 +185,7 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Views" />
         ),
-        meta: { align: "right", filterPlaceholder: "…" },
+        meta: { align: "right", filterPlaceholder: "Search Views" },
         filterFn: includesString,
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">
@@ -198,7 +198,7 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Comments" />
         ),
-        meta: { align: "right", filterPlaceholder: "…" },
+        meta: { align: "right", filterPlaceholder: "Search Comments" },
         filterFn: includesString,
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">
