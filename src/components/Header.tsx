@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useTheme } from "@/components/theme";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Sun, Moon, LogOut, LogIn } from "lucide-react";
+import { Sun, Moon, LogOut, LogIn, Bookmark } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import LanguageSwitcher from "@/components/language-switcher";
@@ -45,6 +45,14 @@ export default function Header() {
             <div className="size-8" aria-hidden="true" />
           ) : isAuthenticated && session?.user ? (
             <div className="flex items-center gap-2">
+              <Link
+                href="/bookmarks"
+                className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
+                aria-label={tCommon("bookmarks")}
+                title={tCommon("bookmarks")}
+              >
+                <Bookmark className="size-4" />
+              </Link>
               <Avatar size="sm">
                 {session.user.image ? (
                   <AvatarImage

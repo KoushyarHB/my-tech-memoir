@@ -6,6 +6,7 @@
     "posts": "Posts",
     "signIn": "Sign in",
     "signOut": "Sign out",
+    "bookmarks": "Bookmarks",
     "theme": {
       "light": "Switch to light mode",
       "dark": "Switch to dark mode"
@@ -30,5 +31,9 @@
   "posts": {
     "title": "Posts",
     "subtitle": "All posts, sorted by most recent."
+  },
+  "bookmarks": {
+    "title": "Bookmarks",
+    "subtitle": "Posts you've saved for later."
   }
 }

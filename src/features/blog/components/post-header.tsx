@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
+import { BookmarkButton } from "@/features/bookmarks/components";
 import type { PostWithTags } from "../types";
 
 type PostHeaderProps = {
@@ -28,9 +29,12 @@ export function PostHeader({ post }: PostHeaderProps) {
         </div>
       )}
 
-      <h1 className="mb-4 font-serif text-3xl font-bold leading-tight tracking-tight text-ink-primary sm:text-4xl">
-        {post.title}
-      </h1>
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="mb-4 font-serif text-3xl font-bold leading-tight tracking-tight text-ink-primary sm:text-4xl">
+          {post.title}
+        </h1>
+        <BookmarkButton postId={post.id} />
+      </div>
 
       {post.excerpt && (
         <p className="mb-4 text-lg leading-relaxed text-ink-secondary">
