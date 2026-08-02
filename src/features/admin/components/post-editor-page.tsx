@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -10,8 +10,10 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PostEditor } from "./post-editor";
-import { Save, Send, ArrowLeft, X } from "lucide-react";
+import { Save, Send, ArrowLeft, X, Eye } from "lucide-react";
 import { slugify } from "@/features/blog/lib/slugify";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 type Tag = { id: string; name: string; slug: string };
 
@@ -280,14 +282,26 @@ export function PostEditorPage({
               Publish
             </Button>
           ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => void doSave(false)}
-              disabled={savePhase === "saving"}
-            >
-              Unpublish
-            </Button>
+            <>
+              <Link
+                href={`/blog/${effectiveSlug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                title="View published post"
+              >
+                <Eye className="size-4" />
+                View
+              </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void doSave(false)}
+                disabled={savePhase === "saving"}
+              >
+                Unpublish
+              </Button>
+            </>
           )}
         </div>
       </div>

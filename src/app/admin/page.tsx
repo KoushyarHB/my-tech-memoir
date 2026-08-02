@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, FileText, CheckCircle, Clock, Tag } from "lucide-react";
+import { Plus, FileText, CheckCircle, Clock, Tag, Eye, Pencil } from "lucide-react";
 import { PostDeleteButton } from "./post-delete-button";
 import { cn } from "@/lib/utils";
 
@@ -107,7 +107,7 @@ export default async function AdminDashboard() {
                   <TableHead>Title</TableHead>
                   <TableHead className="w-[100px]">Status</TableHead>
                   <TableHead className="w-[150px]">Date</TableHead>
-                  <TableHead className="w-[80px]">Actions</TableHead>
+                  <TableHead className="w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -144,8 +144,29 @@ export default async function AdminDashboard() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        <Link href={`/admin/${post.id}`} className={cn(buttonVariants({ variant: "ghost", size: "icon-sm" }))}>
-                          <FileText className="size-3.5" />
+                        {post.published && (
+                          <Link
+                            href={`/blog/${post.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(
+                              buttonVariants({ variant: "ghost", size: "icon-sm" })
+                            )}
+                            title="View published post"
+                            aria-label="View published post"
+                          >
+                            <Eye className="size-3.5" />
+                          </Link>
+                        )}
+                        <Link
+                          href={`/admin/${post.id}`}
+                          className={cn(
+                            buttonVariants({ variant: "ghost", size: "icon-sm" })
+                          )}
+                          title="Edit post"
+                          aria-label="Edit post"
+                        >
+                          <Pencil className="size-3.5" />
                         </Link>
                         <PostDeleteButton postId={post.id} postTitle={post.title} />
                       </div>
