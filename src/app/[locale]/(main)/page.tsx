@@ -1,73 +1,73 @@
 import type { Metadata } from "next";
+import { setRequestLocale, getTranslations } from "next-intl/server";
+import { db } from "@/lib/db";
+import { getPublishedPosts } from "@/features/blog/server/post-service";
+import { PostCard } from "@/features/blog/components";
 import { Link } from "@/i18n/navigation";
-import { PostDate } from "@/components/post-date";
-import { PostTag } from "@/components/post-tag";
 
-export const metadata: Metadata = {
-  title: "My Tech Memoir",
-  description:
-    "A personal blog about code, architecture, and the craft of building software.",
+type Props = {
+  params: Promise<{ locale: string }>;
 };
 
-const posts = [
-  {
-    slug: "understanding-reacts-state-tree-and-closures",
-    title: "Understanding React's State Tree and Closures",
-    date: "July 28, 2026",
-    excerpt:
-      "A deep dive into how React tracks state internally — the flat array behind useState, slot-based indexing, and why closures create snapshots that can go stale.",
-    tags: ["React", "Hooks", "Fundamentals"],
-  },
-  {
-    slug: "why-you-cant-call-usestate-inside-useeffect",
-    title: "Why You Can't Call useState Inside useEffect",
-    date: "July 25, 2026",
-    excerpt:
-      "React's Rules of Hooks exist for a reason. Here's what happens when you break them — and the one fix that makes it all click.",
-    tags: ["React", "Hooks", "Gotchas"],
-  },
-  {
-    slug: "networking-101",
-    title: "Networking 101",
-    date: "July 20, 2026",
-    excerpt:
-      "A complete breakdown of how the internet works — from IPv4 addresses and binary logic to public vs private classes.",
-    tags: ["Networking", "Fundamentals"],
-  },
-];
+export async function generateMetadata({ params }: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "home" });
+  return {
+    title: t("title"),
+    description: t("subtitle"),
+    openGraph: {
+      title: t("title"),
+      description: t("subtitle"),
+      type: "website",
+    },
+  };
+}
 
-export default function Home() {
+export default async function HomePage({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
+  const t = await getTranslations("home");
+  const allPosts = await getPublishedPosts();
+  const recentPosts = allPosts.slice(0, 5);
+
   return (
     <div className="mx-auto max-w-2xl px-5 py-12 sm:py-16">
-      <div className="divide-y" style={{ borderColor: "var(--border)" }}>
-        {posts.map((post) => (
-          <Link
-            key={post.slug}
-            href={`/blog/${post.slug}`}
-            className="group block py-8 first:pt-0 last:pb-0 no-underline transition-opacity duration-200"
-          >
-            <div className="mb-3 flex items-center gap-3">
-              <PostDate>{post.date}</PostDate>
-            </div>
+      <section className="mb-12">
+        <h1 className="mb-3 font-serif text-3xl font-bold tracking-tight text-ink-primary sm:text-4xl">
+          {t("title")}
+        </h1>
+        <p className="text-lg text-ink-secondary">{t("subtitle")}</p>
+      </section>
 
-            <h2 className="font-serif text-xl font-semibold leading-snug tracking-tight text-ink-primary transition-colors duration-200 sm:text-2xl">
-              <span className="border-b border-transparent pb-0.5 transition-all duration-200 group-hover:border-current">
-                {post.title}
-              </span>
-            </h2>
-
-            <p className="mt-3 text-[15px] leading-relaxed text-ink-secondary">
-              {post.excerpt}
-            </p>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              {post.tags.map((tag) => (
-                <PostTag key={tag}>{tag}</PostTag>
+      <section aria-label="Recent posts">
+        {recentPosts.length === 0 ? (
+          <p className="py-12 text-center text-ink-tertiary">
+            No posts published yet. Check back soon.
+          </p>
+        ) : (
+          <>
+            <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+              {recentPosts.map((post) => (
+                <PostCard key={post.id} post={post} />
               ))}
             </div>
-          </Link>
-        ))}
-      </div>
+
+            {allPosts.length > 5 && (
+              <div className="mt-8 text-center">
+                <Link
+                  href="/blog"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-primary underline-offset-4 transition-opacity hover:opacity-80"
+                >
+                  View All Posts →
+                </Link>
+              </div>
+            )}
+          </>
+        )}
+      </section>
     </div>
   );
 }

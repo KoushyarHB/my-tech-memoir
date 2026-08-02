@@ -35,5 +35,18 @@
   "bookmarks": {
     "title": "Bookmarks",
     "subtitle": "Posts you've saved for later."
+  },
+  "about": {
+    "title": "About",
+    "subtitle": "Software engineer, curious learner, and the author behind My Tech Memoir.",
+    "skills": "Skills & Tools",
+    "connect": "Connect",
+    "contact": "Want to talk about networking, software, or just say hi?",
+    "getInTouch": "Get in Touch",
+    "bio": {
+      "p1": "Software engineer with a deep curiosity about how things work under the hood.",
+      "p2": "Currently exploring networking, protocols, and the architecture of the internet.",
+      "p3": "This blog is a living document of that exploration — written as I learn."
+    }
   }
 }

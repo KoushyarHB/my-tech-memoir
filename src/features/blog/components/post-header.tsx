@@ -29,8 +29,8 @@ export function PostHeader({ post }: PostHeaderProps) {
         </div>
       )}
 
-      <div className="flex items-start justify-between gap-4">
-        <h1 className="mb-4 font-serif text-3xl font-bold leading-tight tracking-tight text-ink-primary sm:text-4xl">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <h1 className="font-serif text-3xl font-bold leading-tight tracking-tight text-ink-primary sm:text-4xl">
           {post.title}
         </h1>
         <BookmarkButton postId={post.id} />
