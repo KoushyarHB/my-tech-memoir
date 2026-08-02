@@ -107,6 +107,7 @@ export default async function AdminDashboard() {
                   <TableHead>Title</TableHead>
                   <TableHead className="w-[100px]">Status</TableHead>
                   <TableHead className="w-[150px]">Date</TableHead>
+                  <TableHead className="w-[90px]">Views</TableHead>
                   <TableHead className="w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -141,6 +142,9 @@ export default async function AdminDashboard() {
                         day: "numeric",
                         year: "numeric",
                       }).format(new Date(post.createdAt))}
+                    </TableCell>
+                    <TableCell className="text-sm tabular-nums text-muted-foreground">
+                      {post.viewCount.toLocaleString()}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">

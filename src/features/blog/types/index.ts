@@ -13,6 +13,7 @@ export type PostWithTags = {
   coverImage: string | null;
   published: boolean;
   publishedAt: Date | null;
+  viewCount: number;
   createdAt: Date;
   updatedAt: Date;
   tags: Tag[];
@@ -27,6 +28,7 @@ export type PostSummary = {
   content: string;
   published: boolean;
   publishedAt: Date | null;
+  viewCount: number;
   createdAt: Date;
   updatedAt: Date;
   tags: Tag[];

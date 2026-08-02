@@ -46,6 +46,7 @@ export async function getBookmarksByUserId(userId: string) {
           content: true,
           published: true,
           publishedAt: true,
+          viewCount: true,
           createdAt: true,
           updatedAt: true,
           tags: {
@@ -72,6 +73,7 @@ export async function getBookmarksByUserId(userId: string) {
       content: b.post.content,
       published: b.post.published,
       publishedAt: b.post.publishedAt,
+      viewCount: b.post.viewCount,
       createdAt: b.post.createdAt,
       updatedAt: b.post.updatedAt,
       tags: b.post.tags.map((pt) => pt.tag),

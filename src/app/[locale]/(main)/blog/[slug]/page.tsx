@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { getPostBySlug, getPublishedPosts } from "@/features/blog/server/post-service";
-import { PostHeader } from "@/features/blog/components";
+import { PostHeader, ViewTracker } from "@/features/blog/components";
 import { CommentSection } from "@/features/comments/components";
 
 type Props = {
@@ -49,6 +49,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <article className="mx-auto max-w-2xl px-5 py-10 sm:py-14">
+      <ViewTracker postId={post.id} />
       <PostHeader post={post} />
       <div
         className="prose-memoir"

@@ -46,6 +46,11 @@ export function PostHeader({ post }: PostHeaderProps) {
         <time dateTime={post.createdAt.toISOString()}>{formattedDate}</time>
         <span aria-hidden="true">·</span>
         <span>{post.readingTime}</span>
+        <span aria-hidden="true">·</span>
+        <span>
+          {post.viewCount.toLocaleString()}{" "}
+          {post.viewCount === 1 ? "view" : "views"}
+        </span>
       </div>
     </header>
   );

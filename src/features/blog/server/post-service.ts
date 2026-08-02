@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { Prisma } from "../../../../generated/prisma/client";
 import { estimateReadingTime } from "../lib/reading-time";
 import { slugify } from "../lib/slugify";
 import { sanitizePostHtml } from "../lib/sanitize-post-html";
@@ -18,6 +19,7 @@ const SUMMARY_SELECT = {
   content: true,
   published: true,
   publishedAt: true,
+  viewCount: true,
   createdAt: true,
   updatedAt: true,
   tags: {
@@ -41,6 +43,7 @@ type PostWithJoinTags = {
   coverImage: string | null;
   published: boolean;
   publishedAt: Date | null;
+  viewCount: number;
   createdAt: Date;
   updatedAt: Date;
   tags: { tag: Tag }[];
@@ -58,6 +61,7 @@ function toSummary(
     content,
     published: p.published,
     publishedAt: p.publishedAt,
+    viewCount: p.viewCount,
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
     tags: p.tags.map((pt) => pt.tag),
@@ -200,4 +204,40 @@ export async function searchPosts(
     select: SUMMARY_SELECT,
   })) as unknown as PostWithJoinTags[];
   return posts.map(toSummary);
+}
+
+export async function recordPostView(
+  postId: string,
+  viewerKey: string
+): Promise<{ counted: boolean; viewCount?: number }> {
+  const post = await db.post.findUnique({
+    where: { id: postId },
+    select: { id: true, published: true, viewCount: true },
+  });
+
+  if (!post || !post.published) {
+    return { counted: false };
+  }
+
+  try {
+    await db.postView.create({
+      data: { postId, viewerKey },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return { counted: false, viewCount: post.viewCount };
+    }
+    throw error;
+  }
+
+  const updated = await db.post.update({
+    where: { id: postId },
+    data: { viewCount: { increment: 1 } },
+    select: { viewCount: true },
+  });
+
+  return { counted: true, viewCount: updated.viewCount };
 }
