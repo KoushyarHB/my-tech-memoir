@@ -4,6 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { getPublishedPosts } from "@/features/blog/server/post-service";
 import { PostCard } from "@/features/blog/components";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{ locale: string }>;
 };
