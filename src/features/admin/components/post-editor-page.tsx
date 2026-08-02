@@ -40,7 +40,12 @@ type SavedSnapshot = {
 };
 
 function hasText(html: string): boolean {
-  return html.replace(/<[^>]*>/g, "").trim().length > 0;
+  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim().length > 0;
+}
+
+/** TipTap empty docs are "<p></p>" / "<p><br></p>", not "". Treat those as equal. */
+function normalizeContent(html: string): string {
+  return hasText(html) ? html : "";
 }
 
 function makeSnapshot(input: {
@@ -55,7 +60,7 @@ function makeSnapshot(input: {
     title: input.title.trim(),
     slug: input.slug.trim(),
     excerpt: input.excerpt.trim(),
-    content: input.content,
+    content: normalizeContent(input.content),
     published: input.published,
     tagIds: [...input.tagIds].sort().join(","),
   };
