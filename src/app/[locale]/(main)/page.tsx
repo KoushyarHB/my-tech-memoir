@@ -5,6 +5,8 @@ import { getPublishedPosts } from "@/features/blog/server/post-service";
 import { PostCard } from "@/features/blog/components";
 import { Link } from "@/i18n/navigation";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{ locale: string }>;
 };

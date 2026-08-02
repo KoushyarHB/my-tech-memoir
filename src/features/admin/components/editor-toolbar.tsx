@@ -1,7 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import type { Editor } from "@tiptap/react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Bold,
   Italic,
@@ -25,7 +37,74 @@ type EditorToolbarProps = {
 };
 
 export function EditorToolbar({ editor }: EditorToolbarProps) {
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+
   if (!editor) return null;
+
+  function openLinkDialog() {
+    const previous = editor?.getAttributes("link").href ?? "";
+    setLinkUrl(typeof previous === "string" ? previous : "");
+    setLinkOpen(true);
+  }
+
+  function applyLink() {
+    const url = linkUrl.trim();
+    if (!editor) return;
+
+    if (!url) {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      setLinkOpen(false);
+      return;
+    }
+
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+    setLinkOpen(false);
+    setLinkUrl("");
+  }
+
+  async function uploadImage() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file || !editor) return;
+
+      setUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const json = await res.json().catch(() => null);
+
+        if (!res.ok) {
+          throw new Error(json?.error || "Upload failed");
+        }
+
+        const url = json?.data?.url;
+        if (!url) {
+          throw new Error("Upload response missing image URL");
+        }
+
+        editor.chain().focus().setImage({ src: url }).run();
+        toast.success("Image uploaded");
+      } catch (err) {
+        console.error("Image upload failed:", err);
+        toast.error(
+          err instanceof Error ? err.message : "Failed to upload image"
+        );
+      } finally {
+        setUploading(false);
+      }
+    };
+    input.click();
+  }
 
   const tools = [
     {
@@ -90,46 +169,16 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
     },
     {
       icon: LinkIcon,
-      action: () => {
-        const url = window.prompt("Enter URL");
-        if (url) {
-          editor.chain().focus().setLink({ href: url }).run();
-        }
-      },
+      action: openLinkDialog,
       active: editor.isActive("link"),
       label: "Link",
     },
     {
       icon: ImageIcon,
-      action: async () => {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = "image/*";
-        input.onchange = async () => {
-          const file = input.files?.[0];
-          if (!file) return;
-          const formData = new FormData();
-          formData.append("file", file);
-          try {
-            const res = await fetch("/api/upload", {
-              method: "POST",
-              body: formData,
-            });
-            if (!res.ok) throw new Error("Upload failed");
-            const json = await res.json();
-            const url = json.data?.url;
-            if (url) {
-              editor.chain().focus().setImage({ src: url }).run();
-            }
-          } catch (err) {
-            console.error("Image upload failed:", err);
-            alert("Failed to upload image");
-          }
-        };
-        input.click();
-      },
+      action: () => void uploadImage(),
       active: false,
       label: "Image",
+      disabled: uploading,
     },
   ];
 
@@ -149,37 +198,74 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
   ];
 
   return (
-    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 border-b border-border bg-card p-2">
-      {tools.map((tool) => (
-        <Button
-          key={tool.label}
-          variant={tool.active ? "secondary" : "ghost"}
-          size="icon-sm"
-          onClick={tool.action}
-          aria-label={tool.label}
-          title={tool.label}
-          type="button"
-        >
-          <tool.icon className={cn("size-4", tool.active && "text-primary")} />
-        </Button>
-      ))}
+    <>
+      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 border-b border-border bg-card p-2">
+        {tools.map((tool) => (
+          <Button
+            key={tool.label}
+            variant={tool.active ? "secondary" : "ghost"}
+            size="icon-sm"
+            onClick={tool.action}
+            disabled={"disabled" in tool ? tool.disabled : false}
+            aria-label={tool.label}
+            title={tool.label}
+            type="button"
+          >
+            <tool.icon className={cn("size-4", tool.active && "text-primary")} />
+          </Button>
+        ))}
 
-      <div className="mx-1 h-5 w-px bg-border" />
+        <div className="mx-1 h-5 w-px bg-border" />
 
-      {history.map((tool) => (
-        <Button
-          key={tool.label}
-          variant="ghost"
-          size="icon-sm"
-          onClick={tool.action}
-          disabled={tool.disabled}
-          aria-label={tool.label}
-          title={tool.label}
-          type="button"
-        >
-          <tool.icon className="size-4" />
-        </Button>
-      ))}
-    </div>
+        {history.map((tool) => (
+          <Button
+            key={tool.label}
+            variant="ghost"
+            size="icon-sm"
+            onClick={tool.action}
+            disabled={tool.disabled}
+            aria-label={tool.label}
+            title={tool.label}
+            type="button"
+          >
+            <tool.icon className="size-4" />
+          </Button>
+        ))}
+      </div>
+
+      <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add link</DialogTitle>
+            <DialogDescription>
+              Enter a URL. Leave empty and confirm to remove the current link.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="editor-link-url">URL</Label>
+            <Input
+              id="editor-link-url"
+              type="url"
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              placeholder="https://example.com"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  applyLink();
+                }
+              }}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLinkOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={applyLink}>Apply</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

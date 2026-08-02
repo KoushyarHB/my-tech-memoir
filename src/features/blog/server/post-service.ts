@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { estimateReadingTime } from "../lib/reading-time";
+import { slugify } from "../lib/slugify";
 import { sanitizePostHtml } from "../lib/sanitize-post-html";
 import type {
   CreatePostInput,
@@ -116,7 +117,7 @@ export async function createPost(
   const post = (await db.post.create({
     data: {
       title: input.title,
-      slug: input.slug,
+      slug: slugify(input.slug),
       excerpt: input.excerpt ?? null,
       content: sanitizePostHtml(input.content),
       published: input.published ?? false,
@@ -141,7 +142,7 @@ export async function updatePost(
   const data: Record<string, unknown> = {};
 
   if (input.title !== undefined) data.title = input.title;
-  if (input.slug !== undefined) data.slug = input.slug;
+  if (input.slug !== undefined) data.slug = slugify(input.slug);
   if (input.excerpt !== undefined) data.excerpt = input.excerpt;
   if (input.content !== undefined) data.content = sanitizePostHtml(input.content);
   if (input.published !== undefined) {

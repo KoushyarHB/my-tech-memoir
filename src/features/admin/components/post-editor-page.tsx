@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PostEditor } from "./post-editor";
-import { Save, Send, ArrowLeft, Plus, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Save, Send, ArrowLeft, X } from "lucide-react";
+import { slugify } from "@/features/blog/lib/slugify";
 
 type Tag = { id: string; name: string; slug: string };
 
@@ -26,14 +26,37 @@ type PostEditorPageProps = {
   availableTags: Tag[];
 };
 
-type SaveState = "idle" | "unsaved" | "saving" | "saved";
+type SavePhase = "idle" | "saving" | "saved";
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .substring(0, 80);
+type SavedSnapshot = {
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  published: boolean;
+  tagIds: string;
+};
+
+function hasText(html: string): boolean {
+  return html.replace(/<[^>]*>/g, "").trim().length > 0;
+}
+
+function makeSnapshot(input: {
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  published: boolean;
+  tagIds: string[];
+}): SavedSnapshot {
+  return {
+    title: input.title.trim(),
+    slug: input.slug.trim(),
+    excerpt: input.excerpt.trim(),
+    content: input.content,
+    published: input.published,
+    tagIds: [...input.tagIds].sort().join(","),
+  };
 }
 
 export function PostEditorPage({
@@ -55,27 +78,69 @@ export function PostEditorPage({
   const [published, setPublished] = useState(initialPublished);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initialTagIds);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!initialSlug);
-  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [savePhase, setSavePhase] = useState<SavePhase>("idle");
   const [currentPostId, setCurrentPostId] = useState(postId);
 
-  // Compute slug from title during render (no effect needed)
+  // Last-saved snapshot lives in state so we can diff during render
+  const [lastSaved, setLastSaved] = useState<SavedSnapshot>(
+    makeSnapshot({
+      title: initialTitle,
+      slug: initialSlug || slugify(initialTitle),
+      excerpt: initialExcerpt,
+      content: initialContent,
+      published: initialPublished,
+      tagIds: initialTagIds,
+    })
+  );
+
   const effectiveSlug = slugManuallyEdited ? slug : slugify(title);
 
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Derive dirty state during render (no ref access, no effect)
+  const currentSnapshot = makeSnapshot({
+    title,
+    slug: effectiveSlug,
+    excerpt,
+    content,
+    published,
+    tagIds: selectedTagIds,
+  });
 
-  const canSave = title.trim().length > 0 && slug.trim().length > 0 && content.trim().length > 0;
+  const isDirty =
+    currentSnapshot.title !== lastSaved.title ||
+    currentSnapshot.slug !== lastSaved.slug ||
+    currentSnapshot.excerpt !== lastSaved.excerpt ||
+    currentSnapshot.content !== lastSaved.content ||
+    currentSnapshot.published !== lastSaved.published ||
+    currentSnapshot.tagIds !== lastSaved.tagIds;
+
+  const canSave =
+    currentSnapshot.title.length > 0 &&
+    currentSnapshot.slug.length > 0 &&
+    hasText(content);
+
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savingRef = useRef(false);
 
   const doSave = useCallback(
     async (publish?: boolean) => {
-      if (!canSave && !publish) return;
-      setSaveState("saving");
+      if (savingRef.current) return;
+      if (!canSave && publish === undefined) return;
 
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
+
+      savingRef.current = true;
+      setSavePhase("saving");
+
+      const nextPublished = publish !== undefined ? publish : published;
       const payload = {
         title: title.trim(),
         slug: effectiveSlug.trim(),
         excerpt: excerpt.trim() || undefined,
         content,
-        published: publish !== undefined ? publish : published,
+        published: nextPublished,
         tagIds: selectedTagIds,
       };
 
@@ -87,7 +152,6 @@ export function PostEditorPage({
             body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error("Save failed");
-          if (publish !== undefined) setPublished(publish);
         } else {
           const res = await fetch("/api/posts", {
             method: "POST",
@@ -97,39 +161,76 @@ export function PostEditorPage({
           if (!res.ok) throw new Error("Create failed");
           const json = await res.json();
           setCurrentPostId(json.data.id);
-          if (publish !== undefined) setPublished(publish);
         }
-        setSaveState("saved");
-        setTimeout(() => setSaveState("idle"), 2000);
+
+        if (publish !== undefined) {
+          setPublished(publish);
+        }
+
+        setLastSaved(
+          makeSnapshot({
+            title: payload.title,
+            slug: payload.slug,
+            excerpt: payload.excerpt || "",
+            content: payload.content,
+            published: nextPublished,
+            tagIds: selectedTagIds,
+          })
+        );
+
+        setSavePhase("saved");
+        setTimeout(() => {
+          setSavePhase((prev) => (prev === "saved" ? "idle" : prev));
+        }, 2000);
       } catch (err) {
         console.error("Save failed:", err);
-        setSaveState("idle");
+        setSavePhase("idle");
         alert("Failed to save. Please try again.");
+      } finally {
+        savingRef.current = false;
       }
     },
     [canSave, title, effectiveSlug, excerpt, content, published, selectedTagIds, currentPostId]
   );
 
-  // Auto-save for drafts (debounced 3s)
+  // Auto-save drafts (debounced 3s)
   useEffect(() => {
-    if (published || !canSave) return;
-
-    if (saveState === "saved") return;
+    if (published || !isDirty || !canSave || savingRef.current) return;
 
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-
-    if (title || content) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSaveState("unsaved");
-      saveTimerRef.current = setTimeout(() => {
-        doSave();
-      }, 3000);
-    }
+    saveTimerRef.current = setTimeout(() => {
+      void doSave();
+    }, 3000);
 
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [title, effectiveSlug, excerpt, content, selectedTagIds, published, canSave, doSave, saveState]);
+  }, [isDirty, published, canSave, doSave]);
+
+  // Warn before leaving page with unsaved changes
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (isDirty && savePhase !== "saving") {
+        e.preventDefault();
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty, savePhase]);
+
+  function handleBackClick() {
+    if (isDirty && savePhase !== "saved") {
+      const proceed = window.confirm(
+        "You have unsaved changes.\n\nClick OK to save as draft and leave, or Cancel to stay."
+      );
+      if (proceed && canSave) {
+        void doSave().then(() => router.push("/admin"));
+        return;
+      }
+      if (!proceed) return;
+    }
+    router.push("/admin");
+  }
 
   function toggleTag(tagId: string) {
     setSelectedTagIds((prev) =>
@@ -137,26 +238,34 @@ export function PostEditorPage({
     );
   }
 
+  // Derive display state for the indicator
+  const showUnsaved = isDirty && savePhase !== "saving" && savePhase !== "saved";
+
   return (
     <div className="mx-auto max-w-6xl px-5 py-8">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push("/admin")}
-        >
+        <Button variant="ghost" size="sm" onClick={handleBackClick}>
           <ArrowLeft className="size-4" />
           Back to dashboard
         </Button>
 
         <div className="flex items-center gap-3">
-          <SaveStatusIndicator state={saveState} published={published} />
+          <SaveStatusIndicator
+            phase={savePhase}
+            published={published}
+            isDirty={showUnsaved}
+          />
           <Button
             variant="outline"
             size="sm"
-            onClick={() => doSave()}
-            disabled={!canSave || saveState === "saving"}
+            onClick={() => void doSave()}
+            disabled={!canSave || savePhase === "saving"}
+            title={
+              canSave
+                ? "Save draft"
+                : "Add a title and some body text before saving"
+            }
           >
             <Save className="size-4" />
             Save Draft
@@ -164,8 +273,8 @@ export function PostEditorPage({
           {!published ? (
             <Button
               size="sm"
-              onClick={() => doSave(true)}
-              disabled={!canSave || saveState === "saving"}
+              onClick={() => void doSave(true)}
+              disabled={!canSave || savePhase === "saving"}
             >
               <Send className="size-4" />
               Publish
@@ -174,8 +283,8 @@ export function PostEditorPage({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => doSave(false)}
-              disabled={saveState === "saving"}
+              onClick={() => void doSave(false)}
+              disabled={savePhase === "saving"}
             >
               Unpublish
             </Button>
@@ -194,7 +303,10 @@ export function PostEditorPage({
             onChange={(e) => setTitle(e.target.value)}
             className="mb-4 border-none px-0 font-serif text-2xl font-bold shadow-none focus-visible:ring-0"
           />
-          <PostEditor initialContent={content} onChange={setContent} />
+          <PostEditor
+            initialContent={initialContent}
+            onChange={setContent}
+          />
         </div>
 
         {/* Meta sidebar */}
@@ -205,7 +317,9 @@ export function PostEditorPage({
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="slug" className="mb-1 block text-xs">Slug</Label>
+                <Label htmlFor="slug" className="mb-1 block text-xs">
+                  Slug
+                </Label>
                 <Input
                   id="slug"
                   type="text"
@@ -220,7 +334,9 @@ export function PostEditorPage({
               </div>
 
               <div>
-                <Label htmlFor="excerpt" className="mb-1 block text-xs">Excerpt</Label>
+                <Label htmlFor="excerpt" className="mb-1 block text-xs">
+                  Excerpt
+                </Label>
                 <Textarea
                   id="excerpt"
                   rows={3}
@@ -232,13 +348,14 @@ export function PostEditorPage({
               </div>
 
               <div className="flex items-center justify-between">
-                <Label htmlFor="published" className="text-xs">Published</Label>
+                <Label htmlFor="published" className="text-xs">
+                  Published
+                </Label>
                 <Switch
                   id="published"
                   checked={published}
                   onCheckedChange={(checked) => {
-                    setPublished(checked);
-                    doSave(checked);
+                    void doSave(checked);
                   }}
                 />
               </div>
@@ -281,34 +398,36 @@ export function PostEditorPage({
 }
 
 function SaveStatusIndicator({
-  state,
+  phase,
   published,
+  isDirty,
 }: {
-  state: SaveState;
+  phase: SavePhase;
   published: boolean;
+  isDirty: boolean;
 }) {
-  if (state === "saving") {
+  if (phase === "saving") {
     return (
-      <span className="text-xs text-muted-foreground">
-        <span className="size-2 inline-block animate-pulse rounded-full bg-yellow-500" />
+      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+        <span className="size-2 animate-pulse rounded-full bg-yellow-500" />
         Saving…
       </span>
     );
   }
 
-  if (state === "saved") {
+  if (phase === "saved") {
     return (
-      <span className="text-xs text-muted-foreground">
-        <span className="size-2 inline-block rounded-full bg-green-500" />
-        Saved ✓
+      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+        <span className="size-2 rounded-full bg-green-500" />
+        Saved
       </span>
     );
   }
 
-  if (state === "unsaved" && !published) {
+  if (isDirty) {
     return (
-      <span className="text-xs text-muted-foreground">
-        <span className="size-2 inline-block rounded-full bg-orange-500" />
+      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+        <span className="size-2 rounded-full bg-orange-500" />
         Unsaved changes
       </span>
     );
@@ -316,8 +435,8 @@ function SaveStatusIndicator({
 
   if (published) {
     return (
-      <span className="text-xs text-muted-foreground">
-        <span className="size-2 inline-block rounded-full bg-blue-500" />
+      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+        <span className="size-2 rounded-full bg-blue-500" />
         Published
       </span>
     );

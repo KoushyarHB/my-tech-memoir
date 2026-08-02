@@ -6,20 +6,33 @@ import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import Typography from "@tiptap/extension-typography";
 import Image from "@tiptap/extension-image";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { EditorToolbar } from "./editor-toolbar";
 
 type PostEditorProps = {
   initialContent?: string;
   onChange?: (html: string) => void;
+  onReady?: () => void;
   editable?: boolean;
 };
 
 export function PostEditor({
   initialContent = "",
   onChange,
+  onReady,
   editable = true,
 }: PostEditorProps) {
+  const onChangeRef = useRef(onChange);
+  const onReadyRef = useRef(onReady);
+  const didInitRef = useRef(false);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  });
+  useEffect(() => {
+    onReadyRef.current = onReady;
+  });
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -47,19 +60,21 @@ export function PostEditor({
           "prose-memoir min-h-[400px] max-w-none focus:outline-none px-5 py-4",
       },
     },
-    onUpdate: ({ editor }) => {
-      onChange?.(editor.getHTML());
+    onUpdate: ({ editor: ed }) => {
+      onChangeRef.current?.(ed.getHTML());
+    },
+    onCreate: () => {
+      if (!didInitRef.current) {
+        didInitRef.current = true;
+        onReadyRef.current?.();
+      }
     },
   });
 
   useEffect(() => {
-    if (editor && initialContent !== undefined) {
-      const current = editor.getHTML();
-      if (current !== initialContent) {
-        editor.commands.setContent(initialContent || "", { emitUpdate: false });
-      }
-    }
-  }, [editor, initialContent]);
+    if (!editor) return;
+    editor.setEditable(editable);
+  }, [editor, editable]);
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card">

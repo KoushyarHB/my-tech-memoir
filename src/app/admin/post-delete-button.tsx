@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -30,9 +31,10 @@ export function PostDeleteButton({ postId, postTitle }: PostDeleteButtonProps) {
     try {
       const res = await fetch(`/api/posts/${postId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Delete failed");
+      toast.success("Post deleted");
       router.refresh();
     } catch {
-      alert("Failed to delete post");
+      toast.error("Failed to delete post");
     } finally {
       setDeleting(false);
     }
