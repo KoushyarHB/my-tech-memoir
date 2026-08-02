@@ -320,7 +320,7 @@ export function PostEditorPage({
             placeholder="Post title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="mb-4 border-none px-0 font-serif text-2xl font-bold shadow-none focus-visible:ring-0"
+            className="mb-4 h-auto rounded-none border-0 bg-transparent px-0 py-1 font-serif text-3xl font-bold leading-tight tracking-tight text-ink-primary shadow-none placeholder:text-muted-foreground/50 focus-visible:border-0 focus-visible:ring-0 dark:bg-transparent md:text-3xl"
           />
           <PostEditor
             initialContent={initialContent}

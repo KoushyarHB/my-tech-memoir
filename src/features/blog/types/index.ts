@@ -14,6 +14,7 @@ export type PostWithTags = {
   published: boolean;
   publishedAt: Date | null;
   viewCount: number;
+  commentCount: number;
   createdAt: Date;
   updatedAt: Date;
   tags: Tag[];
@@ -29,6 +30,7 @@ export type PostSummary = {
   published: boolean;
   publishedAt: Date | null;
   viewCount: number;
+  commentCount: number;
   createdAt: Date;
   updatedAt: Date;
   tags: Tag[];

@@ -27,6 +27,9 @@ const SUMMARY_SELECT = {
       tag: { select: { id: true, name: true, slug: true } },
     },
   },
+  _count: {
+    select: { comments: true },
+  },
 } as const;
 
 const FULL_SELECT = {
@@ -47,6 +50,7 @@ type PostWithJoinTags = {
   createdAt: Date;
   updatedAt: Date;
   tags: { tag: Tag }[];
+  _count: { comments: number };
 };
 
 function toSummary(
@@ -62,6 +66,7 @@ function toSummary(
     published: p.published,
     publishedAt: p.publishedAt,
     viewCount: p.viewCount,
+    commentCount: p._count.comments,
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
     tags: p.tags.map((pt) => pt.tag),

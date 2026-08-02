@@ -54,6 +54,9 @@ export async function getBookmarksByUserId(userId: string) {
               tag: { select: { id: true, name: true, slug: true } },
             },
           },
+          _count: {
+            select: { comments: true },
+          },
         },
       },
     },
@@ -74,6 +77,7 @@ export async function getBookmarksByUserId(userId: string) {
       published: b.post.published,
       publishedAt: b.post.publishedAt,
       viewCount: b.post.viewCount,
+      commentCount: b.post._count.comments,
       createdAt: b.post.createdAt,
       updatedAt: b.post.updatedAt,
       tags: b.post.tags.map((pt) => pt.tag),
