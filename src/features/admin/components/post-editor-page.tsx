@@ -302,13 +302,14 @@ export function PostEditorPage({
   return (
     <div className="mx-auto max-w-6xl px-5 py-8">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Button variant="ghost" size="sm" onClick={handleBackClick}>
           <ArrowLeft className="size-4" />
-          Back to dashboard
+          <span className="hidden sm:inline">Back to dashboard</span>
+          <span className="sm:hidden">Back</span>
         </Button>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <SaveStatusIndicator
             phase={savePhase}
             published={published}
@@ -329,7 +330,7 @@ export function PostEditorPage({
             }
           >
             <Save className="size-4" />
-            Save Draft
+            <span className="hidden sm:inline">Save Draft</span>
           </Button>
           {!published ? (
             <Button
@@ -343,7 +344,7 @@ export function PostEditorPage({
               }
             >
               <Send className="size-4" />
-              Publish
+              <span className="hidden sm:inline">Publish</span>
             </Button>
           ) : (
             <>
