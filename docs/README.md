@@ -19,15 +19,16 @@ Each prompt declares **Consumes**, **Produces**, **Does NOT Build**, and **Contr
 
 | Phase | Status | Prompt | Description |
 |-------|--------|--------|-------------|
-| 0 | ⏳ PLANNED | [Design System](./prompts/00-design-system.md) | shadcn/ui primitives, layout helpers, token alias layer, icon system |
+| 0 | ✅ COMPLETED | [Design System](./prompts/00-design-system.md) | shadcn/ui primitives, layout helpers, token alias layer, icon system |
 | 1 | ✅ COMPLETED | [Infrastructure](./prompts/01-infrastructure.md) | Prisma schema (10 models), DB client, API helpers |
 | 2 | ✅ COMPLETED | [Authentication](./prompts/02-authentication.md) | Auth.js v5, GitHub + Google, sign-in page |
-| 3 | ⏳ PLANNED | [Layout & i18n](./prompts/03-layout-providers.md) | next-intl, `[locale]` routing, language switcher, social footer |
-| 4 | ⏳ PLANNED | [Blog](./prompts/04-blog.md) | Post service, components, pages, seed migration |
-| 5 | ⏳ PLANNED | [Comments](./prompts/05-comments.md) | Threaded comments, anonymous + authenticated |
-| 6 | ⏳ PLANNED | [Bookmarks](./prompts/06-bookmarks.md) | Toggle, listing page, API routes |
-| 7 | ⏳ PLANNED | [Home & About](./prompts/07-home-about.md) | DB-driven homepage, about page |
-| 8 | ⏳ PLANNED | [Polish](./prompts/08-polish.md) | ESLint, error boundaries, loading states, SEO |
+| 3 | ✅ COMPLETED | [Layout & i18n](./prompts/03-layout-providers.md) | next-intl, `[locale]` routing, language switcher, social footer |
+| 4 | ✅ COMPLETED | [Blog](./prompts/04-blog.md) | Post service, components, pages, seed migration |
+| 5 | ✅ COMPLETED | [Comments](./prompts/05-comments.md) | Threaded comments, anonymous + authenticated |
+| 6 | ✅ COMPLETED | [Bookmarks](./prompts/06-bookmarks.md) | Toggle, listing page, API routes |
+| 7 | ✅ COMPLETED | [Home & About](./prompts/07-home-about.md) | DB-driven homepage, about page |
+| 8 | ✅ COMPLETED | [Polish](./prompts/08-polish.md) | ESLint, error boundaries, loading states, SEO |
+| 9 | ⏳ PLANNED | [Admin & Editor](./prompts/09-admin-editor.md) | Tiptap WYSIWYG, auto-save, image upload, post management |
 
 ### Status Markers
 - ✅ **COMPLETED** — Phase is built. Prompt documents what was actually built (retrospective).

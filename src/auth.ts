@@ -23,11 +23,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (session.user && token.sub) {
         session.user.id = token.sub;
       }
+      if (session.user && token.role) {
+        session.user.role = token.role as "USER" | "EDITOR" | "ADMIN";
+      }
       return session;
     },
     async jwt({ token, user }) {
       if (user) {
         token.sub = user.id;
+        const dbUser = await db.user.findUnique({
+          where: { id: user.id },
+          select: { role: true },
+        });
+        token.role = dbUser?.role ?? "USER";
       }
       return token;
     },

@@ -23,9 +23,9 @@
 
 | Purpose | Technology |
 |---------|-----------|
-| Rich text editor | Tiptap (WYSIWYG → HTML output) — *deferred* |
+| Rich text editor | Tiptap v3 (WYSIWYG → HTML output) |
 | Content storage | HTML stored in PostgreSQL |
-| Image uploads | Vercel Blob or S3 — *deferred* |
+| Image uploads | Vercel Blob |
 | Multilingual | next-intl |
 | Comments | Custom (anonymous + authenticated, threaded) |
 

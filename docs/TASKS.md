@@ -8,15 +8,16 @@
 
 | Phase | Status | Description |
 |-------|--------|-------------|
-| 0 | ⏳ PLANNED | Design System — tokens, shadcn/ui primitives, layout helpers |
+| 0 | ✅ COMPLETED | Design System — tokens, shadcn/ui primitives, layout helpers |
 | 1 | ✅ COMPLETED | Infrastructure — Prisma schema, DB client, API helpers |
 | 2 | ✅ COMPLETED | Authentication — Auth.js v5, GitHub + Google, sign-in page |
-| 3 | ⏳ PLANNED | Layout & i18n — next-intl, route restructure, language switcher |
-| 4 | ⏳ PLANNED | Blog — post service, components, pages, seed migration |
-| 5 | ⏳ PLANNED | Comments — threaded comments, anonymous + authenticated |
-| 6 | ⏳ PLANNED | Bookmarks — toggle, listing page, API routes |
-| 7 | ⏳ PLANNED | Home & About — DB-driven homepage, about page |
-| 8 | ⏳ PLANNED | Polish — ESLint, error boundaries, loading states, SEO |
+| 3 | ✅ COMPLETED | Layout & i18n — next-intl, route restructure, language switcher |
+| 4 | ✅ COMPLETED | Blog — post service, components, pages, seed migration |
+| 5 | ✅ COMPLETED | Comments — threaded comments, anonymous + authenticated |
+| 6 | ✅ COMPLETED | Bookmarks — toggle, listing page, API routes |
+| 7 | ✅ COMPLETED | Home & About — DB-driven homepage, about page |
+| 8 | ✅ COMPLETED | Polish — ESLint, error boundaries, loading states, SEO |
+| 9 | ⏳ PLANNED | Admin & Editor — Tiptap WYSIWYG, auto-save, image upload, dashboard |
 
 ---
 
