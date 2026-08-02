@@ -24,21 +24,30 @@ export async function POST(request: Request) {
       return apiError("File must be an image", { status: 400 });
     }
 
-    const maxBytes = 10 * 1024 * 1024; // 10MB
+    // Vercel serverless body limit is ~4.5MB for server uploads
+    const maxBytes = 4 * 1024 * 1024;
     if (file.size > maxBytes) {
-      return apiError("Image must be 10MB or smaller", { status: 400 });
+      return apiError("Image must be 4MB or smaller", { status: 400 });
     }
 
     const filename = `posts/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "-")}`;
 
+    // Must match the Blob store access mode (Public vs Private) chosen at creation.
+    // Blog images need a Public store so <img src> works without auth.
+    const access =
+      process.env.BLOB_ACCESS === "private" ? "private" : "public";
+
     const blob = await put(filename, file, {
-      access: "public",
-      addRandomSuffix: false,
+      access,
+      addRandomSuffix: true,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
     });
 
     return apiSuccess({ url: blob.url });
   } catch (error) {
     console.error("Upload failed:", error);
-    return apiError("Failed to upload image", { status: 500 });
+    const message =
+      error instanceof Error ? error.message : "Failed to upload image";
+    return apiError(message, { status: 500 });
   }
 }
