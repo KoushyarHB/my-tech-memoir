@@ -97,18 +97,18 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
           const extraTags = Math.max(0, post.tags.length - tagPreview.length);
 
           return (
-            <div className="min-w-0 max-w-90 space-y-1 whitespace-normal">
+            <div className="min-w-0 space-y-1.5 whitespace-normal pr-2">
               <Link
                 href={`/admin/${post.id}`}
-                className="block truncate font-medium text-ink-primary transition-colors hover:text-accent"
+                className="line-clamp-2 font-medium leading-snug text-ink-primary transition-colors hover:text-accent"
               >
                 {displayTitle}
               </Link>
-              <p className="truncate font-mono text-[11px] text-ink-tertiary">
+              <p className="truncate font-mono text-[11px] leading-none text-ink-tertiary">
                 /{post.slug}
               </p>
               {tagPreview.length > 0 ? (
-                <p className="truncate text-[11px] text-ink-tertiary">
+                <p className="truncate text-[11px] leading-none text-ink-tertiary/90">
                   {tagPreview.map((tag) => tag.name).join(" · ")}
                   {extraTags > 0 ? ` · +${extraTags}` : ""}
                 </p>
@@ -116,6 +116,7 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
             </div>
           );
         },
+        size: 320,
       },
       {
         id: "status",
@@ -155,6 +156,7 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
             </span>
           );
         },
+        size: 120,
       },
       {
         accessorKey: "createdAt",
@@ -179,6 +181,7 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
             {formatDate(row.original.createdAt)}
           </span>
         ),
+        size: 120,
       },
       {
         accessorKey: "viewCount",
@@ -192,6 +195,7 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
             {row.original.viewCount.toLocaleString()}
           </span>
         ),
+        size: 96,
       },
       {
         accessorKey: "commentCount",
@@ -205,6 +209,7 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
             {row.original.commentCount.toLocaleString()}
           </span>
         ),
+        size: 110,
       },
       {
         id: "actions",
@@ -250,6 +255,7 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
             </div>
           );
         },
+        size: 120,
       },
     ],
     []

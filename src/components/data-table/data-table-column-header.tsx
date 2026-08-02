@@ -19,18 +19,16 @@ export function DataTableColumnHeader<TData, TValue>({
   const sorted = column.getIsSorted();
   const canSort = column.getCanSort();
 
+  const base = cn(
+    "inline-flex w-full items-center gap-1.5 text-xs font-semibold tracking-[0.08em] uppercase transition-colors",
+    align === "right" && "justify-end",
+    align === "center" && "justify-center",
+    className
+  );
+
   if (!canSort) {
     return (
-      <span
-        className={cn(
-          "inline-flex w-full text-[11px] font-medium uppercase tracking-[0.1em] text-ink-tertiary",
-          align === "right" && "justify-end",
-          align === "center" && "justify-center",
-          className
-        )}
-      >
-        {title}
-      </span>
+      <span className={cn(base, "text-ink-secondary")}>{title}</span>
     );
   }
 
@@ -39,20 +37,18 @@ export function DataTableColumnHeader<TData, TValue>({
       type="button"
       onClick={() => column.toggleSorting(sorted === "asc")}
       className={cn(
-        "inline-flex w-full items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.1em] transition-colors hover:text-ink-primary",
-        align === "right" && "justify-end",
-        align === "center" && "justify-center",
-        sorted ? "text-ink-primary" : "text-ink-tertiary",
-        className
+        base,
+        "hover:text-ink-primary",
+        sorted ? "text-ink-primary" : "text-ink-secondary"
       )}
     >
       {title}
       {sorted === "asc" ? (
-        <ArrowUp className="size-3" />
+        <ArrowUp className="size-3.5 shrink-0" />
       ) : sorted === "desc" ? (
-        <ArrowDown className="size-3" />
+        <ArrowDown className="size-3.5 shrink-0" />
       ) : (
-        <ArrowUpDown className="size-3 opacity-40" />
+        <ArrowUpDown className="size-3.5 shrink-0 opacity-35" />
       )}
     </button>
   );

@@ -156,9 +156,9 @@ export function DataTable<TData>({
         className
       )}
     >
-      <div className="flex flex-col gap-4 border-b border-border px-5 py-4">
+      <div className="flex flex-col gap-3 border-b border-border px-5 py-3.5">
         {showHeaderChrome ? (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               {title ? (
                 <h2 className="text-sm font-medium text-ink-primary">{title}</h2>
@@ -176,7 +176,7 @@ export function DataTable<TData>({
           <p className="text-xs text-ink-tertiary">{countLabel}</p>
         )}
 
-        <div className="relative max-w-md">
+        <div className="relative max-w-sm">
           <Search
             className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-ink-tertiary"
             aria-hidden
@@ -187,12 +187,12 @@ export function DataTable<TData>({
             onChange={(e) => setGlobalFilter(e.target.value)}
             placeholder={searchPlaceholder}
             aria-label={searchAriaLabel}
-            className="h-9 border-border bg-(--bg-base) pl-8 text-sm dark:bg-(--bg-base)"
+            className="h-8 border-border/70 bg-transparent pl-8 text-xs shadow-none placeholder:text-ink-tertiary/80 dark:bg-transparent"
           />
         </div>
       </div>
 
-      <Table>
+      <Table className="table-fixed">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow
@@ -205,10 +205,11 @@ export function DataTable<TData>({
                   <TableHead
                     key={header.id}
                     className={cn(
-                      "h-10 px-3",
+                      "h-11 px-3 pt-3 pb-1.5",
                       align === "right" && "text-right",
                       align === "center" && "text-center"
                     )}
+                    style={{ width: header.getSize() }}
                   >
                     {header.isPlaceholder
                       ? null
@@ -224,7 +225,7 @@ export function DataTable<TData>({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow
               key={`${headerGroup.id}-filters`}
-              className="border-border hover:bg-transparent"
+              className="border-b border-border hover:bg-transparent"
             >
               {headerGroup.headers.map((header) => {
                 const align = header.column.columnDef.meta?.align ?? "left";
@@ -232,7 +233,7 @@ export function DataTable<TData>({
                   <TableHead
                     key={`${header.id}-filter`}
                     className={cn(
-                      "h-auto px-3 pb-3 pt-0 font-normal",
+                      "h-auto px-3 pt-1 pb-3.5 font-normal",
                       align === "right" && "text-right",
                       align === "center" && "text-center"
                     )}
@@ -269,7 +270,7 @@ export function DataTable<TData>({
             rows.map((row) => (
               <TableRow
                 key={row.id}
-                className="border-border hover:bg-(--bg-muted)/60"
+                className="border-b border-border/80 hover:bg-(--bg-muted)/50"
               >
                 {row.getVisibleCells().map((cell) => {
                   const align = cell.column.columnDef.meta?.align ?? "left";
@@ -277,7 +278,7 @@ export function DataTable<TData>({
                     <TableCell
                       key={cell.id}
                       className={cn(
-                        "px-3 py-3.5",
+                        "px-3 py-3",
                         align === "right" && "text-right",
                         align === "center" && "text-center"
                       )}
