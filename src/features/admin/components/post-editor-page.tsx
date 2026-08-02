@@ -48,6 +48,30 @@ function normalizeContent(html: string): string {
   return hasText(html) ? html : "";
 }
 
+function plainTextLength(html: string): number {
+  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim().length;
+}
+
+/**
+ * Pause auto-save after large accidental wipes (select-all + delete).
+ * Manual Save Draft still works.
+ */
+function isHugeContentDeletion(previousHtml: string, nextHtml: string): boolean {
+  const prevLen = plainTextLength(previousHtml);
+  const nextLen = plainTextLength(nextHtml);
+  if (prevLen < 80) return false; // nothing substantial was saved yet
+
+  const deleted = prevLen - nextLen;
+  if (deleted < 80) return false;
+
+  // Cleared most of a long draft, or removed a large absolute chunk
+  if (nextLen === 0) return true;
+  if (deleted >= 400) return true;
+  if (deleted >= prevLen * 0.5) return true;
+
+  return false;
+}
+
 function makeSnapshot(input: {
   title: string;
   slug: string;
@@ -120,10 +144,16 @@ export function PostEditorPage({
     currentSnapshot.published !== lastSaved.published ||
     currentSnapshot.tagIds !== lastSaved.tagIds;
 
-  const canSave =
-    currentSnapshot.title.length > 0 &&
-    currentSnapshot.slug.length > 0 &&
-    hasText(content);
+  const hasTitle = currentSnapshot.title.length > 0;
+  const hasBody = hasText(content);
+
+  // Drafts can save with title-only or body-only; block only when both are empty
+  const canSave = hasTitle || hasBody;
+  // Publishing still requires a real title and body
+  const canPublish = hasTitle && hasBody;
+
+  const hugeDeletion = isHugeContentDeletion(lastSaved.content, content);
+  const canAutoSave = canSave && !hugeDeletion;
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savingRef = useRef(false);
@@ -131,7 +161,8 @@ export function PostEditorPage({
   const doSave = useCallback(
     async (publish?: boolean) => {
       if (savingRef.current) return;
-      if (!canSave && publish === undefined) return;
+      if (publish === true && !canPublish) return;
+      if (publish === undefined && !canSave) return;
 
       if (saveTimerRef.current) {
         clearTimeout(saveTimerRef.current);
@@ -142,11 +173,15 @@ export function PostEditorPage({
       setSavePhase("saving");
 
       const nextPublished = publish !== undefined ? publish : published;
+      const slugToSave =
+        effectiveSlug.trim() ||
+        slugify(title) ||
+        `draft-${Date.now()}`;
       const payload = {
         title: title.trim(),
-        slug: effectiveSlug.trim(),
+        slug: slugToSave,
         excerpt: excerpt.trim() || undefined,
-        content,
+        content: content || "<p></p>",
         published: nextPublished,
         tagIds: selectedTagIds,
       };
@@ -174,6 +209,10 @@ export function PostEditorPage({
           setPublished(publish);
         }
 
+        if (!slugManuallyEdited && slugToSave !== slug) {
+          setSlug(slugToSave);
+        }
+
         setLastSaved(
           makeSnapshot({
             title: payload.title,
@@ -197,12 +236,24 @@ export function PostEditorPage({
         savingRef.current = false;
       }
     },
-    [canSave, title, effectiveSlug, excerpt, content, published, selectedTagIds, currentPostId]
+    [
+      canSave,
+      canPublish,
+      title,
+      slug,
+      effectiveSlug,
+      excerpt,
+      content,
+      published,
+      selectedTagIds,
+      currentPostId,
+      slugManuallyEdited,
+    ]
   );
 
-  // Auto-save drafts (debounced 3s)
+  // Auto-save drafts (debounced 3s) — skipped after large content deletions
   useEffect(() => {
-    if (published || !isDirty || !canSave || savingRef.current) return;
+    if (published || !isDirty || !canAutoSave || savingRef.current) return;
 
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
@@ -212,7 +263,7 @@ export function PostEditorPage({
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [isDirty, published, canSave, doSave]);
+  }, [isDirty, published, canAutoSave, doSave]);
 
   // Warn before leaving page with unsaved changes
   useEffect(() => {
@@ -262,6 +313,7 @@ export function PostEditorPage({
             phase={savePhase}
             published={published}
             isDirty={showUnsaved}
+            autoSavePaused={hugeDeletion && showUnsaved}
           />
           <Button
             variant="outline"
@@ -270,8 +322,10 @@ export function PostEditorPage({
             disabled={!canSave || savePhase === "saving"}
             title={
               canSave
-                ? "Save draft"
-                : "Add a title and some body text before saving"
+                ? hugeDeletion
+                  ? "Large deletion detected — click to save manually"
+                  : "Save draft"
+                : "Add a title or some body text before saving"
             }
           >
             <Save className="size-4" />
@@ -281,7 +335,12 @@ export function PostEditorPage({
             <Button
               size="sm"
               onClick={() => void doSave(true)}
-              disabled={!canSave || savePhase === "saving"}
+              disabled={!canPublish || savePhase === "saving"}
+              title={
+                canPublish
+                  ? "Publish post"
+                  : "Add a title and body before publishing"
+              }
             >
               <Send className="size-4" />
               Publish
@@ -420,10 +479,12 @@ function SaveStatusIndicator({
   phase,
   published,
   isDirty,
+  autoSavePaused,
 }: {
   phase: SavePhase;
   published: boolean;
   isDirty: boolean;
+  autoSavePaused?: boolean;
 }) {
   if (phase === "saving") {
     return (
@@ -439,6 +500,18 @@ function SaveStatusIndicator({
       <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
         <span className="size-2 rounded-full bg-green-500" />
         Saved
+      </span>
+    );
+  }
+
+  if (isDirty && autoSavePaused) {
+    return (
+      <span
+        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+        title="Auto-save paused after a large deletion. Use Save Draft to confirm."
+      >
+        <span className="size-2 rounded-full bg-orange-500" />
+        Auto-save paused
       </span>
     );
   }
