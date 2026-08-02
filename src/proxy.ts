@@ -11,6 +11,7 @@ export default auth((req) => {
 export const config = {
   // Match all pathnames except:
   // - /api, /trpc, /_next, /_vercel
+  // - /admin (admin panel is locale-independent)
   // - files with extensions (favicon.ico, images, etc.)
-  matcher: ["/((?!api|trpc|_next|_vercel|.*\\..*).*)"],
+  matcher: ["/((?!api|trpc|_next|_vercel|admin|.*\\..*).*)"],
 };
