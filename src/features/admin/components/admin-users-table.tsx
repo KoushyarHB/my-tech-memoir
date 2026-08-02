@@ -101,7 +101,7 @@ export function AdminUsersTable({ users, currentUserId }: AdminUsersTableProps) 
         />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-[var(--border)]">
+      <div className="overflow-hidden rounded-xl border border-border">
         <Table>
           <TableHeader>
             <TableRow>

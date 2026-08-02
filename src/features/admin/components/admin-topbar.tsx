@@ -21,7 +21,7 @@ export function AdminTopbar({
   const isDark = resolvedTheme === "dark";
 
   return (
-    <header className="sticky top-0 z-30 flex h-12 items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--bg-overlay)] px-4 backdrop-blur-xl lg:h-14 lg:px-6">
+    <header className="sticky top-0 z-30 flex h-12 items-center justify-between gap-3 border-b border-border bg-(--bg-overlay) px-4 backdrop-blur-xl lg:h-14 lg:px-6">
       <div className="flex min-w-0 items-center gap-2">
         {showSidebarToggle ? (
           <Button

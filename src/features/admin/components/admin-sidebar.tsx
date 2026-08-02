@@ -80,8 +80,8 @@ export function AdminSidebar({
           "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
           iconOnly && "justify-center px-2",
           active
-            ? "bg-[var(--bg-muted)] font-medium text-ink-primary"
-            : "text-ink-secondary hover:bg-[var(--bg-muted)]/70 hover:text-ink-primary"
+            ? "bg-(--bg-muted) font-medium text-ink-primary"
+            : "text-ink-secondary hover:bg-(--bg-muted)/70 hover:text-ink-primary"
         )}
       >
         <Icon className="size-4 shrink-0 opacity-80" />
@@ -94,7 +94,7 @@ export function AdminSidebar({
     <div className="flex h-full flex-col">
       <div
         className={cn(
-          "flex h-12 shrink-0 items-center border-b border-[var(--border)] lg:h-14",
+          "flex h-12 shrink-0 items-center border-b border-border lg:h-14",
           iconOnly ? "justify-center px-2" : "flex-col justify-center px-4"
         )}
       >
@@ -102,7 +102,7 @@ export function AdminSidebar({
           <button
             type="button"
             onClick={onExpand}
-            className="flex size-8 items-center justify-center rounded-lg text-ink-secondary hover:bg-[var(--bg-muted)] hover:text-ink-primary"
+            className="flex size-8 items-center justify-center rounded-lg text-ink-secondary hover:bg-(--bg-muted) hover:text-ink-primary"
             aria-label="Expand sidebar"
             title="Expand sidebar"
           >
@@ -161,7 +161,7 @@ export function AdminSidebar({
 
       <div
         className={cn(
-          "space-y-2 border-t border-[var(--border)]",
+          "space-y-2 border-t border-border",
           iconOnly ? "p-2" : "p-3"
         )}
       >
@@ -207,7 +207,7 @@ export function AdminSidebar({
     <>
       <aside
         className={cn(
-          "sticky top-0 hidden h-screen shrink-0 border-r border-[var(--border)] bg-[var(--bg-elevated)] transition-[width] duration-200 lg:block",
+          "sticky top-0 hidden h-screen shrink-0 border-r border-border bg-(--bg-elevated) transition-[width] duration-200 lg:block",
           collapsed ? "w-14" : "w-60"
         )}
       >
@@ -222,11 +222,11 @@ export function AdminSidebar({
             aria-label="Close menu"
             onClick={() => onMobileOpenChange(false)}
           />
-          <aside className="relative h-full w-72 max-w-[85vw] bg-[var(--bg-elevated)] shadow-xl">
+          <aside className="relative h-full w-72 max-w-[85vw] bg-(--bg-elevated) shadow-xl">
             <button
               type="button"
               onClick={() => onMobileOpenChange(false)}
-              className="absolute top-3 right-3 inline-flex size-8 items-center justify-center rounded-md text-ink-secondary hover:bg-[var(--bg-muted)]"
+              className="absolute top-3 right-3 inline-flex size-8 items-center justify-center rounded-md text-ink-secondary hover:bg-(--bg-muted)"
               aria-label="Close menu"
             >
               <X className="size-4" />

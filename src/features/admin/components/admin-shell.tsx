@@ -46,7 +46,7 @@ export function AdminShell({ userName, userRole, children }: AdminShellProps) {
   const sidebarOpen = isDesktop ? !sidebarCollapsed : mobileOpen;
 
   return (
-    <div className="min-h-screen bg-[var(--bg-base)] text-ink-primary lg:flex">
+    <div className="min-h-screen bg-(--bg-base) text-ink-primary lg:flex">
       <AdminSidebar
         userName={userName}
         isAdmin={userRole === "ADMIN"}
