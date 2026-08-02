@@ -228,7 +228,12 @@ export async function recordPostView(
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
-      return { counted: false, viewCount: post.viewCount };
+      // Re-read so the client can sync the latest count even when not incrementing
+      const current = await db.post.findUnique({
+        where: { id: postId },
+        select: { viewCount: true },
+      });
+      return { counted: false, viewCount: current?.viewCount ?? post.viewCount };
     }
     throw error;
   }

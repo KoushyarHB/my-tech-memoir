@@ -21,6 +21,8 @@ import { Plus, FileText, CheckCircle, Clock, Tag, Eye, Pencil } from "lucide-rea
 import { PostDeleteButton } from "./post-delete-button";
 import { cn } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboard() {
   const posts = await getAllPosts();
   const tagCount = await db.tag.count();

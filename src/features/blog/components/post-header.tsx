@@ -2,6 +2,7 @@ import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { BookmarkButton } from "@/features/bookmarks/components";
 import type { PostWithTags } from "../types";
+import { PostViewCount } from "./post-view-count";
 
 type PostHeaderProps = {
   post: PostWithTags;
@@ -47,10 +48,7 @@ export function PostHeader({ post }: PostHeaderProps) {
         <span aria-hidden="true">·</span>
         <span>{post.readingTime}</span>
         <span aria-hidden="true">·</span>
-        <span>
-          {post.viewCount.toLocaleString()}{" "}
-          {post.viewCount === 1 ? "view" : "views"}
-        </span>
+        <PostViewCount postId={post.id} initialCount={post.viewCount} />
       </div>
     </header>
   );

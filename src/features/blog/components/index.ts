@@ -1,3 +1,3 @@
 export { PostCard } from "./post-card";
 export { PostHeader } from "./post-header";
-export { ViewTracker } from "./view-tracker";
+export { PostViewCount } from "./post-view-count";
