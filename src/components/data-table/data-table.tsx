@@ -187,7 +187,7 @@ export function DataTable<TData>({
             onChange={(e) => setGlobalFilter(e.target.value)}
             placeholder={searchPlaceholder}
             aria-label={searchAriaLabel}
-            className="h-8 border-border/70 bg-transparent pl-8 text-xs shadow-none placeholder:text-ink-tertiary/80 dark:bg-transparent"
+            className="h-8 border-border/70 bg-transparent pl-8 text-xs shadow-none outline-none placeholder:text-ink-tertiary/80 focus-visible:border-border focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
           />
         </div>
       </div>
@@ -205,7 +205,7 @@ export function DataTable<TData>({
                   <TableHead
                     key={header.id}
                     className={cn(
-                      "h-11 px-3 pt-3 pb-1.5",
+                      "h-auto px-3 pt-3.5 pb-1.5",
                       align === "right" && "text-right",
                       align === "center" && "text-center"
                     )}
@@ -233,7 +233,7 @@ export function DataTable<TData>({
                   <TableHead
                     key={`${header.id}-filter`}
                     className={cn(
-                      "h-auto px-3 pt-0.5 pb-2 align-top font-normal",
+                      "h-auto px-3 pt-0.5 pb-3.5 align-top font-normal",
                       align === "right" && "text-right",
                       align === "center" && "text-center"
                     )}

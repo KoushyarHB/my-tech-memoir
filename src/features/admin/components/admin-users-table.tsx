@@ -228,6 +228,7 @@ export function AdminUsersTable({ users, currentUserId }: AdminUsersTableProps) 
           <DataTableColumnHeader column={column} title="Posts" />
         ),
         enableColumnFilter: false,
+        meta: { align: "center" },
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">
             {row.original.postCount.toLocaleString()}
@@ -240,6 +241,7 @@ export function AdminUsersTable({ users, currentUserId }: AdminUsersTableProps) 
           <DataTableColumnHeader column={column} title="Bookmarks" />
         ),
         enableColumnFilter: false,
+        meta: { align: "center" },
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">
             {row.original.bookmarkCount.toLocaleString()}
@@ -252,6 +254,7 @@ export function AdminUsersTable({ users, currentUserId }: AdminUsersTableProps) 
           <DataTableColumnHeader column={column} title="Comments" />
         ),
         enableColumnFilter: false,
+        meta: { align: "center" },
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">
             {row.original.commentCount.toLocaleString()}

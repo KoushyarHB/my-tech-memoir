@@ -188,7 +188,7 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Views" />
         ),
-        meta: { filterPlaceholder: "Search Views" },
+        meta: { align: "center", filterPlaceholder: "Search Views" },
         filterFn: includesString,
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">
@@ -202,7 +202,7 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Comments" />
         ),
-        meta: { filterPlaceholder: "Search Comments" },
+        meta: { align: "center", filterPlaceholder: "Search Comments" },
         filterFn: includesString,
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">

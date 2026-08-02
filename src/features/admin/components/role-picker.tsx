@@ -29,8 +29,8 @@ export function RolePicker({ value, disabled, onChange }: RolePickerProps) {
         className={cn(
           "group/role-picker inline-flex min-w-30 items-center justify-between gap-2 rounded-lg border border-border bg-(--bg-elevated) px-2.5 py-1.5 text-xs font-medium text-ink-primary transition-colors",
           "hover:border-(--border-hover) hover:bg-(--bg-muted)/50",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--border-focus)/30",
-          "data-popup-open:border-(--border-hover) data-popup-open:bg-(--bg-muted)/50",
+          "outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:border-border focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0",
+          "data-popup-open:border-border data-popup-open:bg-(--bg-muted)/50",
           "disabled:cursor-not-allowed disabled:opacity-50"
         )}
       >
@@ -49,15 +49,17 @@ export function RolePicker({ value, disabled, onChange }: RolePickerProps) {
           side="bottom"
           align="end"
           sideOffset={6}
-          className="isolate z-50"
+          className="isolate z-50 outline-none"
         >
           <Menu.Popup
             className={cn(
-              "min-w-40 origin-(--transform-origin) overflow-hidden rounded-xl border border-border bg-(--bg-elevated) p-1 shadow-(--shadow-lg) outline-none",
+              "min-w-40 origin-(--transform-origin) overflow-hidden rounded-xl border border-border bg-(--bg-elevated) p-1 shadow-(--shadow-lg)",
+              "outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
               "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95",
               "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
               "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2"
             )}
+            style={{ outline: "none" }}
           >
             <Menu.RadioGroup
               value={value}

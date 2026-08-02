@@ -83,7 +83,7 @@ export function BookmarkButton({
         "group relative flex size-10 shrink-0 items-center justify-center rounded-full",
         "border transition-all duration-300 ease-out",
         "hover:scale-105 active:scale-95",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--border-focus) focus-visible:ring-offset-2",
+        "focus-visible:outline-none focus-visible:ring-0",
         "disabled:pointer-events-none disabled:opacity-60",
         bookmarked
           ? "border-accent bg-(--accent-subtle) text-accent shadow-sm"

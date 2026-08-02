@@ -52,7 +52,7 @@ body {
   --border: #d2d0cb;
   --border-muted: #dbd9d4;
   --border-hover: #b8b5ae;
-  --border-focus: #2563eb;
+  --border-focus: #787570;
 
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
@@ -235,7 +235,7 @@ body {
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
@@ -611,9 +611,18 @@ body {
 }
 
 /* ─── Focus, selection, scrollbar ────────────────────────────────── */
+/* No blue focus rings. Prefer border/background shifts on controls. */
+:focus {
+  outline: none;
+}
 :focus-visible {
-  outline: 2px solid var(--border-focus);
-  outline-offset: 2px;
+  outline: none;
+}
+
+[role="menu"],
+[role="listbox"],
+[role="dialog"] {
+  outline: none !important;
 }
 
 ::selection {
