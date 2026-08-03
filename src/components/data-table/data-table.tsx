@@ -208,9 +208,8 @@ export function DataTable<TData>({
                   <TableHead
                     key={header.id}
                     className={cn(
-                      "h-auto px-3 pt-4 pb-1.5",
+                      "h-auto px-3 py-2",
                       align === "right" && "text-right",
-                      align === "center" && "text-center"
                     )}
                     style={{ width: header.getSize() }}
                   >
