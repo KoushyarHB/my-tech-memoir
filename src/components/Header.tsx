@@ -16,7 +16,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTheme } from "@/components/theme";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -47,16 +47,20 @@ export default function Header() {
   const isAuthenticated = status === "authenticated";
   const user = session?.user;
   const showDashboard = canAccessDashboard(user?.role);
+  const aboutActive = pathname === "/about" || pathname.startsWith("/about/");
 
-  const navItems = [
-    { href: "/blog" as const, label: t("blog") },
-    { href: "/about" as const, label: t("about") },
-  ];
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
-  function isActive(href: string) {
-    if (href === "/") return pathname === "/";
-    return pathname === href || pathname.startsWith(`${href}/`);
-  }
+  useEffect(() => {
+    if (!mobileOpen) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setMobileOpen(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mobileOpen]);
 
   return (
     <header
@@ -67,10 +71,11 @@ export default function Header() {
           : "var(--bg-overlay)",
       }}
     >
-      <div className="mx-auto flex h-14 max-w-2xl items-center gap-3 px-5">
+      <div className="relative mx-auto flex h-14 max-w-2xl items-center gap-3 px-5">
         <Link
           href="/"
           className="shrink-0 font-serif text-[1.05rem] font-semibold tracking-tight text-ink-primary no-underline transition-opacity hover:opacity-80"
+          onClick={() => setMobileOpen(false)}
         >
           {tHome("title")}
         </Link>
@@ -79,28 +84,17 @@ export default function Header() {
           className="ml-1 hidden items-center gap-0.5 sm:flex"
           aria-label="Primary"
         >
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "rounded-md px-2.5 py-1.5 text-sm transition-colors",
-                isActive(item.href)
-                  ? "font-medium text-ink-primary"
-                  : "text-ink-secondary hover:text-ink-primary"
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
-          {showDashboard ? (
-            <a
-              href="/admin"
-              className="rounded-md px-2.5 py-1.5 text-sm text-ink-secondary transition-colors hover:text-ink-primary"
-            >
-              {t("dashboard")}
-            </a>
-          ) : null}
+          <Link
+            href="/about"
+            className={cn(
+              "rounded-md px-2.5 py-1.5 text-sm transition-colors",
+              aboutActive
+                ? "font-medium text-ink-primary"
+                : "text-ink-secondary hover:text-ink-primary"
+            )}
+          >
+            {t("about")}
+          </Link>
         </nav>
 
         <div className="ml-auto flex items-center gap-0.5">
@@ -238,6 +232,7 @@ export default function Header() {
             className="text-ink-secondary sm:hidden"
             aria-label={mobileOpen ? t("closeMenu") : t("openMenu")}
             aria-expanded={mobileOpen}
+            aria-controls="mobile-nav"
             onClick={() => setMobileOpen((open) => !open)}
           >
             {mobileOpen ? (
@@ -250,38 +245,40 @@ export default function Header() {
       </div>
 
       {mobileOpen ? (
-        <div className="border-t border-border sm:hidden">
+        <div className="sm:hidden">
+          <button
+            type="button"
+            className="fixed inset-0 top-14 z-40 bg-black/35"
+            aria-label={t("closeMenu")}
+            onClick={() => setMobileOpen(false)}
+          />
           <nav
-            className="mx-auto flex max-w-2xl flex-col gap-0.5 px-3 py-3"
+            id="mobile-nav"
             aria-label="Mobile"
+            className="absolute inset-x-0 top-full z-50 border-b border-border px-3 py-3 shadow-(--shadow-lg)"
+            style={{
+              backgroundColor: isDark
+                ? "rgba(18, 18, 18, 0.96)"
+                : "var(--bg-elevated)",
+            }}
           >
-            {navItems.map((item) => (
+            <div className="mx-auto flex max-w-2xl flex-col gap-0.5">
               <Link
-                key={item.href}
-                href={item.href}
+                href="/about"
                 onClick={() => setMobileOpen(false)}
                 className={cn(
                   "rounded-lg px-3 py-2.5 text-sm transition-colors",
-                  isActive(item.href)
+                  aboutActive
                     ? "bg-(--bg-muted) font-medium text-ink-primary"
                     : "text-ink-secondary hover:bg-(--bg-muted)/70 hover:text-ink-primary"
                 )}
               >
-                {item.label}
+                {t("about")}
               </Link>
-            ))}
-            {showDashboard ? (
-              <a
-                href="/admin"
-                onClick={() => setMobileOpen(false)}
-                className="rounded-lg px-3 py-2.5 text-sm text-ink-secondary transition-colors hover:bg-(--bg-muted)/70 hover:text-ink-primary"
-              >
-                {t("dashboard")}
-              </a>
-            ) : null}
-            <div className="mt-2 flex items-center justify-between border-t border-border px-1 pt-3">
-              <span className="text-xs text-ink-tertiary">{t("language")}</span>
-              <LanguageSwitcher />
+              <div className="mt-2 flex items-center justify-between border-t border-border px-1 pt-3">
+                <span className="text-xs text-ink-tertiary">{t("language")}</span>
+                <LanguageSwitcher />
+              </div>
             </div>
           </nav>
         </div>
