@@ -33,6 +33,8 @@ const ALIGN_OPTIONS: {
   },
 ];
 
+const WIDTH_PRESETS = [50, 75, 100] as const;
+
 function clampWidth(value: number) {
   return Math.min(100, Math.max(25, Math.round(value)));
 }
@@ -139,6 +141,23 @@ export function MemoirImageView(props: ReactNodeViewProps) {
             ))}
           </div>
           <span className="memoir-figure__width">{width}%</span>
+          <div className="memoir-figure__width-presets">
+            {WIDTH_PRESETS.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                title={`Width ${preset}%`}
+                aria-label={`Set image width to ${preset}%`}
+                className={cn(
+                  "memoir-figure__width-preset",
+                  width === preset && "memoir-figure__width-preset--active"
+                )}
+                onClick={() => updateAttributes({ width: preset })}
+              >
+                {preset}%
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

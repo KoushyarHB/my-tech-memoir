@@ -26,7 +26,7 @@ export function PostCard({ post }: PostCardProps) {
         <span className="text-xs text-ink-tertiary">{post.readingTime}</span>
       </div>
 
-      <h2 className="font-serif text-xl font-semibold leading-snug tracking-tight text-ink-primary transition-colors duration-200 sm:text-2xl">
+      <h2 className="font-serif text-lg font-semibold leading-snug tracking-tight text-ink-primary transition-colors duration-200 sm:text-2xl">
         <span className="border-b border-transparent pb-0.5 transition-all duration-200 group-hover:border-current">
           {post.title}
         </span>

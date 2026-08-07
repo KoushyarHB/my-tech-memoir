@@ -31,19 +31,19 @@ export function PostHeader({ post }: PostHeaderProps) {
       )}
 
       <div className="mb-4 flex items-start justify-between gap-3">
-        <h1 className="font-serif text-3xl font-bold leading-tight tracking-tight text-ink-primary sm:text-4xl">
+        <h1 className="min-w-0 flex-1 font-serif text-[1.65rem] font-bold leading-tight tracking-tight text-ink-primary sm:text-4xl">
           {post.title}
         </h1>
         <BookmarkButton postId={post.id} />
       </div>
 
       {post.excerpt && (
-        <p className="mb-4 text-lg leading-relaxed text-ink-secondary">
+        <p className="mb-4 text-base leading-relaxed text-ink-secondary sm:text-lg">
           {post.excerpt}
         </p>
       )}
 
-      <div className="flex items-center gap-3 text-sm text-ink-tertiary">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-tertiary">
         <time dateTime={post.createdAt.toISOString()}>{formattedDate}</time>
         <span aria-hidden="true">·</span>
         <span>{post.readingTime}</span>

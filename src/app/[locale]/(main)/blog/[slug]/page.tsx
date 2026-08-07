@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { getPostBySlug, getPublishedPosts } from "@/features/blog/server/post-service";
-import { PostHeader } from "@/features/blog/components";
+import { Lighthouse, PostHeader } from "@/features/blog/components";
 import { CommentSection } from "@/features/comments/components";
 
 export const dynamic = "force-dynamic";
@@ -50,12 +50,9 @@ export default async function BlogPostPage({ params }: Props) {
   }
 
   return (
-    <article className="mx-auto max-w-2xl px-5 py-10 sm:py-14">
+    <article className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-5 sm:py-14">
       <PostHeader post={post} />
-      <div
-        className="prose-memoir"
-        dangerouslySetInnerHTML={{ __html: post.content }}
-      />
+      <Lighthouse html={post.content} />
       <CommentSection postId={post.id} />
     </article>
   );

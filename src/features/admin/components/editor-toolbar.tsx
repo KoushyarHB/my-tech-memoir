@@ -203,7 +203,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
   return (
     <>
-      <div className="sticky top-0 z-10 flex items-center gap-1 overflow-x-auto border-b border-border bg-card p-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="sticky top-12 z-10 flex items-center gap-1 overflow-x-auto border-b border-border bg-card p-1.5 sm:p-2 lg:top-14 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {tools.map((tool) => (
           <Button
             key={tool.label}

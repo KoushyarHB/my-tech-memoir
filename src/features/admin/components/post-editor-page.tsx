@@ -300,9 +300,9 @@ export function PostEditorPage({
   const showUnsaved = isDirty && savePhase !== "saving" && savePhase !== "saved";
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8">
+    <div className="mx-auto max-w-6xl px-3 py-4 sm:px-5 sm:py-8">
       {/* Header */}
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
         <Button variant="ghost" size="sm" onClick={handleBackClick}>
           <ArrowLeft className="size-4" />
           <span className="hidden sm:inline">Back to dashboard</span>
@@ -372,15 +372,15 @@ export function PostEditorPage({
       </div>
 
       {/* Main layout */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px]">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-[1fr_300px]">
         {/* Editor */}
-        <div>
+        <div className="min-w-0">
           <Input
             type="text"
             placeholder="Post title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="mb-4 h-auto rounded-none border-0 bg-transparent px-0 py-1 font-serif text-3xl font-bold leading-tight tracking-tight text-ink-primary shadow-none placeholder:text-muted-foreground/50 focus-visible:border-0 focus-visible:ring-0 dark:bg-transparent md:text-3xl"
+            className="mb-3 h-auto rounded-none border-0 bg-transparent px-0 py-1 font-serif text-2xl font-bold leading-tight tracking-tight text-ink-primary shadow-none placeholder:text-muted-foreground/50 focus-visible:border-0 focus-visible:ring-0 dark:bg-transparent sm:mb-4 sm:text-3xl md:text-3xl"
           />
           <PostEditor
             initialContent={initialContent}

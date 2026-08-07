@@ -52,7 +52,7 @@ export function PostEditor({
     editorProps: {
       attributes: {
         class:
-          "prose-memoir min-h-[400px] max-w-none focus:outline-none px-5 py-4",
+          "prose-memoir min-h-[280px] max-w-none px-3 py-3 focus:outline-none sm:min-h-[400px] sm:px-5 sm:py-4",
       },
     },
     onUpdate: ({ editor: ed }) => {

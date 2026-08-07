@@ -36,7 +36,7 @@ export default async function HomePage({ params }: Props) {
   const recentPosts = allPosts.slice(0, 5);
 
   return (
-    <div className="mx-auto max-w-2xl px-5 py-12 sm:py-16">
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-5 sm:py-16">
       <section aria-label="Recent posts">
         {recentPosts.length === 0 ? (
           <p className="py-12 text-center text-ink-tertiary">
