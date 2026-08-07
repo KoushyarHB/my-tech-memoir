@@ -275,6 +275,30 @@ export default function Header() {
               >
                 {t("about")}
               </Link>
+
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    href="/bookmarks"
+                    onClick={() => setMobileOpen(false)}
+                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-ink-secondary transition-colors hover:bg-(--bg-muted)/70 hover:text-ink-primary"
+                  >
+                    <Bookmark className="size-3.5 opacity-70" />
+                    {t("bookmarks")}
+                  </Link>
+                  {showDashboard ? (
+                    <a
+                      href="/admin"
+                      onClick={() => setMobileOpen(false)}
+                      className="inline-flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-ink-secondary transition-colors hover:bg-(--bg-muted)/70 hover:text-ink-primary"
+                    >
+                      <LayoutDashboard className="size-3.5 opacity-70" />
+                      {t("dashboard")}
+                    </a>
+                  ) : null}
+                </>
+              ) : null}
+
               <div className="mt-2 flex items-center justify-between border-t border-border px-1 pt-3">
                 <span className="text-xs text-ink-tertiary">{t("language")}</span>
                 <LanguageSwitcher />
