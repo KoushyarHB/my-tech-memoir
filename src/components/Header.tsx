@@ -33,6 +33,12 @@ function canAccessDashboard(role?: string | null) {
   return role === "EDITOR" || role === "ADMIN";
 }
 
+/**
+ * Header layout (intentional split):
+ * - Site nav: About (+ Language in mobile sheet)
+ * - Account menu (avatar): Bookmarks, Dashboard (editors/admins), Sign out
+ * Mobile sheet overlays content — it does not expand the header height.
+ */
 export default function Header() {
   const { resolvedTheme, toggleTheme, mounted } = useTheme();
   const { data: session, status } = useSession();
@@ -59,7 +65,12 @@ export default function Header() {
       if (event.key === "Escape") setMobileOpen(false);
     }
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [mobileOpen]);
 
   return (
@@ -71,7 +82,7 @@ export default function Header() {
           : "var(--bg-overlay)",
       }}
     >
-      <div className="relative mx-auto flex h-14 max-w-2xl items-center gap-3 px-5">
+      <div className="mx-auto flex h-14 max-w-2xl items-center gap-3 px-5">
         <Link
           href="/"
           className="shrink-0 font-serif text-[1.05rem] font-semibold tracking-tight text-ink-primary no-underline transition-opacity hover:opacity-80"
@@ -122,7 +133,11 @@ export default function Header() {
           )}
 
           {isAuthenticated && user ? (
-            <Menu.Root>
+            <Menu.Root
+              onOpenChange={(open) => {
+                if (open) setMobileOpen(false);
+              }}
+            >
               <Menu.Trigger
                 className={cn(
                   "ml-1 inline-flex items-center gap-1.5 rounded-full py-0.5 pr-1.5 pl-0.5 transition-colors",
@@ -152,7 +167,7 @@ export default function Header() {
                   side="bottom"
                   align="end"
                   sideOffset={8}
-                  className="isolate z-50 outline-none"
+                  className="isolate z-[60] outline-none"
                 >
                   <Menu.Popup
                     className={cn(
@@ -245,20 +260,20 @@ export default function Header() {
       </div>
 
       {mobileOpen ? (
-        <div className="sm:hidden">
+        <div className="sm:hidden" aria-hidden={false}>
           <button
             type="button"
-            className="fixed inset-0 top-14 z-40 bg-black/35"
+            className="fixed inset-0 top-14 z-40 bg-black/40"
             aria-label={t("closeMenu")}
             onClick={() => setMobileOpen(false)}
           />
           <nav
             id="mobile-nav"
             aria-label="Mobile"
-            className="absolute inset-x-0 top-full z-50 border-b border-border px-3 py-3 shadow-(--shadow-lg)"
+            className="fixed inset-x-0 top-14 z-50 border-b border-border px-3 py-3 shadow-(--shadow-lg)"
             style={{
               backgroundColor: isDark
-                ? "rgba(18, 18, 18, 0.96)"
+                ? "rgba(18, 18, 18, 0.98)"
                 : "var(--bg-elevated)",
             }}
           >
@@ -275,30 +290,6 @@ export default function Header() {
               >
                 {t("about")}
               </Link>
-
-              {isAuthenticated ? (
-                <>
-                  <Link
-                    href="/bookmarks"
-                    onClick={() => setMobileOpen(false)}
-                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-ink-secondary transition-colors hover:bg-(--bg-muted)/70 hover:text-ink-primary"
-                  >
-                    <Bookmark className="size-3.5 opacity-70" />
-                    {t("bookmarks")}
-                  </Link>
-                  {showDashboard ? (
-                    <a
-                      href="/admin"
-                      onClick={() => setMobileOpen(false)}
-                      className="inline-flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-ink-secondary transition-colors hover:bg-(--bg-muted)/70 hover:text-ink-primary"
-                    >
-                      <LayoutDashboard className="size-3.5 opacity-70" />
-                      {t("dashboard")}
-                    </a>
-                  ) : null}
-                </>
-              ) : null}
-
               <div className="mt-2 flex items-center justify-between border-t border-border px-1 pt-3">
                 <span className="text-xs text-ink-tertiary">{t("language")}</span>
                 <LanguageSwitcher />
