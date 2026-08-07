@@ -7,6 +7,10 @@
     "signIn": "Sign in",
     "signOut": "Sign out",
     "bookmarks": "Bookmarks",
+    "dashboard": "Dashboard",
+    "account": "Account",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
     "theme": {
       "light": "Switch to light mode",
       "dark": "Switch to dark mode"

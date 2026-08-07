@@ -7,6 +7,10 @@
     "signIn": "ورود",
     "signOut": "خروج",
     "bookmarks": "نشان‌شده‌ها",
+    "dashboard": "داشبورد",
+    "account": "حساب کاربری",
+    "openMenu": "باز کردن منو",
+    "closeMenu": "بستن منو",
     "theme": {
       "light": "تغییر به حالت روشن",
       "dark": "تغییر به حالت تاریک"
