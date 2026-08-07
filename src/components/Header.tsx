@@ -10,13 +10,10 @@ import {
   LayoutDashboard,
   LogIn,
   LogOut,
-  Menu as MenuIcon,
   Moon,
   Sun,
   UserRound,
-  X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useTheme } from "@/components/theme";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -33,12 +30,6 @@ function canAccessDashboard(role?: string | null) {
   return role === "EDITOR" || role === "ADMIN";
 }
 
-/**
- * Header layout (intentional split):
- * - Site nav: About (+ Language in mobile sheet)
- * - Account menu (avatar): Bookmarks, Dashboard (editors/admins), Sign out
- * Mobile sheet overlays content — it does not expand the header height.
- */
 export default function Header() {
   const { resolvedTheme, toggleTheme, mounted } = useTheme();
   const { data: session, status } = useSession();
@@ -47,31 +38,12 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const nextRouter = useNextRouter();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const isDark = resolvedTheme === "dark";
   const isAuthenticated = status === "authenticated";
   const user = session?.user;
   const showDashboard = canAccessDashboard(user?.role);
   const aboutActive = pathname === "/about" || pathname.startsWith("/about/");
-
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (!mobileOpen) return;
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setMobileOpen(false);
-    }
-    window.addEventListener("keydown", onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [mobileOpen]);
 
   return (
     <header
@@ -82,23 +54,19 @@ export default function Header() {
           : "var(--bg-overlay)",
       }}
     >
-      <div className="mx-auto flex h-14 max-w-2xl items-center gap-3 px-5">
+      <div className="mx-auto flex h-14 max-w-2xl items-center gap-2 px-4 sm:gap-3 sm:px-5">
         <Link
           href="/"
           className="shrink-0 font-serif text-[1.05rem] font-semibold tracking-tight text-ink-primary no-underline transition-opacity hover:opacity-80"
-          onClick={() => setMobileOpen(false)}
         >
           {tHome("title")}
         </Link>
 
-        <nav
-          className="ml-1 hidden items-center gap-0.5 sm:flex"
-          aria-label="Primary"
-        >
+        <nav className="ml-1 flex items-center" aria-label="Primary">
           <Link
             href="/about"
             className={cn(
-              "rounded-md px-2.5 py-1.5 text-sm transition-colors",
+              "rounded-md px-2 py-1.5 text-sm transition-colors sm:px-2.5",
               aboutActive
                 ? "font-medium text-ink-primary"
                 : "text-ink-secondary hover:text-ink-primary"
@@ -109,9 +77,7 @@ export default function Header() {
         </nav>
 
         <div className="ml-auto flex items-center gap-0.5">
-          <div className="hidden sm:block">
-            <LanguageSwitcher />
-          </div>
+          <LanguageSwitcher />
 
           {mounted ? (
             <Button
@@ -133,11 +99,7 @@ export default function Header() {
           )}
 
           {isAuthenticated && user ? (
-            <Menu.Root
-              onOpenChange={(open) => {
-                if (open) setMobileOpen(false);
-              }}
-            >
+            <Menu.Root>
               <Menu.Trigger
                 className={cn(
                   "ml-1 inline-flex items-center gap-1.5 rounded-full py-0.5 pr-1.5 pl-0.5 transition-colors",
@@ -167,7 +129,7 @@ export default function Header() {
                   side="bottom"
                   align="end"
                   sideOffset={8}
-                  className="isolate z-[60] outline-none"
+                  className="isolate z-50 outline-none"
                 >
                   <Menu.Popup
                     className={cn(
@@ -240,64 +202,8 @@ export default function Header() {
           ) : (
             <div className="ml-1 size-8" aria-hidden />
           )}
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-ink-secondary sm:hidden"
-            aria-label={mobileOpen ? t("closeMenu") : t("openMenu")}
-            aria-expanded={mobileOpen}
-            aria-controls="mobile-nav"
-            onClick={() => setMobileOpen((open) => !open)}
-          >
-            {mobileOpen ? (
-              <X className="size-4" />
-            ) : (
-              <MenuIcon className="size-4" />
-            )}
-          </Button>
         </div>
       </div>
-
-      {mobileOpen ? (
-        <div className="sm:hidden" aria-hidden={false}>
-          <button
-            type="button"
-            className="fixed inset-0 top-14 z-40 bg-black/40"
-            aria-label={t("closeMenu")}
-            onClick={() => setMobileOpen(false)}
-          />
-          <nav
-            id="mobile-nav"
-            aria-label="Mobile"
-            className="fixed inset-x-0 top-14 z-50 border-b border-border px-3 py-3 shadow-(--shadow-lg)"
-            style={{
-              backgroundColor: isDark
-                ? "rgba(18, 18, 18, 0.98)"
-                : "var(--bg-elevated)",
-            }}
-          >
-            <div className="mx-auto flex max-w-2xl flex-col gap-0.5">
-              <Link
-                href="/about"
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "rounded-lg px-3 py-2.5 text-sm transition-colors",
-                  aboutActive
-                    ? "bg-(--bg-muted) font-medium text-ink-primary"
-                    : "text-ink-secondary hover:bg-(--bg-muted)/70 hover:text-ink-primary"
-                )}
-              >
-                {t("about")}
-              </Link>
-              <div className="mt-2 flex items-center justify-between border-t border-border px-1 pt-3">
-                <span className="text-xs text-ink-tertiary">{t("language")}</span>
-                <LanguageSwitcher />
-              </div>
-            </div>
-          </nav>
-        </div>
-      ) : null}
     </header>
   );
 }
