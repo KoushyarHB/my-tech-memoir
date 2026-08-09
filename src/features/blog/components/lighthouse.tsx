@@ -31,10 +31,7 @@ type LighthouseProps = {
  */
 export function Lighthouse({ html, className }: LighthouseProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  // Keep image data through the close animation — clearing it on close
-  // unmounts the <img> mid fade/zoom and causes a visible blink.
-  const [image, setImage] = useState<LighthouseImage | null>(null);
-  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState<LighthouseImage | null>(null);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -55,12 +52,11 @@ export function Lighthouse({ html, className }: LighthouseProps) {
       const caption =
         figure?.querySelector("figcaption")?.textContent?.trim() ?? "";
 
-      setImage({
+      setActive({
         src: img.currentSrc || img.src,
         alt: img.alt || caption || "Image",
         caption,
       });
-      setOpen(true);
     }
 
     root.addEventListener("click", onClick);
@@ -75,19 +71,20 @@ export function Lighthouse({ html, className }: LighthouseProps) {
         dangerouslySetInnerHTML={{ __html: html }}
       />
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={active !== null}
+        onOpenChange={(open) => {
+          if (!open) setActive(null);
+        }}
+      >
         <DialogPortal>
-          <DialogOverlay className="bg-black/80 supports-backdrop-filter:backdrop-blur-sm" />
+          <DialogOverlay className="bg-black/80 duration-0 supports-backdrop-filter:backdrop-blur-sm data-open:animate-none data-closed:animate-none" />
           <DialogPrimitive.Popup
             data-slot="dialog-content"
-            className={cn(
-              "fixed top-1/2 left-1/2 z-50 flex w-[min(100vw-1rem,56rem)] max-w-none -translate-x-1/2 -translate-y-1/2 flex-col items-center outline-none",
-              "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95",
-              "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
-            )}
+            className="fixed top-1/2 left-1/2 z-50 flex w-[min(100vw-1rem,56rem)] max-w-none -translate-x-1/2 -translate-y-1/2 flex-col items-center outline-none duration-0 data-open:animate-none data-closed:animate-none"
           >
             <DialogTitle className="sr-only">
-              {image?.alt || "Image preview"}
+              {active?.alt || "Image preview"}
             </DialogTitle>
             <DialogDescription className="sr-only">
               Enlarged image view. Press Escape or tap close to dismiss.
@@ -106,17 +103,17 @@ export function Lighthouse({ html, className }: LighthouseProps) {
               <span className="sr-only">Close</span>
             </DialogClose>
 
-            {image ? (
+            {active ? (
               <>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={image.src}
-                  alt={image.alt}
+                  src={active.src}
+                  alt={active.alt}
                   className="max-h-[min(82dvh,82vh)] w-auto max-w-full rounded-lg object-contain shadow-(--shadow-xl)"
                 />
-                {image.caption ? (
+                {active.caption ? (
                   <p className="mt-3 max-w-prose px-3 text-center text-sm text-white/90">
-                    {image.caption}
+                    {active.caption}
                   </p>
                 ) : null}
               </>
