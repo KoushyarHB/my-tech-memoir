@@ -72,7 +72,7 @@ export function PostEditor({
   }, [editor, editable]);
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card">
+    <div className="rounded-lg border border-border bg-card">
       <EditorToolbar editor={editor} />
       <EditorContent editor={editor} />
     </div>
