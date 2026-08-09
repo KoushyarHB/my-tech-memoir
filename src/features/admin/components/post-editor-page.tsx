@@ -13,6 +13,7 @@ import { PostEditor } from "./post-editor";
 import { Save, Send, ArrowLeft, X, Eye } from "lucide-react";
 import { slugify } from "@/features/blog/lib/slugify";
 import Link from "next/link";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 type Tag = { id: string; name: string; slug: string };
@@ -231,7 +232,7 @@ export function PostEditorPage({
       } catch (err) {
         console.error("Save failed:", err);
         setSavePhase("idle");
-        alert("Failed to save. Please try again.");
+        toast.error("Failed to save. Please try again.");
       } finally {
         savingRef.current = false;
       }
@@ -278,14 +279,25 @@ export function PostEditorPage({
 
   function handleBackClick() {
     if (isDirty && savePhase !== "saved") {
-      const proceed = window.confirm(
-        "You have unsaved changes.\n\nClick OK to save as draft and leave, or Cancel to stay."
-      );
-      if (proceed && canSave) {
-        void doSave().then(() => router.push("/admin"));
-        return;
-      }
-      if (!proceed) return;
+      toast.warning("You have unsaved changes", {
+        description: "Save as draft and leave, or stay on this page.",
+        duration: Infinity,
+        action: {
+          label: "Save & leave",
+          onClick: () => {
+            if (canSave) {
+              void doSave().then(() => router.push("/admin"));
+              return;
+            }
+            router.push("/admin");
+          },
+        },
+        cancel: {
+          label: "Stay",
+          onClick: () => {},
+        },
+      });
+      return;
     }
     router.push("/admin");
   }
