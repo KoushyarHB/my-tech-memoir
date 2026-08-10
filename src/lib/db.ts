@@ -9,7 +9,7 @@
  * across hot-reloads in dev, and is a no-op in production.
  */
 
-import { PrismaClient } from "../../generated/prisma/client";
+import { PrismaClient, Prisma } from "../../generated/prisma/client";
 import { PrismaNeon } from "@prisma/adapter-neon";
 
 const globalForPrisma = globalThis as unknown as {
@@ -24,5 +24,6 @@ function createPrismaClient() {
 }
 
 export const db = globalForPrisma.prisma ?? createPrismaClient();
+export { Prisma };
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;

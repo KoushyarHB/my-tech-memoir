@@ -1,5 +1,4 @@
-import { db } from "@/lib/db";
-import { Prisma } from "../../../../generated/prisma/client";
+import { db, Prisma } from "@/lib/db";
 import { estimateReadingTime } from "../lib/reading-time";
 import { slugify } from "../lib/slugify";
 import { sanitizePostHtml } from "../lib/sanitize-post-html";
@@ -53,9 +52,7 @@ type PostWithJoinTags = {
   _count: { comments: number };
 };
 
-function toSummary(
-  p: PostWithJoinTags
-): PostSummary {
+function toSummary(p: PostWithJoinTags): PostSummary {
   const content = sanitizePostHtml(p.content);
   return {
     id: p.id,
@@ -74,9 +71,7 @@ function toSummary(
   };
 }
 
-function toWithTags(
-  p: PostWithJoinTags
-): PostWithTags {
+function toWithTags(p: PostWithJoinTags): PostWithTags {
   return {
     ...toSummary(p),
     coverImage: p.coverImage,
@@ -101,7 +96,7 @@ export async function getAllPosts(): Promise<PostSummary[]> {
 }
 
 export async function getPostBySlug(
-  slug: string
+  slug: string,
 ): Promise<PostWithTags | null> {
   const post = (await db.post.findUnique({
     where: { slug },
@@ -110,9 +105,7 @@ export async function getPostBySlug(
   return post ? toWithTags(post) : null;
 }
 
-export async function getPostById(
-  id: string
-): Promise<PostWithTags | null> {
+export async function getPostById(id: string): Promise<PostWithTags | null> {
   const post = (await db.post.findUnique({
     where: { id },
     select: FULL_SELECT,
@@ -121,7 +114,7 @@ export async function getPostById(
 }
 
 export async function createPost(
-  input: CreatePostInput
+  input: CreatePostInput,
 ): Promise<PostWithTags> {
   const post = (await db.post.create({
     data: {
@@ -146,14 +139,15 @@ export async function createPost(
 
 export async function updatePost(
   id: string,
-  input: UpdatePostInput
+  input: UpdatePostInput,
 ): Promise<PostWithTags> {
   const data: Record<string, unknown> = {};
 
   if (input.title !== undefined) data.title = input.title;
   if (input.slug !== undefined) data.slug = slugify(input.slug);
   if (input.excerpt !== undefined) data.excerpt = input.excerpt;
-  if (input.content !== undefined) data.content = sanitizePostHtml(input.content);
+  if (input.content !== undefined)
+    data.content = sanitizePostHtml(input.content);
   if (input.published !== undefined) {
     data.published = input.published;
     if (input.published) data.publishedAt = new Date();
@@ -180,9 +174,7 @@ export async function deletePost(id: string): Promise<void> {
   await db.post.delete({ where: { id } });
 }
 
-export async function getPostsByTag(
-  tagSlug: string
-): Promise<PostSummary[]> {
+export async function getPostsByTag(tagSlug: string): Promise<PostSummary[]> {
   const posts = (await db.post.findMany({
     where: {
       published: true,
@@ -194,9 +186,7 @@ export async function getPostsByTag(
   return posts.map(toSummary);
 }
 
-export async function searchPosts(
-  query: string
-): Promise<PostSummary[]> {
+export async function searchPosts(query: string): Promise<PostSummary[]> {
   const posts = (await db.post.findMany({
     where: {
       published: true,
@@ -213,7 +203,7 @@ export async function searchPosts(
 
 export async function recordPostView(
   postId: string,
-  viewerKey: string
+  viewerKey: string,
 ): Promise<{ counted: boolean; viewCount?: number }> {
   const post = await db.post.findUnique({
     where: { id: postId },
@@ -238,7 +228,10 @@ export async function recordPostView(
         where: { id: postId },
         select: { viewCount: true },
       });
-      return { counted: false, viewCount: current?.viewCount ?? post.viewCount };
+      return {
+        counted: false,
+        viewCount: current?.viewCount ?? post.viewCount,
+      };
     }
     throw error;
   }

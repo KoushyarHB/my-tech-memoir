@@ -17,7 +17,7 @@ import {
 import { useTheme } from "@/components/theme";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import LanguageSwitcher from "@/components/language-switcher";
+import LanguageSwitcher from "@/components/layout/language-switcher";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 

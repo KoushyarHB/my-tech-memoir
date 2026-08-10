@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
-import { PostDate } from "@/components/post-date";
+import { PostDate } from "./post-date";
 import type { PostSummary } from "../types";
 
 type PostCardProps = {
