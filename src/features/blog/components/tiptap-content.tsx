@@ -10,6 +10,16 @@ function applyMarks(text: ReactNode, marks: TiptapMark[] = []): ReactNode {
     if (mark.type === "strike") return <s key={key}>{content}</s>;
     if (mark.type === "code") return <code key={key}>{content}</code>;
     if (mark.type === "highlight") return <mark key={key}>{content}</mark>;
+    if (mark.type === "textStyle") {
+      const color = typeof mark.attrs?.color === "string" ? mark.attrs.color : undefined;
+      return color ? (
+        <span key={key} style={{ color }}>
+          {content}
+        </span>
+      ) : (
+        content
+      );
+    }
     if (mark.type === "link") {
       const href = typeof mark.attrs?.href === "string" ? mark.attrs.href : "#";
       return <a key={key} href={href} className="text-primary underline underline-offset-4">{content}</a>;

@@ -21,6 +21,31 @@ export const slashCommands: SlashCommand[] = [
   { title: "Divider", description: "Insert a horizontal rule", keywords: ["hr", "separator"], command: (editor) => editor.chain().focus().setHorizontalRule().run() },
 ];
 
+const POPUP_GAP = 6;
+const VIEWPORT_MARGIN = 8;
+
+type ClientRectFn = (() => DOMRect | null) | null | undefined;
+
+function positionSlashPopup(popup: HTMLElement, getClientRect: ClientRectFn) {
+  const rect = getClientRect?.();
+  if (!rect) return;
+
+  const height = popup.offsetHeight;
+  const width = popup.offsetWidth;
+  const spaceBelow = window.innerHeight - rect.bottom - VIEWPORT_MARGIN;
+  const spaceAbove = rect.top - VIEWPORT_MARGIN;
+  const placeBelow = spaceBelow >= height || spaceBelow >= spaceAbove;
+
+  let top = placeBelow ? rect.bottom + POPUP_GAP : rect.top - height - POPUP_GAP;
+  let left = rect.left;
+
+  top = Math.max(VIEWPORT_MARGIN, Math.min(top, window.innerHeight - height - VIEWPORT_MARGIN));
+  left = Math.max(VIEWPORT_MARGIN, Math.min(left, window.innerWidth - width - VIEWPORT_MARGIN));
+
+  popup.style.top = `${top}px`;
+  popup.style.left = `${left}px`;
+}
+
 export const SlashCommandExtension = Extension.create({
   name: "slashCommand",
   addOptions() {
@@ -28,8 +53,23 @@ export const SlashCommandExtension = Extension.create({
       ...this.parent?.(),
       suggestion: {
         char: "/",
-        items: ({ query }: { query: string }) => slashCommands.filter((item) => `${item.title} ${item.description} ${item.keywords.join(" ")}`.toLowerCase().includes(query.toLowerCase())).slice(0, 8),
-        command: ({ editor, range, props }: { editor: Editor; range: { from: number; to: number }; props: SlashCommand }) => {
+        items: ({ query }: { query: string }) =>
+          slashCommands
+            .filter((item) =>
+              `${item.title} ${item.description} ${item.keywords.join(" ")}`
+                .toLowerCase()
+                .includes(query.toLowerCase()),
+            )
+            .slice(0, 8),
+        command: ({
+          editor,
+          range,
+          props,
+        }: {
+          editor: Editor;
+          range: { from: number; to: number };
+          props: SlashCommand;
+        }) => {
           editor.chain().focus().deleteRange(range).run();
           props.command(editor);
         },
@@ -38,46 +78,81 @@ export const SlashCommandExtension = Extension.create({
           let selectedIndex = 0;
           let items: SlashCommand[] = [];
           let command: ((item: SlashCommand) => void) | null = null;
+          let getClientRect: ClientRectFn;
+          let detachPositionListeners: (() => void) | null = null;
 
           const draw = () => {
             if (!popup) return;
-            popup.replaceChildren(...items.map((item, index) => {
-              const button = document.createElement("button");
-              button.type = "button";
-              button.className = `flex w-full flex-col items-start px-3 py-2 text-left text-sm ${index === selectedIndex ? "bg-muted" : ""}`;
-              button.innerHTML = `<span class="font-medium">${item.title}</span><span class="text-xs text-muted-foreground">${item.description}</span>`;
-              button.addEventListener("mousedown", (event) => {
-                event.preventDefault();
-                command?.(item);
-              });
-              return button;
-            }));
+            popup.replaceChildren(
+              ...items.map((item, index) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = [
+                  "flex w-full flex-col items-start rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                  index === selectedIndex
+                    ? "bg-(--bg-muted) text-ink-primary"
+                    : "text-ink-primary hover:bg-(--bg-muted)/70",
+                ].join(" ");
+                button.innerHTML = `<span class="font-medium">${item.title}</span><span class="text-xs text-ink-tertiary">${item.description}</span>`;
+                button.addEventListener("mousedown", (event) => {
+                  event.preventDefault();
+                  command?.(item);
+                });
+                return button;
+              }),
+            );
+            // Re-measure after content changes so flip/clamp use the real height.
+            requestAnimationFrame(() => {
+              if (popup) positionSlashPopup(popup, getClientRect);
+            });
+          };
+
+          const syncPosition = () => {
+            if (popup) positionSlashPopup(popup, getClientRect);
+          };
+
+          const attachPositionListeners = () => {
+            detachPositionListeners?.();
+            window.addEventListener("scroll", syncPosition, true);
+            window.addEventListener("resize", syncPosition);
+            detachPositionListeners = () => {
+              window.removeEventListener("scroll", syncPosition, true);
+              window.removeEventListener("resize", syncPosition);
+              detachPositionListeners = null;
+            };
           };
 
           return {
-            onStart: (props: { items: SlashCommand[]; command: (item: SlashCommand) => void; clientRect?: (() => DOMRect | null) | null }) => {
+            onStart: (props: {
+              items: SlashCommand[];
+              command: (item: SlashCommand) => void;
+              clientRect?: ClientRectFn;
+            }) => {
               items = props.items;
               command = props.command;
+              getClientRect = props.clientRect;
+              selectedIndex = 0;
               popup = document.createElement("div");
-              popup.className = "fixed z-50 min-w-56 overflow-hidden rounded-md border border-border bg-popover p-1 shadow-lg";
+              popup.className = [
+                "fixed z-50 max-h-[min(320px,calc(100vh-16px))] min-w-56 overflow-y-auto rounded-xl p-1",
+                "border border-(--border-hover) bg-(--bg-elevated) text-ink-primary",
+                "shadow-(--shadow-xl) ring-1 ring-black/10",
+                "dark:border-(--border-focus) dark:bg-(--bg-elevated) dark:ring-white/20",
+              ].join(" ");
               document.body.appendChild(popup);
+              attachPositionListeners();
               draw();
-              const rect = props.clientRect?.();
-              if (rect && popup) {
-                popup.style.left = `${rect.left}px`;
-                popup.style.top = `${rect.bottom + 4}px`;
-              }
             },
-            onUpdate: (props: { items: SlashCommand[]; command: (item: SlashCommand) => void; clientRect?: (() => DOMRect | null) | null }) => {
+            onUpdate: (props: {
+              items: SlashCommand[];
+              command: (item: SlashCommand) => void;
+              clientRect?: ClientRectFn;
+            }) => {
               items = props.items;
               command = props.command;
+              getClientRect = props.clientRect;
               selectedIndex = Math.min(selectedIndex, Math.max(0, items.length - 1));
               draw();
-              const rect = props.clientRect?.();
-              if (rect && popup) {
-                popup.style.left = `${rect.left}px`;
-                popup.style.top = `${rect.bottom + 4}px`;
-              }
             },
             onKeyDown: (props: { event: KeyboardEvent }) => {
               if (props.event.key === "ArrowDown") {
@@ -97,8 +172,10 @@ export const SlashCommandExtension = Extension.create({
               return false;
             },
             onExit: () => {
+              detachPositionListeners?.();
               popup?.remove();
               popup = null;
+              getClientRect = null;
             },
           };
         },

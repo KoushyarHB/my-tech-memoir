@@ -1,5 +1,5 @@
 export type TiptapMark = {
-  type: "bold" | "italic" | "strike" | "code" | "link" | "highlight";
+  type: "bold" | "italic" | "strike" | "code" | "link" | "highlight" | "textStyle";
   attrs?: Record<string, unknown>;
 };
 
@@ -50,7 +50,13 @@ const MARK_TYPES = new Set([
   "code",
   "link",
   "highlight",
+  "textStyle",
 ]);
+
+/** Hex colors only — TipTap Color uses textStyle.color; reject CSS expressions. */
+function isSafeTextColor(color: string): boolean {
+  return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(color.trim());
+}
 
 const CALLOUT_VARIANTS = new Set(["info", "tip", "warning", "danger"]);
 
@@ -98,6 +104,14 @@ function validateNode(node: unknown, path: string, isRoot = false): node is Tipt
         const href = isRecord(mark.attrs) ? mark.attrs.href : undefined;
         if (typeof href !== "string" || !isSafeHref(href)) {
           throw new Error(`Unsafe link at ${path}.marks[${index}]`);
+        }
+      }
+      if (mark.type === "textStyle") {
+        const color = isRecord(mark.attrs) ? mark.attrs.color : undefined;
+        if (color !== undefined && color !== null) {
+          if (typeof color !== "string" || !isSafeTextColor(color)) {
+            throw new Error(`Invalid text color at ${path}.marks[${index}]`);
+          }
         }
       }
     });
