@@ -1,6 +1,7 @@
 import { Extension } from "@tiptap/core";
 import Suggestion from "@tiptap/suggestion";
 import type { Editor } from "@tiptap/react";
+import { uploadEditorImage } from "./upload-editor-image";
 
 export type SlashCommand = {
   title: string;
@@ -16,6 +17,7 @@ export const slashCommands: SlashCommand[] = [
   { title: "Bullet list", description: "Create a simple list", keywords: ["ul", "list"], command: (editor) => editor.chain().focus().toggleBulletList().run() },
   { title: "Numbered list", description: "Create an ordered list", keywords: ["ol", "list"], command: (editor) => editor.chain().focus().toggleOrderedList().run() },
   { title: "Code block", description: "Insert syntax-highlighted code", keywords: ["code", "snippet"], command: (editor) => editor.chain().focus().setCodeBlock().run() },
+  { title: "Image", description: "Upload and insert an image", keywords: ["img", "picture", "photo", "upload", "media"], command: (editor) => uploadEditorImage(editor) },
   { title: "Table", description: "Insert a 3 by 3 table", keywords: ["grid"], command: (editor) => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() },
   { title: "Callout", description: "Highlight an important note", keywords: ["note", "warning", "info"], command: (editor) => editor.chain().focus().insertContent({ type: "callout", attrs: { variant: "info", title: "Note" }, content: [{ type: "paragraph" }] }).run() },
   { title: "Divider", description: "Insert a horizontal rule", keywords: ["hr", "separator"], command: (editor) => editor.chain().focus().setHorizontalRule().run() },
@@ -60,7 +62,7 @@ export const SlashCommandExtension = Extension.create({
                 .toLowerCase()
                 .includes(query.toLowerCase()),
             )
-            .slice(0, 8),
+            .slice(0, 10),
         command: ({
           editor,
           range,
@@ -75,6 +77,7 @@ export const SlashCommandExtension = Extension.create({
         },
         render: () => {
           let popup: HTMLDivElement | null = null;
+          let list: HTMLDivElement | null = null;
           let selectedIndex = 0;
           let items: SlashCommand[] = [];
           let command: ((item: SlashCommand) => void) | null = null;
@@ -82,8 +85,8 @@ export const SlashCommandExtension = Extension.create({
           let detachPositionListeners: (() => void) | null = null;
 
           const draw = () => {
-            if (!popup) return;
-            popup.replaceChildren(
+            if (!list) return;
+            list.replaceChildren(
               ...items.map((item, index) => {
                 const button = document.createElement("button");
                 button.type = "button";
@@ -132,13 +135,21 @@ export const SlashCommandExtension = Extension.create({
               command = props.command;
               getClientRect = props.clientRect;
               selectedIndex = 0;
+
+              // Outer shell owns border/radius; inner list scrolls so the
+              // scrollbar never clips the top-right corner of the border.
               popup = document.createElement("div");
               popup.className = [
-                "fixed z-50 max-h-[min(320px,calc(100vh-16px))] min-w-56 overflow-y-auto rounded-xl p-1",
+                "fixed z-50 min-w-56 overflow-hidden rounded-xl",
                 "border border-(--border-hover) bg-(--bg-elevated) text-ink-primary",
                 "shadow-(--shadow-xl) ring-1 ring-black/10",
                 "dark:border-(--border-focus) dark:bg-(--bg-elevated) dark:ring-white/20",
               ].join(" ");
+
+              list = document.createElement("div");
+              list.className = "max-h-[min(320px,calc(100vh-16px))] overflow-y-auto p-1";
+              popup.appendChild(list);
+
               document.body.appendChild(popup);
               attachPositionListeners();
               draw();
@@ -175,6 +186,7 @@ export const SlashCommandExtension = Extension.create({
               detachPositionListeners?.();
               popup?.remove();
               popup = null;
+              list = null;
               getClientRect = null;
             },
           };

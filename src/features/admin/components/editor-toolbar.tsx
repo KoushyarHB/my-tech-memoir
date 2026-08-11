@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
 import { BubbleMenu, FloatingMenu } from "@tiptap/react/menus";
-import { toast } from "sonner";
 import {
   Bold,
   Italic,
@@ -36,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { uploadEditorImage } from "./upload-editor-image";
 
 const TEXT_COLORS = [
   { label: "Default", value: null },
@@ -93,27 +93,6 @@ function ActionButton({ label, active, onClick, children }: ActionButtonProps) {
   );
 }
 
-function uploadImage(editor: Editor) {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.onchange = async () => {
-    const file = input.files?.[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append("file", file);
-    try {
-      const response = await fetch("/api/upload", { method: "POST", body: formData });
-      const json = await response.json().catch(() => null);
-      if (!response.ok || !json?.data?.url) throw new Error(json?.error ?? "Upload failed");
-      editor.chain().focus().setMemoirImage({ src: json.data.url, align: "center", width: 100 }).run();
-      toast.success("Image inserted");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Image upload failed");
-    }
-  };
-  input.click();
-}
 
 function BlockMenu({ editor }: { editor: Editor }) {
   const insert = (content: Parameters<typeof editor.commands.insertContent>[0]) => {
@@ -127,7 +106,7 @@ function BlockMenu({ editor }: { editor: Editor }) {
       <ActionButton label="Insert code block" onClick={() => editor.chain().focus().setCodeBlock().run()}><Braces className="size-4" /></ActionButton>
       <ActionButton label="Insert table" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}><Table2 className="size-4" /></ActionButton>
       <ActionButton label="Insert callout" onClick={() => insert({ type: "callout", attrs: { variant: "info", title: "Note" }, content: [{ type: "paragraph" }] })}><span className="text-xs font-bold">!</span></ActionButton>
-      <ActionButton label="Insert image" onClick={() => uploadImage(editor)}><ImagePlus className="size-4" /></ActionButton>
+      <ActionButton label="Insert image" onClick={() => uploadEditorImage(editor)}><ImagePlus className="size-4" /></ActionButton>
       <ActionButton label="Insert divider" onClick={() => editor.chain().focus().setHorizontalRule().run()}><Minus className="size-4" /></ActionButton>
     </div>
   );

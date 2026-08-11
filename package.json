@@ -10,6 +10,7 @@
     "postinstall": "prisma generate",
     "seed": "tsx prisma/seed.ts",
     "db:check": "tsx scripts/check-db.ts",
+    "db:backfill-content-json": "tsx scripts/backfill-content-json.ts",
     "promote-admin": "tsx scripts/promote-admin.ts"
   },
   "prisma": {
@@ -69,6 +70,7 @@
     "dotenv": "^17.4.2",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.2.12",
+    "happy-dom": "^20.11.2",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.11",
     "tsx": "^4.23.1",
