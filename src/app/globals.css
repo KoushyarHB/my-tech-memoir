@@ -630,6 +630,93 @@ body {
   gap: 0.125rem;
 }
 
+/* ─── Modern editor canvas ───────────────────────────────────────── */
+.memoir-editor-shell {
+  position: relative;
+  overflow: visible;
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0.9rem;
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+.memoir-editor-canvas {
+  min-height: 28rem;
+  caret-color: var(--accent);
+}
+
+.memoir-editor-canvas > * {
+  position: relative;
+}
+
+.memoir-editor-canvas > p.is-editor-empty:first-child::before {
+  color: var(--ink-tertiary);
+  content: "Start with a sentence, or type / to insert a block…";
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.memoir-editor-canvas pre {
+  position: relative;
+  margin: 1.25rem 0;
+}
+
+.memoir-editor-canvas table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.memoir-editor-canvas th,
+.memoir-editor-canvas td {
+  min-width: 6rem;
+  border: 1px solid var(--border);
+  padding: 0.65rem 0.75rem;
+  vertical-align: top;
+}
+
+.memoir-editor-canvas th {
+  background: var(--bg-muted);
+  font-weight: 600;
+}
+
+.memoir-editor-canvas .selectedCell {
+  background: var(--accent-muted);
+}
+
+.memoir-editor-canvas .memoir-callout {
+  margin: 1.5rem 0;
+  border-left: 3px solid var(--accent);
+  border-radius: 0.65rem;
+  background: var(--accent-subtle);
+  padding: 1rem 1.1rem;
+}
+
+.memoir-editor-canvas .memoir-callout > strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.memoir-editor-canvas .memoir-callout--warning {
+  border-left-color: #d97706;
+  background: color-mix(in srgb, #f59e0b 12%, transparent);
+}
+
+.memoir-editor-canvas .memoir-callout--danger {
+  border-left-color: #dc2626;
+  background: color-mix(in srgb, #ef4444 12%, transparent);
+}
+
+.memoir-editor-canvas .memoir-callout--tip {
+  border-left-color: #059669;
+  background: color-mix(in srgb, #10b981 12%, transparent);
+}
+
 .ProseMirror .memoir-figure__width-preset {
   min-width: 2.25rem;
   height: 1.75rem;

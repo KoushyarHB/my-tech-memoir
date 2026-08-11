@@ -10,6 +10,7 @@ export type PostWithTags = {
   slug: string;
   excerpt: string | null;
   content: string;
+  contentJson: TiptapDocument | null;
   coverImage: string | null;
   published: boolean;
   publishedAt: Date | null;
@@ -27,6 +28,7 @@ export type PostSummary = {
   slug: string;
   excerpt: string | null;
   content: string;
+  contentJson: TiptapDocument | null;
   published: boolean;
   publishedAt: Date | null;
   viewCount: number;
@@ -42,8 +44,11 @@ export type CreatePostInput = {
   slug: string;
   excerpt?: string;
   content: string;
+  contentJson?: TiptapDocument;
   published?: boolean;
   tagIds?: string[];
 };
 
 export type UpdatePostInput = Partial<CreatePostInput>;
+export * from "./document";
+import type { TiptapDocument } from "./document";

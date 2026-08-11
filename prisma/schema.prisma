@@ -88,6 +88,8 @@ model Post {
   slug        String    @unique
   excerpt     String?
   content     String
+  contentJson Json?
+  contentVersion Int @default(1)
   coverImage  String?
   readingTime Int?
   published   Boolean   @default(false)

@@ -35,6 +35,14 @@ export async function PUT(request: Request, { params }: RouteContext) {
     return apiSuccess(post);
   } catch (error) {
     console.error("Failed to update post:", error);
+    const message = error instanceof Error ? error.message : "Failed to update post";
+    if (
+      /^(Unsafe link|Invalid |Unsupported |Heading level|Code language|Document content)/i.test(
+        message
+      )
+    ) {
+      return apiError(message, { status: 400 });
+    }
     return apiError("Failed to update post", { status: 500 });
   }
 }

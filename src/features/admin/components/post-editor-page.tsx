@@ -15,6 +15,10 @@ import { slugify } from "@/features/blog/lib/slugify";
 import Link from "next/link";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import type { TiptapDocument } from "@/features/blog/types/document";
+import { EMPTY_TIPTAP_DOCUMENT, hasDocumentText } from "@/features/blog/types/document";
+import { TiptapContent } from "@/features/blog/components";
+import { documentToMarkdown, markdownToDocument } from "./markdown";
 
 type Tag = { id: string; name: string; slug: string };
 
@@ -24,6 +28,7 @@ type PostEditorPageProps = {
   initialSlug?: string;
   initialExcerpt?: string;
   initialContent?: string;
+  initialContentJson?: TiptapDocument | null;
   initialPublished?: boolean;
   initialTagIds?: string[];
   availableTags: Tag[];
@@ -55,7 +60,8 @@ function plainTextLength(html: string): number {
 
 /**
  * Pause auto-save after large accidental wipes (select-all + delete).
- * Manual Save Draft still works.
+ * Manual save still works. Auto-save resumes after continued typing
+ * (see AUTO_SAVE_RESUME_CHARS) or when the wipe is undone.
  */
 function isHugeContentDeletion(previousHtml: string, nextHtml: string): boolean {
   const prevLen = plainTextLength(previousHtml);
@@ -72,6 +78,9 @@ function isHugeContentDeletion(previousHtml: string, nextHtml: string): boolean 
 
   return false;
 }
+
+/** Chars typed after a wipe before auto-save resumes (confirms intent). */
+const AUTO_SAVE_RESUME_CHARS = 40;
 
 function makeSnapshot(input: {
   title: string;
@@ -97,6 +106,7 @@ export function PostEditorPage({
   initialSlug = "",
   initialExcerpt = "",
   initialContent = "",
+  initialContentJson = null,
   initialPublished = false,
   initialTagIds = [],
   availableTags,
@@ -107,6 +117,10 @@ export function PostEditorPage({
   const [slug, setSlug] = useState(initialSlug);
   const [excerpt, setExcerpt] = useState(initialExcerpt);
   const [content, setContent] = useState(initialContent);
+  const [contentJson, setContentJson] = useState<TiptapDocument>(initialContentJson ?? EMPTY_TIPTAP_DOCUMENT);
+  const [editorMode, setEditorMode] = useState<"write" | "preview" | "source">("write");
+  const [source, setSource] = useState(() => initialContentJson ? documentToMarkdown(initialContentJson) : "");
+  const [sourceError, setSourceError] = useState<string | null>(null);
   const [published, setPublished] = useState(initialPublished);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initialTagIds);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!initialSlug);
@@ -146,15 +160,50 @@ export function PostEditorPage({
     currentSnapshot.tagIds !== lastSaved.tagIds;
 
   const hasTitle = currentSnapshot.title.length > 0;
-  const hasBody = hasText(content);
+  const hasBody = hasDocumentText(contentJson) || hasText(content);
 
   // Drafts can save with title-only or body-only; block only when both are empty
   const canSave = hasTitle || hasBody;
   // Publishing still requires a real title and body
   const canPublish = hasTitle && hasBody;
 
-  const hugeDeletion = isHugeContentDeletion(lastSaved.content, content);
-  const canAutoSave = canSave && !hugeDeletion;
+  // Latch pause on the rising edge of a huge wipe so we can resume after
+  // continued editing even while content is still much shorter than lastSaved.
+  const [autoSavePaused, setAutoSavePaused] = useState(false);
+  const pauseBaselineLenRef = useRef<number | null>(null);
+  const wasHugeDeletionRef = useRef(false);
+
+  useEffect(() => {
+    const huge = isHugeContentDeletion(lastSaved.content, content);
+    const currentLen = plainTextLength(content);
+
+    if (autoSavePaused) {
+      const baseline = pauseBaselineLenRef.current ?? 0;
+      // Deeper wipe while paused — reset the "kept typing" baseline
+      if (currentLen < baseline) {
+        pauseBaselineLenRef.current = currentLen;
+      }
+      const effectiveBaseline = pauseBaselineLenRef.current ?? currentLen;
+      const continuedEditing =
+        currentLen >= effectiveBaseline + AUTO_SAVE_RESUME_CHARS;
+
+      if (!huge || continuedEditing) {
+        pauseBaselineLenRef.current = null;
+        setAutoSavePaused(false);
+        // Keep wasHuge true after a typed resume so we don't immediately re-latch
+        // while content is still short vs lastSaved; clear when huge goes false.
+        wasHugeDeletionRef.current = huge;
+        return;
+      }
+    } else if (huge && !wasHugeDeletionRef.current) {
+      pauseBaselineLenRef.current = currentLen;
+      setAutoSavePaused(true);
+    }
+
+    wasHugeDeletionRef.current = huge;
+  }, [content, lastSaved.content, autoSavePaused]);
+
+  const canAutoSave = canSave && !autoSavePaused;
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savingRef = useRef(false);
@@ -183,6 +232,7 @@ export function PostEditorPage({
         slug: slugToSave,
         excerpt: excerpt.trim() || undefined,
         content: content || "<p></p>",
+        contentJson,
         published: nextPublished,
         tagIds: selectedTagIds,
       };
@@ -194,14 +244,20 @@ export function PostEditorPage({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
-          if (!res.ok) throw new Error("Save failed");
+          if (!res.ok) {
+            const json = (await res.json().catch(() => null)) as { error?: string } | null;
+            throw new Error(json?.error ?? "Save failed");
+          }
         } else {
           const res = await fetch("/api/posts", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
-          if (!res.ok) throw new Error("Create failed");
+          if (!res.ok) {
+            const json = (await res.json().catch(() => null)) as { error?: string } | null;
+            throw new Error(json?.error ?? "Create failed");
+          }
           const json = await res.json();
           setCurrentPostId(json.data.id);
         }
@@ -224,6 +280,9 @@ export function PostEditorPage({
             tagIds: selectedTagIds,
           })
         );
+        pauseBaselineLenRef.current = null;
+        wasHugeDeletionRef.current = false;
+        setAutoSavePaused(false);
 
         setSavePhase("saved");
         setTimeout(() => {
@@ -232,7 +291,7 @@ export function PostEditorPage({
       } catch (err) {
         console.error("Save failed:", err);
         setSavePhase("idle");
-        toast.error("Failed to save. Please try again.");
+        toast.error(err instanceof Error ? err.message : "Failed to save. Please try again.");
       } finally {
         savingRef.current = false;
       }
@@ -249,6 +308,7 @@ export function PostEditorPage({
       selectedTagIds,
       currentPostId,
       slugManuallyEdited,
+      contentJson,
     ]
   );
 
@@ -266,6 +326,18 @@ export function PostEditorPage({
     };
   }, [isDirty, published, canAutoSave, doSave]);
 
+  // Ctrl/Cmd+S → save (works from editor, title, settings, etc.)
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "s") return;
+      e.preventDefault();
+      if (!canSave || savingRef.current) return;
+      void doSave();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [canSave, doSave]);
+
   // Warn before leaving page with unsaved changes
   useEffect(() => {
     function handleBeforeUnload(e: BeforeUnloadEvent) {
@@ -280,10 +352,12 @@ export function PostEditorPage({
   function handleBackClick() {
     if (isDirty && savePhase !== "saved") {
       toast.warning("You have unsaved changes", {
-        description: "Save as draft and leave, or stay on this page.",
+        description: published
+          ? "Save your updates and leave, or stay on this page."
+          : "Save as draft and leave, or stay on this page.",
         duration: Infinity,
         action: {
-          label: "Save & leave",
+          label: published ? "Update & leave" : "Save & leave",
           onClick: () => {
             if (canSave) {
               void doSave().then(() => router.push("/admin"));
@@ -308,6 +382,24 @@ export function PostEditorPage({
     );
   }
 
+  function parseSource() {
+    try {
+      const next = markdownToDocument(source);
+      setContentJson(next);
+      setSourceError(null);
+      return true;
+    } catch {
+      setSourceError("This Markdown is incomplete or contains unsupported syntax. Write and Preview are showing the last valid version.");
+      return false;
+    }
+  }
+
+  function switchMode(mode: "write" | "preview" | "source") {
+    if (mode === "source") setSource(documentToMarkdown(contentJson));
+    if (editorMode === "source" && mode !== "source" && !parseSource()) return;
+    setEditorMode(mode);
+  }
+
   // Derive display state for the indicator
   const showUnsaved = isDirty && savePhase !== "saving" && savePhase !== "saved";
 
@@ -326,7 +418,7 @@ export function PostEditorPage({
             phase={savePhase}
             published={published}
             isDirty={showUnsaved}
-            autoSavePaused={hugeDeletion && showUnsaved}
+            autoSavePaused={autoSavePaused && showUnsaved}
           />
           <Button
             variant="outline"
@@ -335,14 +427,18 @@ export function PostEditorPage({
             disabled={!canSave || savePhase === "saving"}
             title={
               canSave
-                ? hugeDeletion
-                  ? "Large deletion detected — click to save manually"
-                  : "Save draft"
+                ? autoSavePaused
+                  ? "Large deletion detected — save manually, or keep typing to resume auto-save"
+                  : published
+                    ? "Save changes to the live post"
+                    : "Save draft"
                 : "Add a title or some body text before saving"
             }
           >
             <Save className="size-4" />
-            <span className="hidden sm:inline">Save Draft</span>
+            <span className="hidden sm:inline">
+              {published ? "Update" : "Save Draft"}
+            </span>
           </Button>
           {!published ? (
             <Button
@@ -386,18 +482,66 @@ export function PostEditorPage({
       {/* Main layout */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-[1fr_300px]">
         {/* Editor */}
-        <div className="min-w-0">
-          <Input
+         <div className="min-w-0">
+           <div className="mb-3 flex items-center justify-end gap-1 border-b border-border pb-2">
+             {(["write", "preview", "source"] as const).map((mode) => (
+               <Button key={mode} type="button" size="sm" variant={editorMode === mode ? "secondary" : "ghost"} onClick={() => switchMode(mode)}>
+                 {mode === "write" ? "Write" : mode === "preview" ? "Preview" : "Markdown"}
+               </Button>
+             ))}
+           </div>
+           <Input
             type="text"
             placeholder="Post title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="mb-3 h-auto rounded-none border-0 bg-transparent px-0 py-1 font-serif text-2xl font-bold leading-tight tracking-tight text-ink-primary shadow-none placeholder:text-muted-foreground/50 focus-visible:border-0 focus-visible:ring-0 dark:bg-transparent sm:mb-4 sm:text-3xl md:text-3xl"
           />
-          <PostEditor
-            initialContent={initialContent}
-            onChange={setContent}
-          />
+          {/* Keep Write mounted so Markdown paste syncs into TipTap without a remount wipe. */}
+          <div className={cn(editorMode !== "write" && "hidden")}>
+            <PostEditor
+              initialContent={initialContent}
+              initialContentJson={initialContentJson}
+              document={contentJson}
+              onChange={setContent}
+              onDocumentChange={setContentJson}
+            />
+          </div>
+          {editorMode === "preview" ? (
+            <div className="rounded-lg border border-border bg-card px-3 py-3 sm:px-5 sm:py-4">
+              <TiptapContent document={contentJson} />
+            </div>
+          ) : null}
+          {editorMode === "source" ? (
+            <div className="space-y-2">
+              <Textarea
+                value={source}
+                onChange={(event) => {
+                  setSource(event.target.value);
+                  // Keep the visual editor synchronized with every valid source edit.
+                  // Invalid intermediate Markdown does not destroy the last valid document.
+                  try {
+                    const next = markdownToDocument(event.target.value);
+                    setContentJson(next);
+                    setSourceError(null);
+                  } catch {
+                    setSourceError("The source has a temporary syntax error. Fix it before switching tabs.");
+                  }
+                }}
+                className="min-h-[400px] rounded-lg border-border bg-card font-mono text-sm"
+                placeholder="# Paste or write Markdown here…"
+                spellCheck={false}
+              />
+              <div className="flex items-center justify-between gap-3 text-xs">
+                <p className={sourceError ? "text-amber-600" : "text-ink-tertiary"}>
+                  {sourceError ?? "Paste AI Markdown here — it syncs into Write and Preview."}
+                </p>
+                <Button type="button" variant="outline" size="sm" onClick={() => void parseSource()}>
+                  Apply source
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {/* Meta sidebar */}
@@ -512,7 +656,7 @@ function SaveStatusIndicator({
     return (
       <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
         <span className="size-2 rounded-full bg-green-500" />
-        Saved
+        {published ? "Updated" : "Saved"}
       </span>
     );
   }
@@ -521,7 +665,7 @@ function SaveStatusIndicator({
     return (
       <span
         className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
-        title="Auto-save paused after a large deletion. Use Save Draft to confirm."
+        title="Auto-save paused after a large deletion. Keep typing to resume, or use Save Draft."
       >
         <span className="size-2 rounded-full bg-orange-500" />
         Auto-save paused

@@ -12,7 +12,7 @@ import {
   type FilterFn,
   type SortingState,
 } from "@tanstack/react-table";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -185,13 +185,23 @@ export function DataTable<TData>({
             aria-hidden
           />
           <Input
-            type="search"
+            type="text"
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
             placeholder={searchPlaceholder}
             aria-label={searchAriaLabel}
-            className="h-8 border-border/70 bg-transparent pl-8 text-xs shadow-none outline-none placeholder:text-ink-tertiary/80 focus-visible:border-border focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
+            className="h-8 border-border bg-transparent pr-8 pl-8 text-xs shadow-none outline-none placeholder:text-ink-tertiary/80 focus-visible:border-(--border-hover) focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-(--border-hover) dark:bg-transparent dark:focus-visible:border-(--border-focus)"
           />
+          {globalFilter.trim().length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setGlobalFilter("")}
+              className="absolute top-1/2 right-1.5 inline-flex size-5 -translate-y-1/2 items-center justify-center rounded-md text-ink-tertiary transition-colors hover:bg-(--bg-muted) hover:text-ink-primary"
+              aria-label="Clear search"
+            >
+              <X className="size-3.5" strokeWidth={2} />
+            </button>
+          ) : null}
         </div>
       </div>
 

@@ -52,11 +52,8 @@ export function MemoirImageView(props: ReactNodeViewProps) {
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(width);
   const [dragging, setDragging] = useState(false);
-  const [captionDraft, setCaptionDraft] = useState(caption);
-
-  useEffect(() => {
-    setCaptionDraft(caption);
-  }, [caption]);
+  const captionDraft = useRef(caption);
+  const onResizeEndRef = useRef<() => void>(() => undefined);
 
   const onResizeMove = useCallback(
     (event: PointerEvent) => {
@@ -77,8 +74,12 @@ export function MemoirImageView(props: ReactNodeViewProps) {
   const onResizeEnd = useCallback(() => {
     setDragging(false);
     window.removeEventListener("pointermove", onResizeMove);
-    window.removeEventListener("pointerup", onResizeEnd);
+    window.removeEventListener("pointerup", onResizeEndRef.current);
   }, [onResizeMove]);
+
+  useEffect(() => {
+    onResizeEndRef.current = onResizeEnd;
+  }, [onResizeEnd]);
 
   function onResizeStart(event: React.PointerEvent) {
     if (!editor.isEditable) return;
@@ -101,7 +102,7 @@ export function MemoirImageView(props: ReactNodeViewProps) {
   }, [onResizeMove, onResizeEnd]);
 
   function commitCaption() {
-    const next = captionDraft.trim();
+    const next = captionDraft.current.trim();
     if (next !== caption) {
       updateAttributes({ caption: next });
     }
@@ -189,10 +190,13 @@ export function MemoirImageView(props: ReactNodeViewProps) {
           <div className="memoir-figure__caption" contentEditable={false}>
             <input
               type="text"
-              value={captionDraft}
+              key={caption}
+              defaultValue={caption}
               placeholder="Add a caption…"
               className="memoir-figure__caption-input"
-              onChange={(e) => setCaptionDraft(e.target.value)}
+              onChange={(e) => {
+                captionDraft.current = e.target.value;
+              }}
               onBlur={commitCaption}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {

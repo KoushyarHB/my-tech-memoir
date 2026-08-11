@@ -8,7 +8,9 @@ import type {
   PostWithTags,
   Tag,
   UpdatePostInput,
+  TiptapDocument,
 } from "../types";
+import { EMPTY_TIPTAP_DOCUMENT, validateTiptapDocument } from "../types/document";
 
 const SUMMARY_SELECT = {
   id: true,
@@ -16,6 +18,7 @@ const SUMMARY_SELECT = {
   slug: true,
   excerpt: true,
   content: true,
+  contentJson: true,
   published: true,
   publishedAt: true,
   viewCount: true,
@@ -42,6 +45,7 @@ type PostWithJoinTags = {
   slug: string;
   excerpt: string | null;
   content: string;
+  contentJson: TiptapDocument | null;
   coverImage: string | null;
   published: boolean;
   publishedAt: Date | null;
@@ -60,6 +64,7 @@ function toSummary(p: PostWithJoinTags): PostSummary {
     slug: p.slug,
     excerpt: p.excerpt,
     content,
+    contentJson: p.contentJson,
     published: p.published,
     publishedAt: p.publishedAt,
     viewCount: p.viewCount,
@@ -116,12 +121,16 @@ export async function getPostById(id: string): Promise<PostWithTags | null> {
 export async function createPost(
   input: CreatePostInput,
 ): Promise<PostWithTags> {
+  const contentJson = input.contentJson
+    ? validateTiptapDocument(input.contentJson)
+    : null;
   const post = (await db.post.create({
     data: {
       title: input.title,
       slug: slugify(input.slug),
       excerpt: input.excerpt ?? null,
       content: sanitizePostHtml(input.content),
+      contentJson: contentJson as Prisma.InputJsonValue | undefined,
       published: input.published ?? false,
       publishedAt: input.published ? new Date() : null,
       tags: input.tagIds?.length
@@ -148,6 +157,9 @@ export async function updatePost(
   if (input.excerpt !== undefined) data.excerpt = input.excerpt;
   if (input.content !== undefined)
     data.content = sanitizePostHtml(input.content);
+  if (input.contentJson !== undefined) {
+    data.contentJson = validateTiptapDocument(input.contentJson) as Prisma.InputJsonValue;
+  }
   if (input.published !== undefined) {
     data.published = input.published;
     if (input.published) data.publishedAt = new Date();

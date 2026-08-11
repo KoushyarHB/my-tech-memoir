@@ -13,6 +13,8 @@ import {
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { TiptapContent } from "./tiptap-content";
+import type { TiptapDocument } from "../types/document";
 
 type LighthouseImage = {
   src: string;
@@ -21,7 +23,8 @@ type LighthouseImage = {
 };
 
 type LighthouseProps = {
-  html: string;
+  html?: string;
+  document?: TiptapDocument | null;
   className?: string;
 };
 
@@ -29,7 +32,7 @@ type LighthouseProps = {
  * Renders post HTML and opens images in a full-viewport lightbox ("Lighthouse").
  * Keeps stored TipTap markup unchanged — enhancement is client-side only.
  */
-export function Lighthouse({ html, className }: LighthouseProps) {
+export function Lighthouse({ html, document, className }: LighthouseProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<LighthouseImage | null>(null);
 
@@ -61,15 +64,13 @@ export function Lighthouse({ html, className }: LighthouseProps) {
 
     root.addEventListener("click", onClick);
     return () => root.removeEventListener("click", onClick);
-  }, [html]);
+  }, [html, document]);
 
   return (
     <>
-      <div
-        ref={rootRef}
-        className={cn("prose-memoir lighthouse-content", className)}
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      <div ref={rootRef} className={cn("lighthouse-content", className)}>
+        {document ? <TiptapContent document={document} /> : <div className="prose-memoir" dangerouslySetInnerHTML={{ __html: html ?? "" }} />}
+      </div>
 
       <Dialog
         open={active !== null}

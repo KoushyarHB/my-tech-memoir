@@ -15,8 +15,8 @@ const noRing =
   "shadow-none! outline-none! ring-0! ring-offset-0 border-transparent focus:border-transparent focus:outline-none! focus:ring-0! focus-visible:border-transparent focus-visible:outline-none! focus-visible:ring-0! focus-visible:ring-offset-0 data-highlighted:outline-none! data-highlighted:ring-0! data-highlighted:shadow-none!";
 
 const filterControlClass = cn(
-  "h-7 w-full min-w-0 rounded-md border border-border/70 bg-transparent px-2.5 text-left text-[11px] text-ink-secondary placeholder:text-ink-tertiary/80 hover:border-border dark:bg-transparent",
-  "shadow-none outline-none! ring-0 ring-offset-0 focus:outline-none! focus:ring-0 focus-visible:border-border focus-visible:outline-none! focus-visible:ring-0 focus-visible:ring-offset-0"
+  "h-7 w-full min-w-0 rounded-md border border-border bg-transparent px-2.5 text-left text-[11px] text-ink-secondary placeholder:text-ink-tertiary/80 hover:border-(--border-hover) dark:border-(--border-hover) dark:bg-transparent dark:hover:border-(--border-focus)",
+  "shadow-none outline-none! ring-0 ring-offset-0 focus:outline-none! focus:ring-0 focus-visible:border-(--border-hover) focus-visible:outline-none! focus-visible:ring-0 focus-visible:ring-offset-0 dark:focus-visible:border-(--border-focus)"
 );
 
 const menuItemClass = cn(
@@ -52,7 +52,7 @@ export function DataTableColumnFilter<TData, TValue>({
         <Menu.Trigger
           className={cn(
             filterControlClass,
-            "inline-flex items-center justify-between gap-1.5 data-popup-open:border-border"
+            "inline-flex items-center justify-between gap-1.5 data-popup-open:border-(--border-hover) dark:data-popup-open:border-(--border-focus)"
           )}
         >
           <span className="truncate">{selectedLabel}</span>

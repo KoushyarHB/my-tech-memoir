@@ -52,7 +52,7 @@ export default async function BlogPostPage({ params }: Props) {
   return (
     <article className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-5 sm:py-14">
       <PostHeader post={post} />
-      <Lighthouse html={post.content} />
+      <Lighthouse html={post.content} document={post.contentJson} />
       <CommentSection postId={post.id} />
     </article>
   );
