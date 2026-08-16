@@ -70,7 +70,10 @@ export function PostEditor({
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        codeBlock: false,
+        link: false,
+      }),
       TextStyle,
       Color,
       Link.configure({

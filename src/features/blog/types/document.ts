@@ -122,8 +122,14 @@ function validateNode(node: unknown, path: string, isRoot = false): node is Tipt
       throw new Error(`Heading level must be 1, 2, or 3 at ${path}`);
     }
   }
-  if (node.type === "codeBlock" && isRecord(node.attrs) && node.attrs.language !== undefined && typeof node.attrs.language !== "string") {
-    throw new Error(`Code language must be a string at ${path}`);
+  if (node.type === "codeBlock" && isRecord(node.attrs)) {
+    // TipTap serializes an unset language as `null` (and the toolbar uses null for "plain").
+    const language = node.attrs.language;
+    if (language == null || language === "") {
+      delete node.attrs.language;
+    } else if (typeof language !== "string") {
+      throw new Error(`Code language must be a string at ${path}`);
+    }
   }
   if (node.type === "callout") {
     const variant = isRecord(node.attrs) ? node.attrs.variant : undefined;
