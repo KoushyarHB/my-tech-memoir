@@ -1,7 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -15,7 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useDeletePost } from "@/features/blog/hooks/use-post-mutations";
 
 type PostDeleteButtonProps = {
   postId: string;
@@ -23,28 +21,19 @@ type PostDeleteButtonProps = {
 };
 
 export function PostDeleteButton({ postId, postTitle }: PostDeleteButtonProps) {
-  const router = useRouter();
-  const [deleting, setDeleting] = useState(false);
+  // `useDeletePost` invalidates the posts cache, so the table and the metric
+  // tiles recompute without a full server re-render.
+  const { mutate: deletePost, isPending } = useDeletePost();
 
-  async function handleDelete() {
-    setDeleting(true);
-    try {
-      const res = await fetch(`/api/posts/${postId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
-      toast.success("Post deleted");
-      router.refresh();
-    } catch {
-      toast.error("Failed to delete post");
-    } finally {
-      setDeleting(false);
-    }
+  function handleDelete() {
+    deletePost(postId);
   }
 
   return (
     <AlertDialog>
       <AlertDialogTrigger
         render={
-          <Button variant="ghost" size="icon-sm" disabled={deleting}>
+          <Button variant="ghost" size="icon-sm" disabled={isPending}>
             <Trash2 className="size-3.5" />
           </Button>
         }

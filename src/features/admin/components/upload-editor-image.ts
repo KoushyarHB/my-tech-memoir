@@ -1,5 +1,6 @@
 import type { Editor } from "@tiptap/react";
 import { toast } from "sonner";
+import { api, getErrorMessage } from "@/lib/api-client";
 
 /** Open a file picker, upload to /api/upload, and insert a Memoir image node. */
 export function uploadEditorImage(editor: Editor) {
@@ -12,13 +13,12 @@ export function uploadEditorImage(editor: Editor) {
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const response = await fetch("/api/upload", { method: "POST", body: formData });
-      const json = await response.json().catch(() => null);
-      if (!response.ok || !json?.data?.url) throw new Error(json?.error ?? "Upload failed");
-      editor.chain().focus().setMemoirImage({ src: json.data.url, align: "center", width: 100 }).run();
+      const { url } = await api.upload<{ url: string }>("/api/upload", formData);
+      if (!url) throw new Error("Upload failed");
+      editor.chain().focus().setMemoirImage({ src: url, align: "center", width: 100 }).run();
       toast.success("Image inserted");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Image upload failed");
+      toast.error(getErrorMessage(error, "Image upload failed"));
     }
   };
   input.click();

@@ -50,5 +50,24 @@ export type CreatePostInput = {
 };
 
 export type UpdatePostInput = Partial<CreatePostInput>;
+
+/**
+ * Serialized post summary as returned by the JSON API (dates are ISO strings).
+ * Used by client tables so server-rendered props and refetched data share a type.
+ */
+export type PostListItem = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  published: boolean;
+  publishedAt: string | null;
+  viewCount: number;
+  commentCount: number;
+  createdAt: string;
+  updatedAt: string;
+  readingTime: string;
+  tags: Tag[];
+};
 export * from "./document";
 import type { TiptapDocument } from "./document";

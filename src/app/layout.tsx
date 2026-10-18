@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { ThemeProvider, ThemeScript } from '@/components/theme'
 import SessionProvider from '@/components/providers/session-provider'
+import QueryProvider from '@/components/providers/query-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { Geist, Lora, JetBrains_Mono } from "next/font/google"
 import { cn } from "@/lib/utils"
@@ -59,10 +60,12 @@ export default function RootLayout({
         }}
       >
         <SessionProvider>
-          <ThemeProvider>
-            {children}
-            <Toaster />
-          </ThemeProvider>
+          <QueryProvider>
+            <ThemeProvider>
+              {children}
+              <Toaster />
+            </ThemeProvider>
+          </QueryProvider>
         </SessionProvider>
       </body>
     </html>

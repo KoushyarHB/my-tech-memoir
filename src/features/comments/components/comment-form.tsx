@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { getErrorMessage } from "@/lib/api-client";
+import { useCommentMutations } from "../hooks/use-comment-mutations";
 
 type CommentFormProps = {
   postId: string;
@@ -24,55 +26,50 @@ export function CommentForm({
 }: CommentFormProps) {
   const { data: session } = useSession();
   const isAuthenticated = !!session?.user;
+  const { createMutation } = useCommentMutations(postId);
   const [body, setBody] = useState("");
   const [authorName, setAuthorName] = useState("");
   const [authorEmail, setAuthorEmail] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const submitting = createMutation.isPending;
+  const error =
+    validationError ??
+    (createMutation.isError
+      ? getErrorMessage(createMutation.error, "Something went wrong")
+      : null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
+    setValidationError(null);
+    createMutation.reset();
 
     const trimmed = body.trim();
     if (!trimmed) {
-      setError("Please write a comment.");
+      setValidationError("Please write a comment.");
       return;
     }
 
     if (!isAuthenticated && !authorName.trim()) {
-      setError("Please enter your name.");
+      setValidationError("Please enter your name.");
       return;
     }
 
-    setSubmitting(true);
     try {
-      const res = await fetch("/api/comments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          postId,
-          body: trimmed,
-          authorName: authorName.trim() || undefined,
-          authorEmail: authorEmail.trim() || undefined,
-          parentId,
-        }),
+      await createMutation.mutateAsync({
+        body: trimmed,
+        authorName: authorName.trim() || undefined,
+        authorEmail: authorEmail.trim() || undefined,
+        parentId: parentId ?? undefined,
       });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to post comment");
-      }
 
       setBody("");
       setAuthorName("");
       setAuthorEmail("");
       onCommentPosted?.();
       if (isReply) onCancel?.();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setSubmitting(false);
+    } catch {
+      // Error state is surfaced through `createMutation.error` above.
     }
   }
 

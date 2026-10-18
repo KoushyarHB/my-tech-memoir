@@ -23,6 +23,8 @@ export async function listTags(): Promise<AdminTag[]> {
     },
   });
 
+  console.log("tags", tags);
+
   return tags.map((tag) => ({
     id: tag.id,
     name: tag.name,

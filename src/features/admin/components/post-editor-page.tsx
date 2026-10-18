@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import type { TiptapDocument } from "@/features/blog/types/document";
 import { EMPTY_TIPTAP_DOCUMENT, hasDocumentText } from "@/features/blog/types/document";
 import { TiptapContent } from "@/features/blog/components";
+import { useSavePost } from "@/features/blog/hooks/use-post-mutations";
 import { documentToMarkdown, markdownToDocument } from "./markdown";
 
 type Tag = { id: string; name: string; slug: string };
@@ -112,6 +113,7 @@ export function PostEditorPage({
   availableTags,
 }: PostEditorPageProps) {
   const router = useRouter();
+  const { mutateAsync: savePost } = useSavePost();
 
   const [title, setTitle] = useState(initialTitle);
   const [slug, setSlug] = useState(initialSlug);
@@ -238,28 +240,13 @@ export function PostEditorPage({
       };
 
       try {
-        if (currentPostId) {
-          const res = await fetch(`/api/posts/${currentPostId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          if (!res.ok) {
-            const json = (await res.json().catch(() => null)) as { error?: string } | null;
-            throw new Error(json?.error ?? "Save failed");
-          }
-        } else {
-          const res = await fetch("/api/posts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          if (!res.ok) {
-            const json = (await res.json().catch(() => null)) as { error?: string } | null;
-            throw new Error(json?.error ?? "Create failed");
-          }
-          const json = await res.json();
-          setCurrentPostId(json.data.id);
+        const saved = await savePost({
+          postId: currentPostId,
+          input: payload,
+        });
+
+        if (!currentPostId) {
+          setCurrentPostId(saved.id);
         }
 
         if (publish !== undefined) {
@@ -291,7 +278,6 @@ export function PostEditorPage({
       } catch (err) {
         console.error("Save failed:", err);
         setSavePhase("idle");
-        toast.error(err instanceof Error ? err.message : "Failed to save. Please try again.");
       } finally {
         savingRef.current = false;
       }
@@ -309,6 +295,7 @@ export function PostEditorPage({
       currentPostId,
       slugManuallyEdited,
       contentJson,
+      savePost,
     ]
   );
 

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { recordPostView } from "../services/view-service";
 
 const STORAGE_KEY = "mtm_viewer_key";
 
@@ -28,32 +30,19 @@ type PostViewCountProps = {
 
 export function PostViewCount({ postId, initialCount }: PostViewCountProps) {
   const [count, setCount] = useState(initialCount);
+  const { mutate: recordView } = useMutation({
+    mutationFn: (viewerKey: string) => recordPostView(postId, viewerKey),
+    onSuccess: (result) => {
+      if (typeof result.viewCount === "number") {
+        setCount(result.viewCount);
+      }
+    },
+  });
 
   useEffect(() => {
-    const viewerKey = getOrCreateViewerKey();
-
-    void fetch("/api/views", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ postId, viewerKey }),
-    })
-      .then(async (res) => {
-        if (!res.ok) return;
-        const json = (await res.json()) as {
-          success?: boolean;
-          data?: { viewCount?: number };
-        };
-        if (
-          json.success &&
-          typeof json.data?.viewCount === "number"
-        ) {
-          setCount(json.data.viewCount);
-        }
-      })
-      .catch(() => {
-        // Ignore network / tracking failures
-      });
-  }, [postId]);
+    // Ignore network / tracking failures.
+    recordView(getOrCreateViewerKey());
+  }, [postId, recordView]);
 
   return (
     <span>

@@ -1,35 +1,20 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { useCallback, useMemo } from "react";
 import { BadgeCheck } from "lucide-react";
 import type { ColumnDef, FilterFn } from "@tanstack/react-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DataTable, DataTableColumnHeader } from "@/components/data-table";
 import { RolePicker } from "@/features/admin/components/role-picker";
+import { useUserMutations } from "../hooks/use-users";
+import type { AdminUserRow } from "../types/users";
 import {
   ASSIGNABLE_ROLES,
   ROLE_LABELS,
   type UserRole,
 } from "@/features/admin/types/roles";
 
-export type AdminUserRow = {
-  id: string;
-  email: string;
-  name: string | null;
-  image: string | null;
-  bio: string | null;
-  role: UserRole;
-  emailVerified: boolean;
-  createdAt: string;
-  updatedAt: string;
-  providers: string[];
-  postCount: number;
-  bookmarkCount: number;
-  commentCount: number;
-  translationCount: number;
-};
+export type { AdminUserRow } from "../types/users";
 
 type AdminUsersTableProps = {
   users: AdminUserRow[];
@@ -60,40 +45,25 @@ function formatProvider(provider: string) {
   return provider.charAt(0).toUpperCase() + provider.slice(1);
 }
 
-export function AdminUsersTable({ users, currentUserId }: AdminUsersTableProps) {
-  const router = useRouter();
-  const [pendingId, setPendingId] = useState<string | null>(null);
+export function AdminUsersTable({
+  users,
+  currentUserId,
+}: AdminUsersTableProps) {
+  const {
+    mutate: updateRole,
+    isPending: isUpdatingRole,
+    variables,
+  } = useUserMutations().updateRoleMutation;
+
+  const pendingId = isUpdatingRole ? (variables?.userId ?? null) : null;
 
   const handleRoleChange = useCallback(
-    async (userId: string, role: UserRole) => {
-      setPendingId(userId);
-      try {
-        const res = await fetch(`/api/users/${userId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ role }),
-        });
-        const json = (await res.json()) as {
-          success?: boolean;
-          error?: string;
-        };
-        if (!res.ok || !json.success) {
-          throw new Error(json.error ?? "Failed to update role");
-        }
-        toast.success(`Role updated to ${ROLE_LABELS[role]}`, {
-          description:
-            "They may need to sign out and back in for it to apply.",
-        });
-        router.refresh();
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to update role"
-        );
-      } finally {
-        setPendingId(null);
-      }
+    (userId: string, role: UserRole) => {
+      // The mutation updates the users cache, so the table and its metric
+      // tiles re-render without a server round-trip.
+      updateRole({ userId, role });
     },
-    [router]
+    [updateRole]
   );
 
   const providerOptions = useMemo(() => {

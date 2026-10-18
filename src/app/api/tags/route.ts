@@ -15,6 +15,7 @@ export async function GET() {
       name: tag.name,
       slug: tag.slug,
       postCount: tag.postCount,
+      createdAt: tag.createdAt.toISOString(),
     }))
   );
 }

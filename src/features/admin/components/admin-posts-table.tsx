@@ -9,21 +9,9 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { DataTable, DataTableColumnHeader } from "@/components/data-table";
 import { cn } from "@/lib/utils";
 import { PostDeleteButton } from "@/app/admin/post-delete-button";
+import type { PostListItem } from "@/features/blog/types";
 
-export type AdminPostRow = {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string | null;
-  published: boolean;
-  publishedAt: string | null;
-  viewCount: number;
-  commentCount: number;
-  createdAt: string;
-  updatedAt: string;
-  readingTime: string;
-  tags: { id: string; name: string; slug: string }[];
-};
+export type AdminPostRow = PostListItem;
 
 type AdminPostsTableProps = {
   posts: AdminPostRow[];

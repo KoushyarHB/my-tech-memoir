@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CommentForm } from "./comment-form";
+import { useComments } from "../hooks/use-comments";
 import type { CommentPayload } from "../types";
 
 type CommentListProps = {
   postId: string;
-  refreshKey?: number;
-  onReplyPosted?: () => void;
 };
 
 function timeAgo(dateStr: string): string {
@@ -33,11 +32,9 @@ function timeAgo(dateStr: string): string {
 function CommentItem({
   comment,
   postId,
-  onReplyPosted,
 }: {
   comment: CommentPayload;
   postId: string;
-  onReplyPosted?: () => void;
 }) {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const initial = comment.authorName.charAt(0).toUpperCase();
@@ -75,10 +72,6 @@ function CommentItem({
           postId={postId}
           parentId={comment.id}
           isReply
-          onCommentPosted={() => {
-            setShowReplyForm(false);
-            onReplyPosted?.();
-          }}
           onCancel={() => setShowReplyForm(false)}
         />
       )}
@@ -86,12 +79,7 @@ function CommentItem({
       {comment.replies && comment.replies.length > 0 && (
         <div className="mt-3 ml-6 space-y-3 border-l border-border-muted pl-4">
           {comment.replies.map((reply) => (
-            <CommentItem
-              key={reply.id}
-              comment={reply}
-              postId={postId}
-              onReplyPosted={onReplyPosted}
-            />
+            <CommentItem key={reply.id} comment={reply} postId={postId} />
           ))}
         </div>
       )}
@@ -99,37 +87,10 @@ function CommentItem({
   );
 }
 
-export function CommentList({ postId, refreshKey, onReplyPosted }: CommentListProps) {
-  const [comments, setComments] = useState<CommentPayload[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export function CommentList({ postId }: CommentListProps) {
+  const { data: comments = [], isPending, error } = useComments(postId);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchComments() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(`/api/comments?postId=${postId}`);
-        if (!res.ok) throw new Error("Failed to load comments");
-        const data = await res.json();
-        if (!cancelled) setComments(data.data);
-      } catch (err) {
-        if (!cancelled)
-          setError(err instanceof Error ? err.message : "Unknown error");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    fetchComments();
-    return () => {
-      cancelled = true;
-    };
-  }, [postId, refreshKey]);
-
-  if (loading) {
+  if (isPending) {
     return (
       <div className="space-y-4">
         {[1, 2].map((i) => (
@@ -145,7 +106,9 @@ export function CommentList({ postId, refreshKey, onReplyPosted }: CommentListPr
 
   if (error) {
     return (
-      <p className="text-sm text-ink-tertiary">Could not load comments: {error}</p>
+      <p className="text-sm text-ink-tertiary">
+        Could not load comments: {error.message}
+      </p>
     );
   }
 
@@ -160,12 +123,7 @@ export function CommentList({ postId, refreshKey, onReplyPosted }: CommentListPr
   return (
     <div className="space-y-4">
       {comments.map((comment) => (
-        <CommentItem
-          key={comment.id}
-          comment={comment}
-          postId={postId}
-          onReplyPosted={onReplyPosted}
-        />
+        <CommentItem key={comment.id} comment={comment} postId={postId} />
       ))}
     </div>
   );

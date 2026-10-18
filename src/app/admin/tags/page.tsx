@@ -8,16 +8,6 @@ export default async function AdminTagsPage() {
   await requireAdmin();
   const tags = await listTags();
 
-  const usedCount = tags.filter((tag) => tag.postCount > 0).length;
-  const totalAssignments = tags.reduce((sum, tag) => sum + tag.postCount, 0);
-
-  const metrics = [
-    { label: "Tags", value: tags.length },
-    { label: "In use", value: usedCount },
-    { label: "Unused", value: tags.length - usedCount },
-    { label: "Assignments", value: totalAssignments },
-  ];
-
   const tableTags = tags.map((tag) => ({
     id: tag.id,
     name: tag.name,
@@ -40,22 +30,6 @@ export default async function AdminTagsPage() {
           tags here.
         </p>
       </div>
-
-      <dl className="mb-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4">
-        {metrics.map((metric) => (
-          <div
-            key={metric.label}
-            className="bg-(--bg-elevated) px-4 py-4 sm:px-5"
-          >
-            <dt className="text-[11px] font-medium uppercase tracking-[0.12em] text-ink-tertiary">
-              {metric.label}
-            </dt>
-            <dd className="mt-2 font-serif text-2xl font-semibold tabular-nums text-ink-primary">
-              {metric.value.toLocaleString()}
-            </dd>
-          </div>
-        ))}
-      </dl>
 
       <AdminTagsManager tags={tableTags} />
     </div>

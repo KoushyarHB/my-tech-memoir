@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "@/i18n/navigation";
 import { Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useBookmarkStatus, useToggleBookmark } from "../hooks/use-bookmark";
 
 type BookmarkButtonProps = {
   postId: string;
@@ -17,65 +18,34 @@ export function BookmarkButton({
 }: BookmarkButtonProps) {
   const { status } = useSession();
   const router = useRouter();
-  const [bookmarked, setBookmarked] = useState(initialBookmarked);
-  const [loading, setLoading] = useState(false);
+  const { data: bookmarkedFromQuery } = useBookmarkStatus(
+    postId,
+    status === "authenticated"
+  );
+  const { mutate: toggleBookmark, isPending } = useToggleBookmark(postId);
   const [justToggled, setJustToggled] = useState(false);
 
-  useEffect(() => {
-    if (status !== "authenticated") return;
+  const bookmarked = bookmarkedFromQuery ?? initialBookmarked;
 
-    let cancelled = false;
-
-    async function checkBookmark() {
-      try {
-        const res = await fetch(`/api/bookmarks?postId=${postId}`);
-        if (res.ok) {
-          const json = await res.json();
-          if (!cancelled) setBookmarked(json.data?.bookmarked ?? false);
-        }
-      } catch {
-        // silently default to unbookmarked
-      }
-    }
-
-    checkBookmark();
-    return () => {
-      cancelled = true;
-    };
-  }, [postId, status]);
-
-  const handleToggle = useCallback(async () => {
+  const handleToggle = useCallback(() => {
     if (status !== "authenticated") {
       router.push("/signin");
       return;
     }
 
-    setLoading(true);
-    try {
-      const res = await fetch("/api/bookmarks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId }),
-      });
-
-      if (res.ok) {
-        const json = await res.json();
-        setBookmarked(json.data?.bookmarked ?? false);
+    toggleBookmark(undefined, {
+      onSuccess: () => {
         setJustToggled(true);
         window.setTimeout(() => setJustToggled(false), 320);
-      }
-    } catch {
-      // state reverts on next page load
-    } finally {
-      setLoading(false);
-    }
-  }, [postId, status, router]);
+      },
+    });
+  }, [status, router, toggleBookmark]);
 
   return (
     <button
       type="button"
       onClick={handleToggle}
-      disabled={loading}
+      disabled={isPending}
       aria-label={bookmarked ? "Remove bookmark" : "Add bookmark"}
       title={bookmarked ? "Remove bookmark" : "Add bookmark"}
       aria-pressed={bookmarked}
