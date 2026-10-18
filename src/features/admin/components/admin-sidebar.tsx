@@ -46,6 +46,8 @@ function isActive(pathname: string, href: string, exact?: boolean) {
 type AdminSidebarProps = {
   userName?: string | null;
   isAdmin?: boolean;
+  /** Pending comments — rendered as a badge on the Comments entry. */
+  pendingComments?: number;
   collapsed: boolean;
   mobileOpen: boolean;
   onMobileOpenChange: (open: boolean) => void;
@@ -55,6 +57,7 @@ type AdminSidebarProps = {
 export function AdminSidebar({
   userName,
   isAdmin = false,
+  pendingComments = 0,
   collapsed,
   mobileOpen,
   onMobileOpenChange,
@@ -67,7 +70,8 @@ export function AdminSidebar({
     label: string,
     Icon: (typeof MAIN_NAV)[number]["icon"],
     exact?: boolean,
-    iconOnly?: boolean
+    iconOnly?: boolean,
+    badge?: number
   ) => {
     const active = isActive(pathname, href, exact);
     return (
@@ -86,6 +90,20 @@ export function AdminSidebar({
       >
         <Icon className="size-4 shrink-0 opacity-80" />
         {!iconOnly ? label : null}
+        {badge && badge > 0 ? (
+          <span
+            className={cn(
+              "ml-auto rounded-md px-1.5 py-0.5 text-[10px] font-medium tabular-nums",
+              iconOnly && "sr-only",
+              active
+                ? "bg-(--accent) text-(--ink-inverse)"
+                : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+            )}
+            title={`${badge} awaiting moderation`}
+          >
+            {badge > 99 ? "99+" : badge}
+          </span>
+        ) : null}
       </Link>
     );
   };
@@ -135,7 +153,8 @@ export function AdminSidebar({
               item.label,
               item.icon,
               "exact" in item ? item.exact : false,
-              iconOnly
+              iconOnly,
+              item.href === "/admin/comments" ? pendingComments : undefined
             )
           )}
           {isAdmin

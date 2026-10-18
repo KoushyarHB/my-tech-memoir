@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -56,7 +57,7 @@ export function CommentForm({
     }
 
     try {
-      await createMutation.mutateAsync({
+      const created = await createMutation.mutateAsync({
         body: trimmed,
         authorName: authorName.trim() || undefined,
         authorEmail: authorEmail.trim() || undefined,
@@ -68,6 +69,17 @@ export function CommentForm({
       setAuthorEmail("");
       onCommentPosted?.();
       if (isReply) onCancel?.();
+
+      // Auto-moderation may hold a comment back instead of publishing it.
+      if (created.status === "PENDING") {
+        toast.info("Your comment is awaiting moderation", {
+          description: "It will appear once it has been reviewed.",
+        });
+      } else if (created.status !== "APPROVED") {
+        toast.error("Your comment was flagged and will not be published", {
+          description: "If this is a mistake, reply by email instead.",
+        });
+      }
     } catch {
       // Error state is surfaced through `createMutation.error` above.
     }

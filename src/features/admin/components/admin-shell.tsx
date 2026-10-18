@@ -7,6 +7,8 @@ import { AdminTopbar } from "./admin-topbar";
 type AdminShellProps = {
   userName?: string | null;
   userRole?: string | null;
+  /** Pending comment count, shown as a badge in the sidebar. */
+  pendingComments?: number;
   children: React.ReactNode;
 };
 
@@ -26,7 +28,12 @@ function getServerDesktopSnapshot() {
   return true;
 }
 
-export function AdminShell({ userName, userRole, children }: AdminShellProps) {
+export function AdminShell({
+  userName,
+  userRole,
+  pendingComments = 0,
+  children,
+}: AdminShellProps) {
   const isDesktop = useSyncExternalStore(
     subscribeDesktop,
     getDesktopSnapshot,
@@ -50,6 +57,7 @@ export function AdminShell({ userName, userRole, children }: AdminShellProps) {
       <AdminSidebar
         userName={userName}
         isAdmin={userRole === "ADMIN"}
+        pendingComments={pendingComments}
         collapsed={sidebarCollapsed}
         mobileOpen={mobileOpen}
         onMobileOpenChange={setMobileOpen}

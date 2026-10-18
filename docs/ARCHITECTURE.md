@@ -61,8 +61,7 @@ features/<domain>/
 |---|---|
 | `blog` | Posts: CRUD, publish state, view counting, post queries |
 | `tags` | Tags: listing, creation, stats |
-| `comments` | Comment threads, replies, moderation status |
-| `bookmarks` | Per-user bookmarks |
+| `comments` | Comment threads, replies, moderation status || `bookmarks` | Per-user bookmarks |
 | `users` | User administration: list, roles, stats |
 | `admin` | Dashboard + admin shell. Composes the domains above. |
 | `appearance` | Theme, accent, reading scale and motion preferences (browser-local). |
@@ -258,6 +257,43 @@ unaffected.
 Legacy `localStorage.theme` values are migrated on first load, and the header /
 topbar theme toggles read the same context.
 
+### Comment moderation
+
+Comments are scored automatically before they are stored, so a human only sees
+the ones that need a decision.
+
+```
+new comment → assessComment() → score
+                                ├─ ≥ 60  → SPAM     (hidden, queued)
+                                ├─ ≥ 25  → PENDING  (queued for review)
+                                └─ else  → APPROVED (published)
+```
+
+`features/comments/lib/moderation.ts` is pure and returns a score plus a list of
+human-readable flags (links, promotional phrasing, shouting, repetition, URL in
+the author name, email in the body, very short). The flags are shown in the
+queue, so a moderator sees *why* something was held and can override it in one
+click. Two signals lower the score: a signed-in author and an author who already
+has an approved comment.
+
+Signals are computed on read, never stored — improving the rules needs no
+migration or backfill.
+
+Only `APPROVED` is publicly visible, which is what makes `PENDING` meaningful.
+A held comment tells its author it is awaiting review instead of vanishing.
+
+The admin queue adds:
+
+- status tabs with live counts, layered on top of the column filters by AND-ing
+  both expressions, so one code path handles "status" and "author contains"
+- cross-page selection with bulk approve / reject / spam (idempotent: rows
+  already in the target state are reported as skipped)
+- a detail dialog with the full body, quoted parent, thread, staff reply
+  (`⌘/Ctrl + Enter`), body editing and all status transitions
+- optimistic status changes, so clicking through a queue never waits on a
+  round-trip
+- a pending badge in the admin sidebar
+
 ---
 
 ## 6. Error handling
@@ -315,6 +351,14 @@ never a second implementation of the same query.
   the pre-paint script against a fake DOM (defaults, legacy key, system theme,
   corrupt payload), and renders the Appearance form to check every section and
   option is present.
+- `npm run verify:moderation` — exercises the auto-moderator (clean, link,
+  promotional, shouting, repetition, trust penalties, score clamping, status
+  transitions) and renders the moderation view to confirm tabs, tiles, signals
+  and selection controls.
+- `npx tsx --env-file=.env scripts/verify-moderation-live.ts` — optional live
+  check: creates clean/spam/borderline comments, asserts public visibility,
+  approves one, checks bulk idempotency, staff replies, stats, and cascade
+  delete, then cleans up.
 - `npx tsx --env-file=.env scripts/verify-tags-filter-live.ts` — optional live
   check that filtering posts by a tag id matches a direct count.
 - `npx tsx --env-file=.env scripts/verify-dashboard-live.ts` — optional live

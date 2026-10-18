@@ -1,3 +1,9 @@
 export { CommentForm } from "./comment-form";
 export { CommentList } from "./comment-list";
 export { CommentSection } from "./comment-section";
+export { CommentStatusBadge } from "./comment-status-badge";
+export { CommentSignalsPanel } from "./comment-signals-panel";
+export { CommentRowActions } from "./comment-row-actions";
+export { CommentDetailDialog } from "./comment-detail-dialog";
+export { AdminCommentsTable } from "./admin-comments-table";
+export { AdminCommentsView } from "./admin-comments-view";

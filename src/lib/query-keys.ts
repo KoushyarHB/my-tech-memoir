@@ -12,6 +12,11 @@ export const queryKeys = {
     all: ["comments"] as const,
     page: (query: Partial<PaginationQuery> & { postId?: string }) =>
       ["comments", "page", query] as const,
+    moderation: (query: Partial<PaginationQuery>) =>
+      ["comments", "moderation", query] as const,
+    stats: () => ["comments", "stats"] as const,
+    thread: (commentId: string) =>
+      ["comments", "thread", commentId] as const,
   },
   bookmarks: {
     all: ["bookmarks"] as const,
