@@ -1,31 +1,23 @@
 import Link from "next/link";
-import { getAllPosts } from "@/features/blog/server/post-service";
-import { db } from "@/lib/db";
+import { getPostStats, getPostsPage } from "@/features/blog/server/post-service";
+import { getTagStats } from "@/features/tags/server/tag-repository";
 import { buttonVariants } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdminPostsView } from "@/features/admin/components/admin-posts-view";
+import { DEFAULT_PAGE_SIZE } from "@/shared/constants/pagination";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPostsPage() {
-  const posts = await getAllPosts();
-  const tagCount = await db.tag.count();
-
-  const tablePosts = posts.map((post) => ({
-    id: post.id,
-    title: post.title,
-    slug: post.slug,
-    excerpt: post.excerpt,
-    published: post.published,
-    publishedAt: post.publishedAt?.toISOString() ?? null,
-    viewCount: post.viewCount,
-    commentCount: post.commentCount,
-    createdAt: post.createdAt.toISOString(),
-    updatedAt: post.updatedAt.toISOString(),
-    readingTime: post.readingTime,
-    tags: post.tags,
-  }));
+  const [posts, stats, tagStats] = await Promise.all([
+    getPostsPage(
+      { page: 1, pageSize: DEFAULT_PAGE_SIZE },
+      { drafts: true }
+    ),
+    getPostStats(),
+    getTagStats(),
+  ]);
 
   return (
     <div className="px-5 py-8 lg:px-8">
@@ -50,7 +42,10 @@ export default async function AdminPostsPage() {
         </Link>
       </div>
 
-      <AdminPostsView posts={tablePosts} tagCount={tagCount} />
+      <AdminPostsView
+        posts={posts.items}
+        stats={{ ...stats, tags: tagStats.total }}
+      />
     </div>
   );
 }

@@ -1,18 +1,8 @@
 import { NextResponse } from "next/server";
-
-interface ApiResponseMeta {
-  page?: number;
-  limit?: number;
-  total?: number;
-  totalPages?: number;
-}
-
-interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  meta?: ApiResponseMeta;
-}
+import { FilterExpressionError } from "@/shared/lib/filter-expression";
+import { QueryValidationError } from "@/shared/lib/pagination";
+import type { ApiResponse } from "@/shared/types/api";
+import type { PaginatedResult } from "@/shared/types/pagination";
 
 interface ResponseOptions {
   status?: number;
@@ -45,27 +35,30 @@ export function apiError(
   );
 }
 
+/**
+ * Paginated list reply.
+ *
+ * `data` is a `PaginatedResult<T>` (`page`, `pageSize`, `totalItems`,
+ * `totalPages`, `items`) — the same shape tms-backend returns, so clients can
+ * share pagination code between the two APIs.
+ */
 export function apiPaginated<T>(
-  data: T[],
-  total: number,
-  page: number,
-  limit: number,
+  result: PaginatedResult<T>,
   options?: ResponseOptions
-): NextResponse<ApiResponse<T[]>> {
-  return NextResponse.json(
-    {
-      success: true,
-      data,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    },
-    {
-      status: options?.status ?? 200,
-      headers: options?.headers,
-    }
-  );
+): NextResponse<ApiResponse<PaginatedResult<T>>> {
+  return apiSuccess(result, options);
+}
+
+/**
+ * Maps query-validation failures to a 400. Returns `null` for anything else so
+ * callers can fall through to their own 500 handling.
+ */
+export function apiQueryError(error: unknown): NextResponse<ApiResponse<null>> | null {
+  if (error instanceof QueryValidationError) {
+    return apiError(error.message, { status: 400 });
+  }
+  if (error instanceof FilterExpressionError) {
+    return apiError(error.message, { status: 400 });
+  }
+  return null;
 }

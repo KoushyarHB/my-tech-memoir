@@ -1,43 +1,49 @@
-import { db } from "@/lib/db";
-import type { CommentPayload } from "../types";
+import type { PaginatedResult, PaginationQuery } from "@/shared/types/pagination";
+import {
+  COMMENT_AUTHOR_EMAIL_MAX_LENGTH,
+  COMMENT_AUTHOR_NAME_MAX_LENGTH,
+  COMMENT_BODY_MAX_LENGTH,
+} from "../constants/comment";
+import type { CreateCommentRequest, GetCommentDto } from "../types";
+import {
+  deleteCommentRecord,
+  findCommentById,
+  findCommentsPage,
+  insertComment,
+} from "./comment-repository";
+import { postExists } from "@/features/blog/server/post-service";
 
-type RawComment = {
-  id: string;
-  body: string;
-  authorName: string | null;
-  authorEmail: string | null;
-  userId: string | null;
-  parentId: string | null;
-  status: string;
-  createdAt: Date;
-  user: { name: string | null; image: string | null } | null;
-};
+/**
+ * Comments domain: business rules.
+ *
+ * Turns a flat page (roots + their replies) into the nested shape the UI
+ * renders, and validates new comments before they are stored.
+ */
 
-function toPayload(c: RawComment): CommentPayload {
-  const authorName = c.user?.name ?? c.authorName ?? "Anonymous";
-  return {
-    id: c.id,
-    body: c.body,
-    authorName,
-    userId: c.userId,
-    parentId: c.parentId,
-    status: c.status as CommentPayload["status"],
-    createdAt: c.createdAt.toISOString(),
-  };
+export class CommentValidationError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status = 400) {
+    super(message);
+    this.name = "CommentValidationError";
+    this.status = status;
+  }
 }
 
-function buildTree(flat: CommentPayload[]): CommentPayload[] {
-  const map = new Map<string, CommentPayload>();
-  const roots: CommentPayload[] = [];
+function buildTree(flat: GetCommentDto[]): GetCommentDto[] {
+  const map = new Map<string, GetCommentDto>();
+  const roots: GetCommentDto[] = [];
 
-  for (const c of flat) {
-    map.set(c.id, { ...c, replies: [] });
+  for (const comment of flat) {
+    map.set(comment.id, { ...comment, replies: [] });
   }
 
-  for (const c of flat) {
-    const node = map.get(c.id)!;
-    if (c.parentId && map.has(c.parentId)) {
-      map.get(c.parentId)!.replies!.push(node);
+  for (const comment of flat) {
+    const node = map.get(comment.id);
+    if (!node) continue;
+
+    if (comment.parentId) {
+      map.get(comment.parentId)?.replies?.push(node);
     } else {
       roots.push(node);
     }
@@ -46,79 +52,76 @@ function buildTree(flat: CommentPayload[]): CommentPayload[] {
   return roots;
 }
 
-export async function getCommentsByPostId(
-  postId: string
-): Promise<CommentPayload[]> {
-  const comments = (await db.comment.findMany({
-    where: {
-      postId,
-      status: { in: ["PENDING", "APPROVED"] },
-    },
-    orderBy: { createdAt: "asc" },
-    select: {
-      id: true,
-      body: true,
-      authorName: true,
-      authorEmail: true,
-      userId: true,
-      parentId: true,
-      status: true,
-      createdAt: true,
-      user: { select: { name: true, image: true } },
-    },
-  })) as unknown as RawComment[];
-
-  const flat = comments.map(toPayload);
-  return buildTree(flat);
+export async function getCommentsPage(
+  postId: string,
+  query: PaginationQuery,
+  options: { visibleOnly?: boolean } = {}
+): Promise<PaginatedResult<GetCommentDto>> {
+  const page = await findCommentsPage(postId, query, options);
+  return { ...page, items: buildTree(page.items) };
 }
 
-export async function createComment(params: {
-  postId: string;
-  body: string;
-  userId?: string | null;
-  authorName?: string;
-  authorEmail?: string;
-  parentId?: string | null;
-}): Promise<CommentPayload> {
-  const comment = (await db.comment.create({
-    data: {
-      postId: params.postId,
-      body: params.body,
-      userId: params.userId ?? null,
-      authorName: params.userId ? null : (params.authorName ?? "Anonymous"),
-      authorEmail: params.userId ? null : (params.authorEmail ?? null),
-      parentId: params.parentId ?? null,
-      status: "APPROVED",
-    },
-    select: {
-      id: true,
-      body: true,
-      authorName: true,
-      authorEmail: true,
-      userId: true,
-      parentId: true,
-      status: true,
-      createdAt: true,
-      user: { select: { name: true, image: true } },
-    },
-  })) as unknown as RawComment;
+export async function createComment(
+  input: CreateCommentRequest,
+  userId: string | null
+): Promise<GetCommentDto> {
+  if (!input.postId) {
+    throw new CommentValidationError("postId is required");
+  }
 
-  return toPayload(comment);
+  const body = (input.body ?? "").trim();
+
+  if (!body) {
+    throw new CommentValidationError("body is required");
+  }
+  if (body.length > COMMENT_BODY_MAX_LENGTH) {
+    throw new CommentValidationError(
+      `body must be ${COMMENT_BODY_MAX_LENGTH} characters or fewer`
+    );
+  }
+
+  const authorName = (input.authorName ?? "").trim();
+  const authorEmail = (input.authorEmail ?? "").trim();
+
+  if (!userId && !authorName) {
+    throw new CommentValidationError(
+      "authorName is required for anonymous comments"
+    );
+  }
+  if (authorName.length > COMMENT_AUTHOR_NAME_MAX_LENGTH) {
+    throw new CommentValidationError(
+      `authorName must be ${COMMENT_AUTHOR_NAME_MAX_LENGTH} characters or fewer`
+    );
+  }
+  if (authorEmail.length > COMMENT_AUTHOR_EMAIL_MAX_LENGTH) {
+    throw new CommentValidationError(
+      `authorEmail must be ${COMMENT_AUTHOR_EMAIL_MAX_LENGTH} characters or fewer`
+    );
+  }
+
+  const exists = await postExists(input.postId);
+  if (!exists) {
+    throw new CommentValidationError("Post not found", 404);
+  }
+
+  return insertComment({
+    postId: input.postId,
+    body,
+    userId,
+    authorName: userId ? null : authorName || "Anonymous",
+    authorEmail: userId ? null : authorEmail || null,
+    parentId: input.parentId ?? null,
+    status: "APPROVED",
+  });
 }
 
 export async function deleteComment(
   commentId: string,
   userId: string
 ): Promise<boolean> {
-  const comment = await db.comment.findUnique({
-    where: { id: commentId },
-    select: { userId: true },
-  });
+  const comment = await findCommentById(commentId);
+  if (!comment || comment.userId !== userId) return false;
 
-  if (!comment || comment.userId !== userId) {
-    return false;
-  }
-
-  await db.comment.delete({ where: { id: commentId } });
+  await deleteCommentRecord(commentId);
   return true;
 }

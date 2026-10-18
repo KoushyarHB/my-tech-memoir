@@ -1,10 +1,10 @@
 import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { PostDate } from "./post-date";
-import type { PostSummary } from "../types";
+import type { GetPostSummaryDto } from "../types";
 
 type PostCardProps = {
-  post: PostSummary;
+  post: GetPostSummaryDto;
 };
 
 export function PostCard({ post }: PostCardProps) {

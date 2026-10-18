@@ -1,89 +1,31 @@
-import { db } from "@/lib/db";
-import { estimateReadingTime } from "@/features/blog/lib/reading-time";
+import type { PaginatedResult, PaginationQuery } from "@/shared/types/pagination";
+import type { GetBookmarkDto, ToggleBookmarkDto } from "../types";
+import {
+  findBookmark,
+  findBookmarksPage,
+  toggleBookmarkRecord,
+} from "./bookmark-repository";
+
+/** Bookmarks domain: business rules. */
+
+export async function getBookmarksPage(
+  userId: string,
+  query: PaginationQuery
+): Promise<PaginatedResult<GetBookmarkDto>> {
+  return findBookmarksPage(userId, query);
+}
 
 export async function isBookmarked(
   userId: string,
   postId: string
 ): Promise<boolean> {
-  const bookmark = await db.bookmark.findUnique({
-    where: { postId_userId: { userId, postId } },
-    select: { id: true },
-  });
-  return !!bookmark;
+  const bookmark = await findBookmark(userId, postId);
+  return bookmark !== null;
 }
 
 export async function toggleBookmark(
   userId: string,
   postId: string
-): Promise<{ bookmarked: boolean; bookmarkId: string | null }> {
-  const existing = await db.bookmark.findUnique({
-    where: { postId_userId: { userId, postId } },
-    select: { id: true },
-  });
-
-  if (existing) {
-    await db.bookmark.delete({ where: { id: existing.id } });
-    return { bookmarked: false, bookmarkId: null };
-  }
-
-  const bookmark = await db.bookmark.create({
-    data: { userId, postId },
-  });
-
-  return { bookmarked: true, bookmarkId: bookmark.id };
-}
-
-export async function getBookmarksByUserId(userId: string) {
-  const bookmarks = await db.bookmark.findMany({
-    where: { userId },
-    include: {
-      post: {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          excerpt: true,
-           content: true,
-           contentJson: true,
-          published: true,
-          publishedAt: true,
-          viewCount: true,
-          createdAt: true,
-          updatedAt: true,
-          tags: {
-            select: {
-              tag: { select: { id: true, name: true, slug: true } },
-            },
-          },
-          _count: {
-            select: { comments: true },
-          },
-        },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  return bookmarks.map((b) => ({
-    id: b.id,
-    postId: b.postId,
-    userId: b.userId,
-    createdAt: b.createdAt,
-    post: {
-      id: b.post.id,
-      title: b.post.title,
-      slug: b.post.slug,
-      excerpt: b.post.excerpt,
-       content: b.post.content,
-       contentJson: b.post.contentJson as import("@/features/blog/types/document").TiptapDocument | null,
-      published: b.post.published,
-      publishedAt: b.post.publishedAt,
-      viewCount: b.post.viewCount,
-      commentCount: b.post._count.comments,
-      createdAt: b.post.createdAt,
-      updatedAt: b.post.updatedAt,
-      tags: b.post.tags.map((pt) => pt.tag),
-      readingTime: estimateReadingTime(b.post.content),
-    },
-  }));
+): Promise<ToggleBookmarkDto> {
+  return toggleBookmarkRecord(userId, postId);
 }

@@ -1,165 +1,189 @@
-import { db, Prisma } from "@/lib/db";
-import { estimateReadingTime } from "../lib/reading-time";
-import { slugify } from "../lib/slugify";
+import { Prisma } from "@/lib/db";
+import { slugify } from "@/shared/lib/slugify";
+import {
+  POST_CONTENT_MAX_LENGTH,
+  POST_EXCERPT_MAX_LENGTH,
+  POST_TITLE_MAX_LENGTH,
+} from "../constants/post";
 import { sanitizePostHtml } from "../lib/sanitize-post-html";
+import { readingTimeMinutes } from "../lib/reading-time";
+import { validateTiptapDocument } from "../types/document";
+import type { PaginatedResult, PaginationQuery } from "@/shared/types/pagination";
 import type {
-  CreatePostInput,
-  PostSummary,
-  PostWithTags,
-  Tag,
-  UpdatePostInput,
-  TiptapDocument,
+  CreatePostRequest,
+  GetPostDto,
+  GetPostSummaryDto,
+  UpdatePostRequest,
 } from "../types";
-import { EMPTY_TIPTAP_DOCUMENT, validateTiptapDocument } from "../types/document";
+import {
+  deletePostRecord,
+  findAllPublishedSlugs,
+  findPostById,
+  findPostBySlug,
+  findPostViewCount,
+  findPostViewState,
+  findPostsPage,
+  incrementPostView,
+  insertPost,
+  insertPostView,
+  updatePostRecord,
+} from "./post-repository";
 
-const SUMMARY_SELECT = {
-  id: true,
-  title: true,
-  slug: true,
-  excerpt: true,
-  content: true,
-  contentJson: true,
-  published: true,
-  publishedAt: true,
-  viewCount: true,
-  createdAt: true,
-  updatedAt: true,
-  tags: {
-    select: {
-      tag: { select: { id: true, name: true, slug: true } },
-    },
-  },
-  _count: {
-    select: { comments: true },
-  },
-} as const;
+/**
+ * Blog domain: post business rules.
+ *
+ * Owns sanitisation, document validation, slug derivation and publish
+ * bookkeeping. Mirrors tms-backend's command handlers: the repository is pure
+ * persistence, this layer is where invariants live.
+ */
 
-const FULL_SELECT = {
-  ...SUMMARY_SELECT,
-  coverImage: true,
-} as const;
-
-type PostWithJoinTags = {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string | null;
-  content: string;
-  contentJson: TiptapDocument | null;
-  coverImage: string | null;
-  published: boolean;
-  publishedAt: Date | null;
-  viewCount: number;
-  createdAt: Date;
-  updatedAt: Date;
-  tags: { tag: Tag }[];
-  _count: { comments: number };
-};
-
-function toSummary(p: PostWithJoinTags): PostSummary {
-  const content = sanitizePostHtml(p.content);
-  return {
-    id: p.id,
-    title: p.title,
-    slug: p.slug,
-    excerpt: p.excerpt,
-    content,
-    contentJson: p.contentJson,
-    published: p.published,
-    publishedAt: p.publishedAt,
-    viewCount: p.viewCount,
-    commentCount: p._count.comments,
-    createdAt: p.createdAt,
-    updatedAt: p.updatedAt,
-    tags: p.tags.map((pt) => pt.tag),
-    readingTime: estimateReadingTime(content),
-  };
+export class PostValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PostValidationError";
+  }
 }
 
-function toWithTags(p: PostWithJoinTags): PostWithTags {
-  return {
-    ...toSummary(p),
-    coverImage: p.coverImage,
-  };
+const UNPUBLISHED_SLUG_PREFIX = "draft-";
+
+function hasBodyText(html: string): boolean {
+  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim().length > 0;
 }
 
-export async function getPublishedPosts(): Promise<PostSummary[]> {
-  const posts = (await db.post.findMany({
-    where: { published: true },
-    orderBy: { createdAt: "desc" },
-    select: SUMMARY_SELECT,
-  })) as unknown as PostWithJoinTags[];
-  return posts.map(toSummary);
+function resolveSlug(inputSlug: string | undefined, title: string): string {
+  return (
+    (inputSlug ?? "").trim() ||
+    slugify(title) ||
+    `${UNPUBLISHED_SLUG_PREFIX}${Date.now()}`
+  );
 }
 
-export async function getAllPosts(): Promise<PostSummary[]> {
-  const posts = (await db.post.findMany({
-    orderBy: { createdAt: "desc" },
-    select: SUMMARY_SELECT,
-  })) as unknown as PostWithJoinTags[];
-  return posts.map(toSummary);
+export async function getPostsPage(
+  query: PaginationQuery,
+  options: { drafts?: boolean; tagSlug?: string } = {}
+): Promise<PaginatedResult<GetPostSummaryDto>> {
+  return findPostsPage(query, {
+    publishedOnly: !options.drafts,
+    tagSlug: options.tagSlug,
+  });
 }
 
-export async function getPostBySlug(
-  slug: string,
-): Promise<PostWithTags | null> {
-  const post = (await db.post.findUnique({
-    where: { slug },
-    select: FULL_SELECT,
-  })) as unknown as PostWithJoinTags | null;
-  return post ? toWithTags(post) : null;
+export async function getPostById(id: string): Promise<GetPostDto | null> {
+  return findPostById(id);
 }
 
-export async function getPostById(id: string): Promise<PostWithTags | null> {
-  const post = (await db.post.findUnique({
-    where: { id },
-    select: FULL_SELECT,
-  })) as unknown as PostWithJoinTags | null;
-  return post ? toWithTags(post) : null;
+/** Slugs of every published post, for `generateStaticParams`. */
+export async function getPublishedSlugs(): Promise<{ slug: string }[]> {
+  return findAllPublishedSlugs();
+}
+
+export { getPostStats, postExists } from "./post-repository";
+
+export async function getPostBySlug(slug: string): Promise<GetPostDto | null> {
+  return findPostBySlug(slug);
 }
 
 export async function createPost(
-  input: CreatePostInput,
-): Promise<PostWithTags> {
-  const contentJson = input.contentJson
-    ? validateTiptapDocument(input.contentJson)
-    : null;
-  const post = (await db.post.create({
-    data: {
-      title: input.title,
-      slug: slugify(input.slug),
-      excerpt: input.excerpt ?? null,
-      content: sanitizePostHtml(input.content),
-      contentJson: contentJson as Prisma.InputJsonValue | undefined,
-      published: input.published ?? false,
-      publishedAt: input.published ? new Date() : null,
-      tags: input.tagIds?.length
-        ? {
-            create: input.tagIds.map((tagId) => ({
-              tag: { connect: { id: tagId } },
-            })),
-          }
-        : undefined,
-    },
-    select: FULL_SELECT,
-  })) as unknown as PostWithJoinTags;
-  return toWithTags(post);
+  input: CreatePostRequest
+): Promise<GetPostDto> {
+  const title = (input.title ?? "").trim();
+  const content = input.content ?? "";
+
+  // Drafts may be title-only or body-only; reject only when both are empty.
+  if (!title && !hasBodyText(content)) {
+    throw new PostValidationError("Add a title or body before saving");
+  }
+  if (title.length > POST_TITLE_MAX_LENGTH) {
+    throw new PostValidationError(
+      `Title must be ${POST_TITLE_MAX_LENGTH} characters or fewer`
+    );
+  }
+  if ((input.excerpt ?? "").length > POST_EXCERPT_MAX_LENGTH) {
+    throw new PostValidationError(
+      `Excerpt must be ${POST_EXCERPT_MAX_LENGTH} characters or fewer`
+    );
+  }
+  if (content.length > POST_CONTENT_MAX_LENGTH) {
+    throw new PostValidationError(
+      `Content must be ${POST_CONTENT_MAX_LENGTH} characters or fewer`
+    );
+  }
+
+  const sanitized = content ? sanitizePostHtml(content) : "<p></p>";
+  const slug = resolveSlug(input.slug, title);
+
+  const data: Prisma.PostCreateInput = {
+    title,
+    slug: slugify(slug),
+    excerpt: input.excerpt ?? null,
+    content: sanitized,
+    contentJson: input.contentJson
+      ? (validateTiptapDocument(input.contentJson) as Prisma.InputJsonValue)
+      : undefined,
+    coverImage: input.coverImage ?? null,
+    published: input.published ?? false,
+    publishedAt: input.published ? new Date() : null,
+    readingTime: readingTimeMinutes(sanitized),
+    tags: input.tagIds?.length
+      ? {
+          create: input.tagIds.map((tagId) => ({
+            tag: { connect: { id: tagId } },
+          })),
+        }
+      : undefined,
+  };
+
+  return insertPost(data);
 }
 
 export async function updatePost(
   id: string,
-  input: UpdatePostInput,
-): Promise<PostWithTags> {
-  const data: Record<string, unknown> = {};
+  input: UpdatePostRequest
+): Promise<GetPostDto> {
+  if (
+    input.title !== undefined &&
+    input.title.length > POST_TITLE_MAX_LENGTH
+  ) {
+    throw new PostValidationError(
+      `Title must be ${POST_TITLE_MAX_LENGTH} characters or fewer`
+    );
+  }
+  if (
+    input.excerpt !== undefined &&
+    input.excerpt.length > POST_EXCERPT_MAX_LENGTH
+  ) {
+    throw new PostValidationError(
+      `Excerpt must be ${POST_EXCERPT_MAX_LENGTH} characters or fewer`
+    );
+  }
+  if (
+    input.content !== undefined &&
+    input.content.length > POST_CONTENT_MAX_LENGTH
+  ) {
+    throw new PostValidationError(
+      `Content must be ${POST_CONTENT_MAX_LENGTH} characters or fewer`
+    );
+  }
+
+  const data: Prisma.PostUpdateInput = {};
 
   if (input.title !== undefined) data.title = input.title;
   if (input.slug !== undefined) data.slug = slugify(input.slug);
   if (input.excerpt !== undefined) data.excerpt = input.excerpt;
-  if (input.content !== undefined)
-    data.content = sanitizePostHtml(input.content);
-  if (input.contentJson !== undefined) {
-    data.contentJson = validateTiptapDocument(input.contentJson) as Prisma.InputJsonValue;
+  if (input.coverImage !== undefined) data.coverImage = input.coverImage;
+
+  if (input.content !== undefined) {
+    const sanitized = sanitizePostHtml(input.content);
+    data.content = sanitized;
+    data.readingTime = readingTimeMinutes(sanitized);
   }
+
+  if (input.contentJson !== undefined) {
+    data.contentJson = validateTiptapDocument(
+      input.contentJson
+    ) as Prisma.InputJsonValue;
+  }
+
   if (input.published !== undefined) {
     data.published = input.published;
     if (input.published) data.publishedAt = new Date();
@@ -174,72 +198,32 @@ export async function updatePost(
     };
   }
 
-  const post = (await db.post.update({
-    where: { id },
-    data,
-    select: FULL_SELECT,
-  })) as unknown as PostWithJoinTags;
-  return toWithTags(post);
+  return updatePostRecord(id, data);
 }
 
 export async function deletePost(id: string): Promise<void> {
-  await db.post.delete({ where: { id } });
-}
-
-export async function getPostsByTag(tagSlug: string): Promise<PostSummary[]> {
-  const posts = (await db.post.findMany({
-    where: {
-      published: true,
-      tags: { some: { tag: { slug: tagSlug } } },
-    },
-    orderBy: { createdAt: "desc" },
-    select: SUMMARY_SELECT,
-  })) as unknown as PostWithJoinTags[];
-  return posts.map(toSummary);
-}
-
-export async function searchPosts(query: string): Promise<PostSummary[]> {
-  const posts = (await db.post.findMany({
-    where: {
-      published: true,
-      OR: [
-        { title: { contains: query, mode: "insensitive" } },
-        { excerpt: { contains: query, mode: "insensitive" } },
-      ],
-    },
-    orderBy: { createdAt: "desc" },
-    select: SUMMARY_SELECT,
-  })) as unknown as PostWithJoinTags[];
-  return posts.map(toSummary);
+  await deletePostRecord(id);
 }
 
 export async function recordPostView(
   postId: string,
-  viewerKey: string,
+  viewerKey: string
 ): Promise<{ counted: boolean; viewCount?: number }> {
-  const post = await db.post.findUnique({
-    where: { id: postId },
-    select: { id: true, published: true, viewCount: true },
-  });
+  const post = await findPostViewState(postId);
 
   if (!post || !post.published) {
     return { counted: false };
   }
 
   try {
-    await db.postView.create({
-      data: { postId, viewerKey },
-    });
+    await insertPostView(postId, viewerKey);
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
-      // Re-read so the client can sync the latest count even when not incrementing
-      const current = await db.post.findUnique({
-        where: { id: postId },
-        select: { viewCount: true },
-      });
+      // Re-read so the client can sync the latest count even when not incrementing.
+      const current = await findPostViewCount(postId);
       return {
         counted: false,
         viewCount: current?.viewCount ?? post.viewCount,
@@ -248,11 +232,6 @@ export async function recordPostView(
     throw error;
   }
 
-  const updated = await db.post.update({
-    where: { id: postId },
-    data: { viewCount: { increment: 1 } },
-    select: { viewCount: true },
-  });
-
+  const updated = await incrementPostView(postId);
   return { counted: true, viewCount: updated.viewCount };
 }

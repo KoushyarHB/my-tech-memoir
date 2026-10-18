@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PostEditor } from "./post-editor";
 import { Save, Send, ArrowLeft, X, Eye } from "lucide-react";
-import { slugify } from "@/features/blog/lib/slugify";
+import { slugify } from "@/shared/lib/slugify";
 import Link from "next/link";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";

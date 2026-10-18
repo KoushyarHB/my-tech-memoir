@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { DataTableColumnFilter } from "./data-table-column-filter";
+import { DataTablePagination } from "./data-table-pagination";
+import { buildFilterExpression, hasActiveColumnFilters } from "./data-table-filters";
 import "./types";
 
 const globalFilterFn = <TData,>(
@@ -63,6 +65,18 @@ const globalFilterFn = <TData,>(
   return values.join(" ").toLowerCase().includes(query);
 };
 
+/** Debounce for the search box before it triggers a server round-trip. */
+const SEARCH_DEBOUNCE_MS = 300;
+
+export type DataTableQuery = {
+  /** 1-based page number. */
+  page: number;
+  pageSize: number;
+  search: string;
+  sorting: SortingState;
+  columnFilters: ColumnFiltersState;
+};
+
 type DataTableToolbarContext<TData> = {
   rows: TData[];
   filteredCount: number;
@@ -76,13 +90,29 @@ type DataTableProps<TData> = {
   searchPlaceholder?: string;
   searchAriaLabel?: string;
   toolbar?:
-  | React.ReactNode
-  | ((ctx: DataTableToolbarContext<TData>) => React.ReactNode);
+    | React.ReactNode
+    | ((ctx: DataTableToolbarContext<TData>) => React.ReactNode);
   title?: string;
   description?: string;
   emptyMessage?: string;
   emptyFilteredMessage?: string;
   className?: string;
+
+  // ── Server-driven mode ───────────────────────────────────────────────
+  /** When provided, pagination/sorting/filtering are delegated to the server. */
+  query?: DataTableQuery;
+  onQueryChange?: (patch: Partial<DataTableQuery>) => void;
+  /**
+   * Receives the `filters` expression derived from the column filters, using
+   * each column's `filterField`/`filterOperator` meta. The parent passes it to
+   * the API as the `filters` query parameter.
+   */
+  onFiltersChange?: (expression: string) => void;
+  totalItems?: number;
+  totalPages?: number;
+  isFetching?: boolean;
+  isLoading?: boolean;
+  onReload?: () => void;
 };
 
 export function DataTable<TData>({
@@ -97,12 +127,55 @@ export function DataTable<TData>({
   emptyMessage = "No results",
   emptyFilteredMessage = "No results match your filters",
   className,
+  query,
+  onQueryChange,
+  onFiltersChange,
+  totalItems,
+  totalPages,
+  isFetching,
+  isLoading,
+  onReload,
 }: DataTableProps<TData>) {
   "use no memo";
 
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState("");
+  const serverSide = Boolean(query && onQueryChange);
+
+  const [localSorting, setLocalSorting] = useState<SortingState>([]);
+  const [localColumnFilters, setLocalColumnFilters] =
+    useState<ColumnFiltersState>([]);
+  const [localGlobalFilter, setLocalGlobalFilter] = useState("");
+  const [searchDraft, setSearchDraft] = useState(query?.search ?? "");
+
+  const sorting = serverSide ? (query?.sorting ?? []) : localSorting;
+  const columnFilters = useMemo(
+    () => (serverSide ? (query?.columnFilters ?? []) : localColumnFilters),
+    [serverSide, query?.columnFilters, localColumnFilters]
+  );
+  const globalFilter = serverSide
+    ? (query?.search ?? "")
+    : localGlobalFilter;
+
+  // Keep the input in sync when the query changes from outside (reset, reload).
+  const lastExternalSearch = useRef(globalFilter);
+  useEffect(() => {
+    if (lastExternalSearch.current !== globalFilter) {
+      lastExternalSearch.current = globalFilter;
+      setSearchDraft(globalFilter);
+    }
+  }, [globalFilter]);
+
+  // Debounced search → server. Resets to page 1 because result sets change.
+  useEffect(() => {
+    if (!serverSide || !onQueryChange) return;
+    if (searchDraft === (query?.search ?? "")) return;
+
+    const timer = setTimeout(() => {
+      lastExternalSearch.current = searchDraft;
+      onQueryChange({ search: searchDraft, page: 1 });
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [searchDraft, serverSide, onQueryChange, query?.search]);
 
   // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table v8 is not React Compiler–safe yet
   const table = useReactTable({
@@ -114,40 +187,100 @@ export function DataTable<TData>({
       columnFilters,
       globalFilter,
     },
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter,
+    manualPagination: serverSide,
+    manualSorting: serverSide,
+    manualFiltering: serverSide,
+    pageCount: serverSide ? (totalPages ?? -1) : undefined,
+    enableMultiSort: false,
+    onSortingChange: (updater) => {
+      const next =
+        typeof updater === "function" ? updater(sorting) : updater;
+      if (serverSide && onQueryChange) {
+        onQueryChange({ sorting: next, page: 1 });
+        return;
+      }
+      setLocalSorting(next);
+    },
+    onColumnFiltersChange: (updater) => {
+      const next =
+        typeof updater === "function" ? updater(columnFilters) : updater;
+      if (serverSide && onQueryChange) {
+        onQueryChange({ columnFilters: next, page: 1 });
+        return;
+      }
+      setLocalColumnFilters(next);
+    },
+    onGlobalFilterChange: (updater) => {
+      const next =
+        typeof updater === "function" ? updater(globalFilter) : updater;
+      if (serverSide) {
+        setSearchDraft(String(next ?? ""));
+        return;
+      }
+      setLocalGlobalFilter(String(next ?? ""));
+    },
     globalFilterFn: globalFilterFn as FilterFn<TData>,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    ...(serverSide
+      ? {}
+      : {
+          getFilteredRowModel: getFilteredRowModel(),
+          getSortedRowModel: getSortedRowModel(),
+        }),
   });
 
   const rows = table.getRowModel().rows;
   const hasActiveFilters =
-    globalFilter.trim().length > 0 || columnFilters.length > 0;
+    globalFilter.trim().length > 0 || hasActiveColumnFilters(columnFilters);
+
+  // Derive the server `filters` expression from the column filters + meta.
+  const filterExpression = useMemo(
+    () =>
+      buildFilterExpression(
+        columnFilters,
+        (columnId) => table.getColumn(columnId)?.columnDef.meta
+      ),
+    [columnFilters, table]
+  );
+
+  const lastFiltersRef = useRef("");
+  useEffect(() => {
+    if (!serverSide || !onFiltersChange) return;
+    if (lastFiltersRef.current === filterExpression) return;
+    lastFiltersRef.current = filterExpression;
+    onFiltersChange(filterExpression);
+  }, [filterExpression, serverSide, onFiltersChange]);
 
   const toolbarContent =
     typeof toolbar === "function"
       ? toolbar({
-        rows: rows.map((row) => row.original),
-        filteredCount: rows.length,
-        totalCount: data.length,
-      })
+          rows: rows.map((row) => row.original),
+          filteredCount: rows.length,
+          totalCount: totalItems ?? data.length,
+        })
       : toolbar;
 
   const countLabel = useMemo(() => {
+    if (serverSide) {
+      const total = totalItems ?? 0;
+      return `${total} ${total === 1 ? "entry" : "entries"}`;
+    }
     const visible = rows.length;
     const total = data.length;
     if (hasActiveFilters) {
       return `${visible} of ${total} matching`;
     }
     return `${total} ${total === 1 ? "entry" : "entries"}`;
-  }, [rows.length, data.length, hasActiveFilters]);
+  }, [serverSide, totalItems, rows.length, data.length, hasActiveFilters]);
 
   function clearFilters() {
-    setGlobalFilter("");
-    setColumnFilters([]);
+    setSearchDraft("");
+    if (serverSide && onQueryChange) {
+      onQueryChange({ search: "", columnFilters: [], page: 1 });
+      return;
+    }
+    setLocalGlobalFilter("");
+    setLocalColumnFilters([]);
   }
 
   const showHeaderChrome = Boolean(title || description || toolbarContent);
@@ -186,16 +319,27 @@ export function DataTable<TData>({
           />
           <Input
             type="text"
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
+            value={serverSide ? searchDraft : globalFilter}
+            onChange={(e) =>
+              serverSide
+                ? setSearchDraft(e.target.value)
+                : setLocalGlobalFilter(e.target.value)
+            }
             placeholder={searchPlaceholder}
             aria-label={searchAriaLabel}
             className="h-8 border-border bg-transparent pr-8 pl-8 text-xs shadow-none outline-none placeholder:text-ink-tertiary/80 focus-visible:border-(--border-hover) focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-(--border-hover) dark:bg-transparent dark:focus-visible:border-(--border-focus)"
           />
-          {globalFilter.trim().length > 0 ? (
+          {(serverSide ? searchDraft : globalFilter).trim().length > 0 ? (
             <button
               type="button"
-              onClick={() => setGlobalFilter("")}
+              onClick={() => {
+                setSearchDraft("");
+                if (serverSide && onQueryChange) {
+                  onQueryChange({ search: "", page: 1 });
+                  return;
+                }
+                setLocalGlobalFilter("");
+              }}
               className="absolute top-1/2 right-1.5 inline-flex size-5 -translate-y-1/2 items-center justify-center rounded-md text-ink-tertiary transition-colors hover:bg-(--bg-muted) hover:text-ink-primary"
               aria-label="Clear search"
             >
@@ -219,16 +363,16 @@ export function DataTable<TData>({
                     key={header.id}
                     className={cn(
                       "h-auto px-3 py-2",
-                      align === "right" && "text-right",
+                      align === "right" && "text-right"
                     )}
                     style={{ width: header.getSize() }}
                   >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                   </TableHead>
                 );
               })}
@@ -258,7 +402,16 @@ export function DataTable<TData>({
           ))}
         </TableHeader>
         <TableBody>
-          {rows.length === 0 ? (
+          {isLoading && rows.length === 0 ? (
+            <TableRow className="hover:bg-transparent">
+              <TableCell
+                colSpan={Math.max(columns.length, 1)}
+                className="h-28 px-5 py-10 text-center"
+              >
+                <p className="text-sm text-ink-tertiary">Loading…</p>
+              </TableCell>
+            </TableRow>
+          ) : rows.length === 0 ? (
             <TableRow className="hover:bg-transparent">
               <TableCell
                 colSpan={Math.max(columns.length, 1)}
@@ -307,6 +460,19 @@ export function DataTable<TData>({
           )}
         </TableBody>
       </Table>
+
+      {serverSide && query && onQueryChange ? (
+        <DataTablePagination
+          page={query.page}
+          pageSize={query.pageSize}
+          totalItems={totalItems ?? 0}
+          totalPages={totalPages ?? 0}
+          onPageChange={(page) => onQueryChange({ page })}
+          onPageSizeChange={(pageSize) => onQueryChange({ pageSize, page: 1 })}
+          onReload={onReload}
+          isFetching={isFetching}
+        />
+      ) : null}
     </section>
   );
 }

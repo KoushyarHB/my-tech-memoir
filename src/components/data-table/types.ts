@@ -1,4 +1,5 @@
 import type { RowData } from "@tanstack/react-table";
+import type { FilterOperator } from "@/shared/lib/filter-expression";
 
 export type DataTableFilterOption = {
   label: string;
@@ -10,10 +11,16 @@ export type DataTableColumnMeta = {
   filterVariant?: "text" | "select";
   filterOptions?: DataTableFilterOption[];
   filterPlaceholder?: string;
+  /**
+   * Server-side filter field name. Defaults to the column id and must be one of
+   * the domain's `*_FILTER_FIELDS`.
+   */
+  filterField?: string;
+  /** Defaults to `contains` for text filters and `eq` for selects. */
+  filterOperator?: FilterOperator;
 };
 
 declare module "@tanstack/react-table" {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue>
     extends DataTableColumnMeta {}
 }

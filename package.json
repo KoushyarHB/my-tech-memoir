@@ -11,6 +11,7 @@
     "seed": "tsx prisma/seed.ts",
     "db:check": "tsx scripts/check-db.ts",
     "db:backfill-content-json": "tsx scripts/backfill-content-json.ts",
+    "verify:query": "tsx scripts/verify-query-layer.ts",
     "promote-admin": "tsx scripts/promote-admin.ts"
   },
   "prisma": {

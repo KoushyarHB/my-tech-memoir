@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { db } from "@/lib/db";
-import { getPublishedPosts } from "@/features/blog/server/post-service";
+import { getPostsPage } from "@/features/blog/server/post-service";
 import { PostCard } from "@/features/blog/components";
 import { Link } from "@/i18n/navigation";
 
 export const dynamic = "force-dynamic";
+
+const RECENT_POST_COUNT = 5;
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -31,9 +32,10 @@ export default async function HomePage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const t = await getTranslations("home");
-  const allPosts = await getPublishedPosts();
-  const recentPosts = allPosts.slice(0, 5);
+  const { items: recentPosts, totalItems } = await getPostsPage({
+    page: 1,
+    pageSize: RECENT_POST_COUNT,
+  });
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-5 sm:py-16">
@@ -50,7 +52,7 @@ export default async function HomePage({ params }: Props) {
               ))}
             </div>
 
-            {allPosts.length > 5 && (
+            {totalItems > RECENT_POST_COUNT && (
               <div className="mt-8 text-center">
                 <Link
                   href="/blog"

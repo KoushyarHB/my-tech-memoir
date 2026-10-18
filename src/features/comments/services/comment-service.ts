@@ -1,18 +1,25 @@
 import { api } from "@/lib/api-client";
-import type { CommentFormData, CommentPayload } from "../types";
+import { toPaginationQueryString } from "@/shared/lib/query-string";
+import type { PaginatedResult, PaginationQuery } from "@/shared/types/pagination";
+import type { CreateCommentRequest, GetCommentDto } from "../types";
 
-export async function fetchComments(postId: string): Promise<CommentPayload[]> {
-  return api.get<CommentPayload[]>(
-    `/api/comments?postId=${encodeURIComponent(postId)}`
+/** Comments domain: client-side API functions. */
+
+export async function fetchCommentsPage(
+  postId: string,
+  query: Partial<PaginationQuery> = {}
+): Promise<PaginatedResult<GetCommentDto>> {
+  const params = new URLSearchParams(
+    toPaginationQueryString(query).replace(/^\?/, "")
+  );
+  params.set("postId", postId);
+  return api.get<PaginatedResult<GetCommentDto>>(
+    `/api/comments?${params.toString()}`
   );
 }
 
-export type CreateCommentInput = CommentFormData & {
-  postId: string;
-};
-
 export async function createComment(
-  input: CreateCommentInput
-): Promise<CommentPayload> {
-  return api.post<CommentPayload>("/api/comments", input);
+  input: CreateCommentRequest
+): Promise<GetCommentDto> {
+  return api.post<GetCommentDto>("/api/comments", input);
 }

@@ -4,11 +4,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CommentForm } from "./comment-form";
-import { useComments } from "../hooks/use-comments";
-import type { CommentPayload } from "../types";
+import type { GetCommentDto } from "../types";
 
 type CommentListProps = {
   postId: string;
+  comments: GetCommentDto[];
+  isPending?: boolean;
+  errorMessage?: string | null;
 };
 
 function timeAgo(dateStr: string): string {
@@ -33,7 +35,7 @@ function CommentItem({
   comment,
   postId,
 }: {
-  comment: CommentPayload;
+  comment: GetCommentDto;
   postId: string;
 }) {
   const [showReplyForm, setShowReplyForm] = useState(false);
@@ -87,9 +89,12 @@ function CommentItem({
   );
 }
 
-export function CommentList({ postId }: CommentListProps) {
-  const { data: comments = [], isPending, error } = useComments(postId);
-
+export function CommentList({
+  postId,
+  comments,
+  isPending,
+  errorMessage,
+}: CommentListProps) {
   if (isPending) {
     return (
       <div className="space-y-4">
@@ -104,10 +109,10 @@ export function CommentList({ postId }: CommentListProps) {
     );
   }
 
-  if (error) {
+  if (errorMessage) {
     return (
       <p className="text-sm text-ink-tertiary">
-        Could not load comments: {error.message}
+        Could not load comments: {errorMessage}
       </p>
     );
   }

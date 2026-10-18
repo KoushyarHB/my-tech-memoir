@@ -1,23 +1,34 @@
-import { createTag, listTags } from "@/features/admin/server/tag-service";
-import { apiSuccess, apiError } from "@/lib/api-response";
+import { apiError, apiPaginated, apiQueryError, apiSuccess } from "@/lib/api-response";
 import { requireAdminApi, requireEditorApi } from "@/lib/auth-guard";
+import { parsePaginationQuery } from "@/shared/lib/pagination";
+import { findTagsPage } from "@/features/tags/server/tag-repository";
+import {
+  createTag,
+  TagValidationError,
+} from "@/features/tags/server/tag-service";
+import type { CreateTagRequest } from "@/features/tags/types";
 
-export async function GET() {
+/**
+ * GET /api/tags — paginated tag list (editors and admins).
+ */
+export async function GET(request: Request) {
   const session = await requireEditorApi();
   if (!session) {
     return apiError("Forbidden", { status: 403 });
   }
 
-  const tags = await listTags();
-  return apiSuccess(
-    tags.map((tag) => ({
-      id: tag.id,
-      name: tag.name,
-      slug: tag.slug,
-      postCount: tag.postCount,
-      createdAt: tag.createdAt.toISOString(),
-    }))
-  );
+  try {
+    const { searchParams } = new URL(request.url);
+    const query = parsePaginationQuery(searchParams);
+    const result = await findTagsPage(query);
+    return apiPaginated(result);
+  } catch (error) {
+    const queryError = apiQueryError(error);
+    if (queryError) return queryError;
+
+    console.error("Failed to list tags:", error);
+    return apiError("Failed to fetch tags", { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -27,23 +38,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = (await request.json()) as { name?: string; slug?: string };
-    const tag = await createTag({
-      name: body.name ?? "",
-      slug: body.slug,
-    });
+    const body = (await request.json()) as CreateTagRequest;
+    const tag = await createTag(body);
     return apiSuccess(tag, { status: 201 });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to create tag";
-    const status =
-      message.includes("required") ||
-      message.includes("could not") ||
-      message.includes("characters")
-        ? 400
-        : message.includes("already exists")
-          ? 409
-          : 500;
-    return apiError(message, { status });
+    if (error instanceof TagValidationError) {
+      return apiError(error.message, { status: error.status });
+    }
+
+    console.error("Failed to create tag:", error);
+    return apiError("Failed to create tag", { status: 500 });
   }
 }

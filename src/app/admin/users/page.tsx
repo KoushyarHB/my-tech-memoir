@@ -1,29 +1,17 @@
 import { requireAdmin } from "@/lib/auth-guard";
-import { listUsers } from "@/features/admin/server/user-service";
+import { getUsersPage, getUserStats } from "@/features/users/server/user-service";
 import { AdminUsersView } from "@/features/admin/components/admin-users-view";
+import { DEFAULT_PAGE_SIZE } from "@/shared/constants/pagination";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminUsersPage() {
   const session = await requireAdmin();
-  const users = await listUsers();
 
-  const tableUsers = users.map((user) => ({
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    image: user.image,
-    bio: user.bio,
-    role: user.role,
-    emailVerified: Boolean(user.emailVerified),
-    createdAt: user.createdAt.toISOString(),
-    updatedAt: user.updatedAt.toISOString(),
-    providers: user.providers,
-    postCount: user.postCount,
-    bookmarkCount: user.bookmarkCount,
-    commentCount: user.commentCount,
-    translationCount: user.translationCount,
-  }));
+  const [users, stats] = await Promise.all([
+    getUsersPage({ page: 1, pageSize: DEFAULT_PAGE_SIZE }),
+    getUserStats(),
+  ]);
 
   return (
     <div className="px-5 py-8 lg:px-8">
@@ -39,7 +27,11 @@ export default async function AdminUsersPage() {
         </p>
       </div>
 
-      <AdminUsersView users={tableUsers} currentUserId={session.user.id} />
+      <AdminUsersView
+        users={users.items}
+        stats={stats}
+        currentUserId={session.user.id}
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { db } from "@/lib/db";
 import { PostEditorPage } from "@/features/admin/components";
-import { isTiptapDocument } from "@/features/blog/types/document";
+import { getPostById } from "@/features/blog/server/post-service";
+import { findAllTags } from "@/features/tags/server/tag-repository";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -10,32 +10,11 @@ type Props = {
 export default async function EditPostPage({ params }: Props) {
   const { id } = await params;
 
-  const post = await db.post.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      title: true,
-      slug: true,
-      excerpt: true,
-      content: true,
-      contentJson: true,
-      published: true,
-      tags: {
-        select: {
-          tag: { select: { id: true, name: true, slug: true } },
-        },
-      },
-    },
-  });
+  const [post, tags] = await Promise.all([getPostById(id), findAllTags()]);
 
   if (!post) {
     notFound();
   }
-
-  const tags = await db.tag.findMany({
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, slug: true },
-  });
 
   return (
     <PostEditorPage
@@ -44,10 +23,10 @@ export default async function EditPostPage({ params }: Props) {
       initialTitle={post.title}
       initialSlug={post.slug}
       initialExcerpt={post.excerpt ?? ""}
-       initialContent={post.content}
-       initialContentJson={isTiptapDocument(post.contentJson) ? post.contentJson : null}
+      initialContent={post.content}
+      initialContentJson={post.contentJson}
       initialPublished={post.published}
-      initialTagIds={post.tags.map((pt) => pt.tag.id)}
+      initialTagIds={post.tags.map((tag) => tag.id)}
     />
   );
 }

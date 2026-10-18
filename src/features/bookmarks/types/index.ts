@@ -1,4 +1,4 @@
-export type ToggleBookmarkResponse = {
-  bookmarked: boolean;
-  bookmarkId: string | null;
-};
+export type {
+  GetBookmarkDto,
+  ToggleBookmarkDto,
+} from "./response/get-bookmark.dto";

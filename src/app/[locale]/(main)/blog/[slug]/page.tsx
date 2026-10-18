@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { getPostBySlug, getPublishedPosts } from "@/features/blog/server/post-service";
+import {
+  getPostBySlug,
+  getPublishedSlugs,
+} from "@/features/blog/server/post-service";
 import { Lighthouse, PostHeader } from "@/features/blog/components";
 import { CommentSection } from "@/features/comments/components";
 
@@ -12,8 +15,7 @@ type Props = {
 };
 
 export async function generateStaticParams() {
-  const posts = await getPublishedPosts();
-  return posts.map((post) => ({ slug: post.slug }));
+  return getPublishedSlugs();
 }
 
 export async function generateMetadata({ params }: {
@@ -33,8 +35,8 @@ export async function generateMetadata({ params }: {
       title: post.title,
       description: post.excerpt ?? undefined,
       type: "article",
-      publishedTime: post.createdAt.toISOString(),
-      modifiedTime: post.updatedAt.toISOString(),
+      publishedTime: post.createdAt,
+      modifiedTime: post.updatedAt,
     },
   };
 }

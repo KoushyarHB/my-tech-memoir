@@ -1,11 +1,19 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { fetchComments } from "../services/comment-service";
+import type { PaginatedResult, PaginationQuery } from "@/shared/types/pagination";
+import { fetchCommentsPage } from "../services/comment-service";
+import type { GetCommentDto } from "../types";
 
-export function useComments(postId: string) {
+export function useCommentsPage(
+  postId: string,
+  query: Partial<PaginationQuery>,
+  initialData?: PaginatedResult<GetCommentDto>
+) {
   return useQuery({
-    queryKey: queryKeys.comments.byPost(postId),
-    queryFn: () => fetchComments(postId),
+    queryKey: queryKeys.comments.page({ ...query, postId }),
+    queryFn: () => fetchCommentsPage(postId, query),
+    initialData,
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
 }

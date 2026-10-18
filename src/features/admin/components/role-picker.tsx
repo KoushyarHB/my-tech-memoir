@@ -2,11 +2,8 @@
 
 import { Menu } from "@base-ui/react/menu";
 import { Check, ChevronDown } from "lucide-react";
-import {
-  ASSIGNABLE_ROLES,
-  ROLE_LABELS,
-  type UserRole,
-} from "@/features/admin/types/roles";
+import { ASSIGNABLE_ROLES, ROLE_LABELS } from "@/features/users/constants/roles";
+import type { UserRole } from "@/features/users/types";
 import { cn } from "@/lib/utils";
 
 const ROLE_DOT: Record<UserRole, string> = {

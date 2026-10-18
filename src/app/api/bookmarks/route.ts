@@ -1,13 +1,18 @@
-import { NextRequest } from "next/server";
 import { auth } from "@/auth";
-import { apiSuccess, apiError } from "@/lib/api-response";
+import { apiError, apiPaginated, apiQueryError, apiSuccess } from "@/lib/api-response";
+import { parsePaginationQuery } from "@/shared/lib/pagination";
 import {
-  toggleBookmark,
+  getBookmarksPage,
   isBookmarked,
-  getBookmarksByUserId,
+  toggleBookmark,
 } from "@/features/bookmarks/server/bookmark-service";
 
-export async function GET(request: NextRequest) {
+/**
+ * GET /api/bookmarks
+ *   ?postId=…          → { bookmarked } for that post
+ *   ?page&pageSize…    → paginated list for the current user
+ */
+export async function GET(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return apiError("Authentication required", { status: 401 });
@@ -21,11 +26,20 @@ export async function GET(request: NextRequest) {
     return apiSuccess({ bookmarked });
   }
 
-  const bookmarks = await getBookmarksByUserId(session.user.id);
-  return apiSuccess(bookmarks);
+  try {
+    const query = parsePaginationQuery(searchParams);
+    const result = await getBookmarksPage(session.user.id, query);
+    return apiPaginated(result);
+  } catch (error) {
+    const queryError = apiQueryError(error);
+    if (queryError) return queryError;
+
+    console.error("Failed to list bookmarks:", error);
+    return apiError("Failed to fetch bookmarks", { status: 500 });
+  }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return apiError("Authentication required", { status: 401 });

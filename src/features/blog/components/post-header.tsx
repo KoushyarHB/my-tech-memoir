@@ -1,11 +1,11 @@
 import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { BookmarkButton } from "@/features/bookmarks/components";
-import type { PostWithTags } from "../types";
+import type { GetPostDto } from "../types";
 import { PostViewCount } from "./post-view-count";
 
 type PostHeaderProps = {
-  post: PostWithTags;
+  post: GetPostDto;
 };
 
 export function PostHeader({ post }: PostHeaderProps) {
@@ -44,7 +44,7 @@ export function PostHeader({ post }: PostHeaderProps) {
       )}
 
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-tertiary">
-        <time dateTime={post.createdAt.toISOString()}>{formattedDate}</time>
+        <time dateTime={post.createdAt}>{formattedDate}</time>
         <span aria-hidden="true">·</span>
         <span>{post.readingTime}</span>
         <span aria-hidden="true">·</span>

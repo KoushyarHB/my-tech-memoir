@@ -4,28 +4,29 @@ import { useMemo } from "react";
 import Link from "next/link";
 import * as XLSX from "xlsx";
 import { Download, Eye, Pencil } from "lucide-react";
-import type { ColumnDef, FilterFn } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { DataTable, DataTableColumnHeader } from "@/components/data-table";
+import {
+  DataTable,
+  DataTableColumnHeader,
+  type DataTableQuery,
+} from "@/components/data-table";
 import { cn } from "@/lib/utils";
 import { PostDeleteButton } from "@/app/admin/post-delete-button";
-import type { PostListItem } from "@/features/blog/types";
+import type { GetPostSummaryDto } from "@/features/blog/types";
 
-export type AdminPostRow = PostListItem;
+export type AdminPostRow = GetPostSummaryDto;
 
 type AdminPostsTableProps = {
   posts: AdminPostRow[];
-};
-
-const includesString: FilterFn<AdminPostRow> = (row, columnId, filterValue) => {
-  const query = String(filterValue ?? "")
-    .trim()
-    .toLowerCase();
-  if (!query) return true;
-  const value = row.getValue(columnId);
-  return String(value ?? "")
-    .toLowerCase()
-    .includes(query);
+  query: DataTableQuery;
+  onQueryChange: (patch: Partial<DataTableQuery>) => void;
+  onFiltersChange: (expression: string) => void;
+  totalItems: number;
+  totalPages: number;
+  isFetching?: boolean;
+  isLoading?: boolean;
+  onReload?: () => void;
 };
 
 function formatDate(value: string) {
@@ -60,7 +61,17 @@ function exportRows(rows: AdminPostRow[]) {
   );
 }
 
-export function AdminPostsTable({ posts }: AdminPostsTableProps) {
+export function AdminPostsTable({
+  posts,
+  query,
+  onQueryChange,
+  onFiltersChange,
+  totalItems,
+  totalPages,
+  isFetching,
+  isLoading,
+  onReload,
+}: AdminPostsTableProps) {
   const columns = useMemo<ColumnDef<AdminPostRow>[]>(
     () => [
       {
@@ -76,8 +87,11 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Title" />
         ),
-        meta: { filterPlaceholder: "Search Title" },
-        filterFn: includesString,
+        meta: {
+          filterPlaceholder: "Search Title",
+          filterField: "title",
+          filterOperator: "contains",
+        },
         cell: ({ row }) => {
           const post = row.original;
           const displayTitle = post.title.trim() || "Untitled draft";
@@ -109,20 +123,18 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
       {
         id: "status",
         accessorFn: (row) => (row.published ? "published" : "draft"),
+        enableSorting: false,
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Status" />
         ),
         meta: {
           filterVariant: "select",
+          filterField: "published",
+          filterOperator: "eq",
           filterOptions: [
-            { label: "Published", value: "published" },
-            { label: "Draft", value: "draft" },
+            { label: "Published", value: "true" },
+            { label: "Draft", value: "false" },
           ],
-        },
-        filterFn: (row, _id, filterValue) => {
-          const value = String(filterValue ?? "");
-          if (!value) return true;
-          return (row.original.published ? "published" : "draft") === value;
         },
         cell: ({ row }) => {
           const published = row.original.published;
@@ -151,19 +163,11 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Date" />
         ),
-        meta: { filterPlaceholder: "Search Date" },
-        filterFn: (row, _id, filterValue) => {
-          const query = String(filterValue ?? "")
-            .trim()
-            .toLowerCase();
-          if (!query) return true;
-          return formatDate(row.original.createdAt)
-            .toLowerCase()
-            .includes(query);
+        meta: {
+          filterPlaceholder: "From YYYY-MM-DD",
+          filterField: "createdAt",
+          filterOperator: "gte",
         },
-        sortingFn: (a, b) =>
-          new Date(a.original.createdAt).getTime() -
-          new Date(b.original.createdAt).getTime(),
         cell: ({ row }) => (
           <span className="text-sm text-ink-secondary">
             {formatDate(row.original.createdAt)}
@@ -176,8 +180,12 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Views" />
         ),
-        meta: { align: "center", filterPlaceholder: "Search Views" },
-        filterFn: includesString,
+        meta: {
+          align: "center",
+          filterPlaceholder: "Min views",
+          filterField: "viewCount",
+          filterOperator: "gte",
+        },
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">
             {row.original.viewCount.toLocaleString()}
@@ -190,8 +198,9 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Comments" />
         ),
-        meta: { align: "center", filterPlaceholder: "Search Comments" },
-        filterFn: includesString,
+        // Relation counts can be sorted but not filtered in Prisma.
+        enableColumnFilter: false,
+        meta: { align: "center" },
         cell: ({ row }) => (
           <span className="text-sm tabular-nums text-ink-secondary">
             {row.original.commentCount.toLocaleString()}
@@ -254,10 +263,18 @@ export function AdminPostsTable({ posts }: AdminPostsTableProps) {
       data={posts}
       getRowId={(row) => row.id}
       title="All posts"
-      searchPlaceholder="Search title, slug, tags, status…"
+      searchPlaceholder="Search title, slug, excerpt…"
       searchAriaLabel="Search posts"
       emptyMessage="No posts yet"
       emptyFilteredMessage="No posts match your filters"
+      query={query}
+      onQueryChange={onQueryChange}
+      onFiltersChange={onFiltersChange}
+      totalItems={totalItems}
+      totalPages={totalPages}
+      isFetching={isFetching}
+      isLoading={isLoading}
+      onReload={onReload}
       toolbar={({ rows }) => (
         <Button
           type="button"

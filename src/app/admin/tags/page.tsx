@@ -1,20 +1,20 @@
 import { requireAdmin } from "@/lib/auth-guard";
-import { listTags } from "@/features/admin/server/tag-service";
+import {
+  findTagsPage,
+  getTagStats,
+} from "@/features/tags/server/tag-repository";
+import { TAG_PAGE_SIZE } from "@/features/tags/constants/tag";
 import { AdminTagsManager } from "@/features/admin/components/admin-tags-manager";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminTagsPage() {
   await requireAdmin();
-  const tags = await listTags();
 
-  const tableTags = tags.map((tag) => ({
-    id: tag.id,
-    name: tag.name,
-    slug: tag.slug,
-    postCount: tag.postCount,
-    createdAt: tag.createdAt.toISOString(),
-  }));
+  const [tags, stats] = await Promise.all([
+    findTagsPage({ page: 1, pageSize: TAG_PAGE_SIZE }),
+    getTagStats(),
+  ]);
 
   return (
     <div className="px-5 py-8 lg:px-8">
@@ -31,7 +31,7 @@ export default async function AdminTagsPage() {
         </p>
       </div>
 
-      <AdminTagsManager tags={tableTags} />
+      <AdminTagsManager tags={tags.items} stats={stats} />
     </div>
   );
 }

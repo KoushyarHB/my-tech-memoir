@@ -6,30 +6,36 @@ import {
   createPost,
   deletePost,
   updatePost,
-  type SavedPost,
 } from "../services/post-service";
-import type { CreatePostInput, UpdatePostInput } from "../types";
+import type {
+  CreatePostRequest,
+  GetPostDto,
+  UpdatePostRequest,
+} from "../types";
 
 export type SavePostVariables = {
   postId?: string;
-  input: CreatePostInput | UpdatePostInput;
+  input: CreatePostRequest | UpdatePostRequest;
 };
 
+/**
+ * Blog domain: write operations.
+ *
+ * Both hooks invalidate the posts root so every open page (and the metric
+ * tiles derived from it) refetches; the editor keeps its own local state and
+ * only needs the saved DTO back.
+ */
 export function useSavePost() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ postId, input }: SavePostVariables): Promise<SavedPost> =>
+    mutationFn: ({ postId, input }: SavePostVariables): Promise<GetPostDto> =>
       postId
-        ? updatePost(postId, input as UpdatePostInput)
-        : createPost(input as CreatePostInput),
+        ? updatePost(postId, input as UpdatePostRequest)
+        : createPost(input as CreatePostRequest),
     onSuccess: (post) => {
+      queryClient.setQueryData(queryKeys.posts.detail(post.id), post);
       queryClient.invalidateQueries({ queryKey: queryKeys.posts.all });
-      if (post?.id) {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.posts.detail(post.id),
-        });
-      }
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, "Failed to save. Please try again."));

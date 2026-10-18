@@ -1,4 +1,10 @@
 import { db } from "@/lib/db";
+import {
+  DASHBOARD_GROWTH_MONTHS,
+  DASHBOARD_RECENT_LIMIT,
+  DASHBOARD_TREND_DAYS,
+} from "../constants/dashboard";
+import type { GetDashboardDto } from "../types";
 
 function startOfMonth(d: Date) {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
@@ -8,14 +14,26 @@ function startOfDay(d: Date) {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 }
 
-export async function getAdminDashboardData() {
+export async function getAdminDashboardData(): Promise<GetDashboardDto> {
   const now = new Date();
 
   const sixMonthsAgo = startOfMonth(
-    new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 5, 1))
+    new Date(
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth() - (DASHBOARD_GROWTH_MONTHS - 1),
+        1
+      )
+    )
   );
   const fourteenDaysAgo = startOfDay(
-    new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 13))
+    new Date(
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() - (DASHBOARD_TREND_DAYS - 1)
+      )
+    )
   );
 
   const [
@@ -40,7 +58,7 @@ export async function getAdminDashboardData() {
     db.comment.count({ where: { status: "PENDING" } }),
     db.post.findMany({
       orderBy: { createdAt: "desc" },
-      take: 6,
+      take: DASHBOARD_RECENT_LIMIT,
       select: {
         id: true,
         title: true,
@@ -51,7 +69,7 @@ export async function getAdminDashboardData() {
     }),
     db.comment.findMany({
       orderBy: { createdAt: "desc" },
-      take: 6,
+      take: DASHBOARD_RECENT_LIMIT,
       select: {
         id: true,
         body: true,
@@ -77,9 +95,13 @@ export async function getAdminDashboardData() {
     timeZone: "UTC",
   });
 
-  const postGrowth = Array.from({ length: 6 }, (_, i) => {
+  const postGrowth = Array.from({ length: DASHBOARD_GROWTH_MONTHS }, (_, i) => {
     const d = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 5 + i, 1)
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth() - (DASHBOARD_GROWTH_MONTHS - 1) + i,
+        1
+      )
     );
     const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}`;
     const count = postsForGrowth.filter((p) => {
@@ -98,7 +120,7 @@ export async function getAdminDashboardData() {
     timeZone: "UTC",
   });
 
-  const commentsTrend = Array.from({ length: 14 }, (_, i) => {
+  const commentsTrend = Array.from({ length: DASHBOARD_TREND_DAYS }, (_, i) => {
     const d = new Date(
       Date.UTC(
         fourteenDaysAgo.getUTCFullYear(),
