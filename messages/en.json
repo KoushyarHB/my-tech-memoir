@@ -42,15 +42,19 @@
   },
   "about": {
     "title": "About",
-    "subtitle": "Software engineer, curious learner, and the author behind My Tech Memoir.",
+    "subtitle": "Software engineer, writing about what I learn as I learn it.",
+    "roleLine": "Software engineer · Transport management systems",
     "skills": "Skills & Tools",
     "connect": "Connect",
-    "contact": "Want to talk about networking, software, or just say hi?",
-    "getInTouch": "Get in Touch",
+    "contact": "Found something wrong, or want to compare notes?",
+    "contactHint": "Telegram is the fastest way to reach me.",
+    "getInTouch": "Message me on Telegram",
+    "now": "Right now",
+    "nowText": "Reading and building to fill in the layers I skipped — from the code I write down to the machines it runs on.",
     "bio": {
-      "p1": "Software engineer with a deep curiosity about how things work under the hood.",
-      "p2": "Currently exploring networking, protocols, and the architecture of the internet.",
-      "p3": "This blog is a living document of that exploration — written as I learn."
+      "p1": "I'm a software engineer. Most of my working hours go into a transport management system: software that moves freight between places and punishes you for every detail you get wrong.",
+      "p2": "Outside of work I go looking for the parts I skipped — how the layers underneath my code actually behave, why the abstractions are shaped the way they are, and what changes once you stop treating any of it as a black box.",
+      "p3": "This is where I keep those notes. Some of them will be wrong. I leave the corrections in rather than quietly tidying them away, because writing things down is the only reliable way I've found to discover what I don't actually understand."
     }
   }
 }

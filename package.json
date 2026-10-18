@@ -16,6 +16,7 @@
     "verify:filters": "tsx scripts/verify-api-select-filter.ts && tsx scripts/verify-api-select-render.tsx",
     "verify:appearance": "tsx scripts/verify-appearance.ts && tsx scripts/verify-appearance-render.tsx",
     "verify:moderation": "tsx scripts/verify-moderation.ts && tsx scripts/verify-comments-render.tsx",
+    "verify:about": "tsx scripts/verify-about-render.tsx",
     "promote-admin": "tsx scripts/promote-admin.ts"
   },
   "prisma": {

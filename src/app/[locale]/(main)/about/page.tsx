@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { Mail, ArrowRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ConnectLinks, ProfileHeader } from "@/features/about/components";
+import {
+  PRIMARY_CONTACT,
+  SKILL_GROUPS,
+} from "@/features/about/constants/profile";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -17,45 +22,13 @@ export async function generateMetadata({ params }: {
   return {
     title: t("title"),
     description: t("subtitle"),
+    openGraph: {
+      title: t("title"),
+      description: t("subtitle"),
+      type: "profile",
+    },
   };
 }
-
-const SKILLS = [
-  "TypeScript",
-  "React",
-  "Next.js",
-  "Node.js",
-  "PostgreSQL",
-  "Prisma",
-  "Networking",
-  "Linux",
-  "Docker",
-  "Git",
-  "Tailwind CSS",
-  "Python",
-];
-
-function GithubIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-    </svg>
-  );
-}
-
-function LinkedinIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-    </svg>
-  );
-}
-
-const SOCIAL_LINKS = [
-  { name: "GitHub", href: "https://github.com/KoushyarHB", Icon: GithubIcon },
-  { name: "LinkedIn", href: "https://linkedin.com/in/koushyarhb", Icon: LinkedinIcon },
-  { name: "Email", href: "mailto:koushyarhb@gmail.com", Icon: Mail },
-];
 
 export default async function AboutPage({ params }: Props) {
   const { locale } = await params;
@@ -65,84 +38,73 @@ export default async function AboutPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-(--reading-max-width) px-5 py-12 sm:py-16">
-      {/* Author photo */}
-      <figure className="mb-10 flex flex-col items-center">
-        <div
-          className="flex size-40 items-center justify-center rounded-full"
-          style={{
-            backgroundColor: "var(--bg-muted)",
-            border: "3px solid var(--accent-muted)",
-          }}
-        >
-          <span className="font-serif text-5xl font-bold text-ink-secondary">
-            K
-          </span>
-        </div>
-        <figcaption className="mt-3 text-sm text-ink-tertiary">
-          Koushyar
-        </figcaption>
-      </figure>
+      <ProfileHeader roleLine={t("roleLine")} />
 
-      {/* Bio */}
-      <section aria-label="Bio" className="prose-memoir mb-12">
-        <h1 className="mb-6 text-center font-serif text-3xl font-bold text-ink-primary">
-          {t("title")}
-        </h1>
-
+      <section aria-label="Bio" className="prose-memoir mt-10">
         <p>{t("bio.p1")}</p>
         <p>{t("bio.p2")}</p>
         <p>{t("bio.p3")}</p>
       </section>
 
-      {/* Skills */}
-      <section aria-label="Skills" className="mb-12">
+      <section aria-label="Currently" className="mt-8">
+        <div className="rounded-xl border border-border bg-(--bg-elevated) px-4 py-3.5">
+          <p className="mb-1 inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.12em] text-ink-tertiary">
+            <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden />
+            {t("now")}
+          </p>
+          <p className="text-sm leading-relaxed text-ink-secondary">
+            {t("nowText")}
+          </p>
+        </div>
+      </section>
+
+      <section aria-label="Skills" className="mt-12">
         <h2 className="mb-4 font-serif text-xl font-semibold text-ink-primary">
           {t("skills")}
         </h2>
-        <div className="flex flex-wrap gap-2">
-          {SKILLS.map((skill) => (
-            <Badge key={skill} variant="secondary">
-              {skill}
-            </Badge>
+        <dl className="space-y-3">
+          {SKILL_GROUPS.map((group) => (
+            <div key={group.label} className="flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:gap-3">
+              <dt className="shrink-0 text-[11px] font-medium uppercase tracking-[0.1em] text-ink-tertiary sm:w-24">
+                {group.label}
+              </dt>
+              <dd className="flex flex-wrap gap-1.5">
+                {group.skills.map((skill) => (
+                  <Badge key={skill} variant="secondary" className="font-normal">
+                    {skill}
+                  </Badge>
+                ))}
+              </dd>
+            </div>
           ))}
-        </div>
+        </dl>
       </section>
 
-      {/* Social links */}
-      <section aria-label="Social links" className="mb-12">
+      <section aria-label="Connect" className="mt-12">
         <h2 className="mb-4 font-serif text-xl font-semibold text-ink-primary">
           {t("connect")}
         </h2>
-        <div className="flex flex-wrap gap-3">
-          {SOCIAL_LINKS.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              target={link.href.startsWith("mailto") ? undefined : "_blank"}
-              rel={
-                link.href.startsWith("mailto")
-                  ? undefined
-                  : "noopener noreferrer"
-              }
-              className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-ink-secondary transition-colors hover:border-primary hover:text-primary"
-            >
-              <link.Icon />
-              {link.name}
-            </a>
-          ))}
-        </div>
+        <ConnectLinks />
       </section>
 
-      {/* Contact */}
-      <section aria-label="Contact" className="text-center">
-        <p className="mb-4 text-ink-secondary">{t("contact")}</p>
+      <section
+        aria-label="Contact"
+        className="mt-14 border-t border-border pt-8 text-center"
+      >
+        <p className="text-ink-secondary">{t("contact")}</p>
+        <p className="mt-1 text-xs text-ink-tertiary">{t("contactHint")}</p>
         <a
-          href="mailto:koushyarhb@gmail.com"
-          className={cn(buttonVariants({ variant: "default", size: "lg" }))}
+          href={PRIMARY_CONTACT.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            buttonVariants({ variant: "default", size: "lg" }),
+            "mt-5"
+          )}
         >
-          <Mail className="size-4" />
+          <PRIMARY_CONTACT.Icon className="size-4" />
           {t("getInTouch")}
-          <ArrowRight className="size-4" />
+          <ArrowUpRight className="size-4" />
         </a>
       </section>
     </div>
