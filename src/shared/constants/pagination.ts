@@ -11,7 +11,13 @@ export const DEFAULT_PAGE = 1;
 export const DEFAULT_PAGE_SIZE = 20;
 
 /** Options offered by the table footer. All must respect the max above. */
-export const PAGE_SIZE_OPTIONS = [10, 20, 30, 50, 100] as const;
+export const PAGE_SIZE_OPTIONS = [5, 10, 20, 30, 50, 100] as const;
+
+/** Same options shaped for the dropdown, which resolves its label from them. */
+export const PAGE_SIZE_ITEMS = PAGE_SIZE_OPTIONS.map((value) => ({
+  value,
+  label: String(value),
+}));
 
 /** Longest accepted free-text search term. */
 export const SEARCH_MAX_LENGTH = 200;

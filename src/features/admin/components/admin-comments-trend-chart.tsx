@@ -10,16 +10,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-export type CommentsTrendPoint = {
-  label: string;
-  approved: number;
-  pending: number;
-  rejected: number;
-};
+import type { DashboardCommentsTrendPointDto } from "../types";
 
 type AdminCommentsTrendChartProps = {
-  data: CommentsTrendPoint[];
+  data: DashboardCommentsTrendPointDto[];
 };
 
 export function AdminCommentsTrendChart({ data }: AdminCommentsTrendChartProps) {
@@ -37,12 +31,15 @@ export function AdminCommentsTrendChart({ data }: AdminCommentsTrendChartProps) 
             tick={{ fill: "var(--ink-tertiary)", fontSize: 11 }}
             axisLine={false}
             tickLine={false}
+            minTickGap={16}
+            interval="preserveStartEnd"
           />
           <YAxis
             allowDecimals={false}
             tick={{ fill: "var(--ink-tertiary)", fontSize: 11 }}
             axisLine={false}
             tickLine={false}
+            width={40}
           />
           <Tooltip
             contentStyle={{
@@ -52,6 +49,9 @@ export function AdminCommentsTrendChart({ data }: AdminCommentsTrendChartProps) 
               color: "var(--ink-primary)",
               fontSize: 12,
             }}
+            labelFormatter={(_label, payload) =>
+              payload?.[0]?.payload?.bucket ?? String(_label)
+            }
           />
           <Legend
             wrapperStyle={{ fontSize: 12, color: "var(--ink-secondary)" }}

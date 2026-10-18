@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { getAdminDashboardData } from "@/features/admin/server/dashboard-service";
-import { AdminPostGrowthChart } from "@/features/admin/components/admin-post-growth-chart";
-import { AdminCommentsTrendChart } from "@/features/admin/components/admin-comments-trend-chart";
+import { AdminDashboardCharts } from "@/features/admin/components/admin-dashboard-charts";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Plus } from "lucide-react";
@@ -74,20 +73,14 @@ export default async function AdminDashboardPage() {
         ))}
       </dl>
 
-      <div className="mb-8 grid gap-4 lg:grid-cols-2">
-        <section className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
-          <h2 className="mb-4 text-sm font-medium text-ink-primary">
-            Post growth
-          </h2>
-          <AdminPostGrowthChart data={data.postGrowth} />
-        </section>
-        <section className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5">
-          <h2 className="mb-4 text-sm font-medium text-ink-primary">
-            Comments trend
-          </h2>
-          <AdminCommentsTrendChart data={data.commentsTrend} />
-        </section>
-      </div>
+      <AdminDashboardCharts
+        initialData={{
+          range: data.range,
+          bucket: data.bucket,
+          postGrowth: data.postGrowth,
+          commentsTrend: data.commentsTrend,
+        }}
+      />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]">

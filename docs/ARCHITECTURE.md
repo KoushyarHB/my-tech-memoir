@@ -156,6 +156,12 @@ Cache keys include the whole query object, so every page/sort/filter combination
 is its own cache entry, and `keepPreviousData` keeps the current rows on screen
 while the next page loads.
 
+The page-size control is a portalled Base UI `Select`, not a native `<select>`:
+the popup escapes the table card's `overflow-hidden`, flips to whichever side
+has room, and caps its height at `--available-height`. `PAGE_SIZE_OPTIONS`
+(5, 10, 20, 30, 50, 100) is the single source for both the trigger and the
+list, bounded by `PAGINATION_MAX_PAGE_SIZE`.
+
 Mutations invalidate the domain root (`queryKeys.posts.all`), which also covers
 the domain's stats query (`["posts", "stats"]`).
 
@@ -177,6 +183,28 @@ safe and no date re-parsing is needed in components.
 Public pages keep page state in the URL (`?page=2`) and render
 `components/pagination/pagination-links.tsx`; admin tables keep it in React
 state and drive TanStack Query.
+
+### Dashboard ranges
+
+The dashboard activity charts follow the same pattern for a non-paginated
+dimension. `DASHBOARD_RANGES` (`7d`, `14d`, `30d`, `90d`, `12m`) each map to a
+bucket size in `constants/dashboard.ts`:
+
+| Range | Bucket | Points |
+|---|---|---|
+| `7d` / `14d` / `30d` | day | 7 / 14 / 30 |
+| `90d` | week (Monday start) | 13 |
+| `12m` | month | 12 |
+| `5y` | year (Jan 1) | 5 |
+
+Buckets are generated from the range config, not from the rows, so the axis is
+always continuous and empty periods render as explicit zeroes.
+`server/dashboard-buckets.ts` owns that maths and is covered by
+`npm run verify:dashboard`.
+
+The page server-renders the default range and passes it as `initialData`; the
+selector calls `GET /api/dashboard/trends?range=…`, keyed per range so returning
+to a previously viewed window is instant.
 
 ---
 
@@ -223,6 +251,13 @@ never a second implementation of the same query.
 
 - `npm run verify:query` — pure-function checks for pagination parsing, filter
   grammar, and Prisma `where` generation (no database required).
+- `npm run verify:dashboard` — pure-function checks for dashboard bucketing
+  (bucket counts, contiguity, week/month/year alignment, tooltip labels).
+- `npx tsx scripts/verify-pagination-footer.tsx` — renders the table footer in
+  isolation to confirm the page-size dropdown renders (and no native
+  `<select>` sneaks back in).
+- `npx tsx --env-file=.env scripts/verify-dashboard-live.ts` — optional live
+  check that bucketed totals match raw row counts.
 - `npx tsc --noEmit` — type check.
 - `npm run lint` — ESLint.
 - `npm run build` — production build (also validates route conflicts).

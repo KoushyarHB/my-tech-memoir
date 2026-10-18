@@ -5,4 +5,6 @@ export type {
   DashboardRecentCommentDto,
   DashboardStatsDto,
   GetDashboardDto,
+  GetDashboardTrendsDto,
 } from "./response/get-dashboard.dto";
+export type { DashboardBucket, DashboardRange } from "../constants/dashboard";

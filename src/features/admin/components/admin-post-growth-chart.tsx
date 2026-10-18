@@ -9,14 +9,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-export type PostGrowthPoint = {
-  label: string;
-  count: number;
-};
+import type { DashboardPostGrowthPointDto } from "../types";
 
 type AdminPostGrowthChartProps = {
-  data: PostGrowthPoint[];
+  data: DashboardPostGrowthPointDto[];
 };
 
 export function AdminPostGrowthChart({ data }: AdminPostGrowthChartProps) {
@@ -34,12 +30,15 @@ export function AdminPostGrowthChart({ data }: AdminPostGrowthChartProps) {
             tick={{ fill: "var(--ink-tertiary)", fontSize: 11 }}
             axisLine={false}
             tickLine={false}
+            minTickGap={16}
+            interval="preserveStartEnd"
           />
           <YAxis
             allowDecimals={false}
             tick={{ fill: "var(--ink-tertiary)", fontSize: 11 }}
             axisLine={false}
             tickLine={false}
+            width={40}
           />
           <Tooltip
             cursor={{ fill: "var(--bg-muted)" }}
@@ -50,6 +49,9 @@ export function AdminPostGrowthChart({ data }: AdminPostGrowthChartProps) {
               color: "var(--ink-primary)",
               fontSize: 12,
             }}
+            labelFormatter={(_label, payload) =>
+              payload?.[0]?.payload?.bucket ?? String(_label)
+            }
           />
           <Bar
             dataKey="count"

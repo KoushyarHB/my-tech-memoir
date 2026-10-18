@@ -2,8 +2,15 @@
 
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { PAGE_SIZE_OPTIONS } from "@/shared/constants/pagination";
+import { PAGE_SIZE_ITEMS, PAGE_SIZE_OPTIONS } from "@/shared/constants/pagination";
 
 type DataTablePaginationProps = {
   page: number;
@@ -116,21 +123,58 @@ export function DataTablePagination({
           </Button>
         </div>
 
-        <label className="flex items-center gap-1.5 text-xs text-ink-tertiary">
-          <span className="sr-only">Rows per page</span>
-          <select
+        <div className="flex items-center gap-1.5 text-xs text-ink-tertiary">
+          <Select
+            items={PAGE_SIZE_ITEMS}
             value={pageSize}
-            onChange={(event) => onPageSizeChange(Number(event.target.value))}
-            className="h-7 rounded-md border border-border bg-transparent px-1.5 text-xs text-ink-secondary outline-none hover:border-(--border-hover) focus-visible:border-(--border-focus)"
+            onValueChange={(next) => {
+              const parsed = Number(next);
+              if (Number.isFinite(parsed) && parsed > 0) {
+                onPageSizeChange(parsed);
+              }
+            }}
           >
-            {PAGE_SIZE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger
+              size="sm"
+              aria-label="Rows per page"
+              className={cn(
+                "h-7 min-w-16 gap-1 rounded-md border-border bg-transparent px-2 text-xs text-ink-secondary tabular-nums",
+                "hover:border-(--border-hover) focus-visible:border-(--border-focus) focus-visible:ring-0",
+                "dark:bg-transparent dark:hover:bg-transparent"
+              )}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            {/*
+              Portalled, so it is not clipped by the table card's
+              `overflow-hidden`. Base UI flips the popup to the side with more
+              room and caps it at `--available-height`, so the list always stays
+              on screen.
+            */}
+            <SelectContent
+              side="bottom"
+              align="end"
+              sideOffset={6}
+              alignItemWithTrigger={false}
+              className="min-w-0 w-(--anchor-width) p-1"
+            >
+              {PAGE_SIZE_OPTIONS.map((option) => (
+                <SelectItem
+                  key={option}
+                  value={option}
+                  className={cn(
+                    "py-1 pr-7 pl-2 text-xs tabular-nums text-ink-secondary",
+                    "data-highlighted:bg-(--bg-muted) data-highlighted:text-ink-primary",
+                    "data-selected:font-medium data-selected:text-ink-primary"
+                  )}
+                >
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <span className="hidden sm:inline">per page</span>
-        </label>
+        </div>
 
         {onReload ? (
           <Button

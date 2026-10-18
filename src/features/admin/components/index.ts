@@ -14,3 +14,4 @@ export { RolePicker } from "./role-picker";
 export { AdminComingSoon } from "./admin-coming-soon";
 export { AdminPostGrowthChart } from "./admin-post-growth-chart";
 export { AdminCommentsTrendChart } from "./admin-comments-trend-chart";
+export { AdminDashboardCharts } from "./admin-dashboard-charts";

@@ -36,4 +36,8 @@ export const queryKeys = {
     detail: (postId: string) => ["posts", "detail", postId] as const,
     stats: () => ["posts", "stats"] as const,
   },
+  dashboard: {
+    all: ["dashboard"] as const,
+    trends: (range: string) => ["dashboard", "trends", range] as const,
+  },
 };

@@ -1,163 +1,122 @@
-import { db } from "@/lib/db";
 import {
-  DASHBOARD_GROWTH_MONTHS,
-  DASHBOARD_RECENT_LIMIT,
-  DASHBOARD_TREND_DAYS,
+  DEFAULT_DASHBOARD_RANGE,
+  DASHBOARD_RANGE_CONFIG,
+  isDashboardRange,
+  type DashboardRange,
 } from "../constants/dashboard";
-import type { GetDashboardDto } from "../types";
+import type {
+  DashboardCommentsTrendPointDto,
+  DashboardPostGrowthPointDto,
+  GetDashboardDto,
+  GetDashboardTrendsDto,
+} from "../types";
+import {
+  bucketIndexFor,
+  buildDashboardBuckets,
+  dashboardRangeStart,
+  describeBucket,
+} from "./dashboard-buckets";
+import {
+  countComments,
+  countPosts,
+  countTags,
+  findCommentTimestampsSince,
+  findLatestPosts,
+  findPostTimestampsSince,
+  findRecentComments,
+  sumPostViews,
+} from "./dashboard-repository";
 
-function startOfMonth(d: Date) {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+/**
+ * Admin domain: dashboard read model.
+ *
+ * Every trend series is bucketed from the selected range, so the chart axis is
+ * continuous and empty periods render as explicit zeroes instead of gaps.
+ */
+
+export function normalizeDashboardRange(value: unknown): DashboardRange {
+  return isDashboardRange(value) ? value : DEFAULT_DASHBOARD_RANGE;
 }
 
-function startOfDay(d: Date) {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-}
+export async function getDashboardTrends(
+  range: DashboardRange,
+  now: Date = new Date()
+): Promise<GetDashboardTrendsDto> {
+  const buckets = buildDashboardBuckets(range, now);
+  const since = dashboardRangeStart(buckets);
+  const { bucket } = DASHBOARD_RANGE_CONFIG[range];
 
-export async function getAdminDashboardData(): Promise<GetDashboardDto> {
-  const now = new Date();
-
-  const sixMonthsAgo = startOfMonth(
-    new Date(
-      Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth() - (DASHBOARD_GROWTH_MONTHS - 1),
-        1
-      )
-    )
-  );
-  const fourteenDaysAgo = startOfDay(
-    new Date(
-      Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate() - (DASHBOARD_TREND_DAYS - 1)
-      )
-    )
-  );
-
-  const [
-    totalPosts,
-    publishedCount,
-    draftCount,
-    tagCount,
-    viewsAgg,
-    commentCount,
-    pendingComments,
-    latestPosts,
-    recentComments,
-    postsForGrowth,
-    commentsForTrend,
-  ] = await Promise.all([
-    db.post.count(),
-    db.post.count({ where: { published: true } }),
-    db.post.count({ where: { published: false } }),
-    db.tag.count(),
-    db.post.aggregate({ _sum: { viewCount: true } }),
-    db.comment.count(),
-    db.comment.count({ where: { status: "PENDING" } }),
-    db.post.findMany({
-      orderBy: { createdAt: "desc" },
-      take: DASHBOARD_RECENT_LIMIT,
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        published: true,
-        createdAt: true,
-      },
-    }),
-    db.comment.findMany({
-      orderBy: { createdAt: "desc" },
-      take: DASHBOARD_RECENT_LIMIT,
-      select: {
-        id: true,
-        body: true,
-        authorName: true,
-        status: true,
-        createdAt: true,
-        user: { select: { name: true } },
-        post: { select: { id: true, title: true, slug: true } },
-      },
-    }),
-    db.post.findMany({
-      where: { createdAt: { gte: sixMonthsAgo } },
-      select: { createdAt: true },
-    }),
-    db.comment.findMany({
-      where: { createdAt: { gte: fourteenDaysAgo } },
-      select: { createdAt: true, status: true },
-    }),
+  const [posts, comments] = await Promise.all([
+    findPostTimestampsSince(since),
+    findCommentTimestampsSince(since),
   ]);
 
-  const monthFmt = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    timeZone: "UTC",
-  });
+  const postGrowth: DashboardPostGrowthPointDto[] = buckets.map(
+    (entry, index) => ({
+      label: entry.label,
+      key: entry.key,
+      bucket: describeBucket(range, index, buckets),
+      count: 0,
+    })
+  );
 
-  const postGrowth = Array.from({ length: DASHBOARD_GROWTH_MONTHS }, (_, i) => {
-    const d = new Date(
-      Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth() - (DASHBOARD_GROWTH_MONTHS - 1) + i,
-        1
-      )
-    );
-    const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}`;
-    const count = postsForGrowth.filter((p) => {
-      const c = p.createdAt;
-      return (
-        c.getUTCFullYear() === d.getUTCFullYear() &&
-        c.getUTCMonth() === d.getUTCMonth()
-      );
-    }).length;
-    return { label: monthFmt.format(d), key, count };
-  });
+  for (const post of posts) {
+    const index = bucketIndexFor(buckets, post.createdAt);
+    if (index >= 0) postGrowth[index].count += 1;
+  }
 
-  const dayFmt = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
+  const commentsTrend: DashboardCommentsTrendPointDto[] = buckets.map(
+    (entry, index) => ({
+      label: entry.label,
+      key: entry.key,
+      bucket: describeBucket(range, index, buckets),
+      approved: 0,
+      pending: 0,
+      rejected: 0,
+    })
+  );
 
-  const commentsTrend = Array.from({ length: DASHBOARD_TREND_DAYS }, (_, i) => {
-    const d = new Date(
-      Date.UTC(
-        fourteenDaysAgo.getUTCFullYear(),
-        fourteenDaysAgo.getUTCMonth(),
-        fourteenDaysAgo.getUTCDate() + i
-      )
-    );
-    const dayComments = commentsForTrend.filter((c) => {
-      const t = c.createdAt;
-      return (
-        t.getUTCFullYear() === d.getUTCFullYear() &&
-        t.getUTCMonth() === d.getUTCMonth() &&
-        t.getUTCDate() === d.getUTCDate()
-      );
-    });
-    return {
-      label: dayFmt.format(d),
-      approved: dayComments.filter((c) => c.status === "APPROVED").length,
-      pending: dayComments.filter((c) => c.status === "PENDING").length,
-      rejected: dayComments.filter(
-        (c) => c.status === "REJECTED" || c.status === "SPAM"
-      ).length,
-    };
-  });
+  for (const comment of comments) {
+    const index = bucketIndexFor(buckets, comment.createdAt);
+    if (index < 0) continue;
+
+    const point = commentsTrend[index];
+    if (comment.status === "APPROVED") point.approved += 1;
+    else if (comment.status === "PENDING") point.pending += 1;
+    else point.rejected += 1; // REJECTED | SPAM
+  }
+
+  return { range, bucket, postGrowth, commentsTrend };
+}
+
+export async function getAdminDashboardData(
+  range: DashboardRange = DEFAULT_DASHBOARD_RANGE
+): Promise<GetDashboardDto> {
+  const [postCounts, tagCount, totalViews, commentCounts, latestPosts, recentComments, trends] =
+    await Promise.all([
+      countPosts(),
+      countTags(),
+      sumPostViews(),
+      countComments(),
+      findLatestPosts(),
+      findRecentComments(),
+      getDashboardTrends(range),
+    ]);
 
   return {
     stats: {
-      totalPosts,
-      publishedCount,
-      draftCount,
+      totalPosts: postCounts.total,
+      publishedCount: postCounts.published,
+      draftCount: postCounts.drafts,
       tagCount,
-      totalViews: viewsAgg._sum.viewCount ?? 0,
-      commentCount,
-      pendingComments,
+      totalViews,
+      commentCount: commentCounts.total,
+      pendingComments: commentCounts.pending,
     },
-    postGrowth: postGrowth.map(({ label, count }) => ({ label, count })),
-    commentsTrend,
+    range: trends.range,
+    bucket: trends.bucket,
+    postGrowth: trends.postGrowth,
+    commentsTrend: trends.commentsTrend,
     latestPosts,
     recentComments,
   };
