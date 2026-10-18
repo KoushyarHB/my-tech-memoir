@@ -14,6 +14,7 @@
     "verify:query": "tsx scripts/verify-query-layer.ts",
     "verify:dashboard": "tsx scripts/verify-dashboard-ranges.ts",
     "verify:filters": "tsx scripts/verify-api-select-filter.ts && tsx scripts/verify-api-select-render.tsx",
+    "verify:appearance": "tsx scripts/verify-appearance.ts && tsx scripts/verify-appearance-render.tsx",
     "promote-admin": "tsx scripts/promote-admin.ts"
   },
   "prisma": {

@@ -67,11 +67,16 @@ body {
   --code-text: #3a3834;
 
   /* Blockquote */
-  --bq-border: #2563eb;
+  --bq-border: var(--accent);
   --bq-bg: #e4e3df;
 
   /* Radius */
   --radius: 0.5rem;
+
+  /* Reading scale — overridden by [data-reading-*] on <html> */
+  --reading-font-size: 1rem;
+  --reading-line-height: 1.8;
+  --reading-max-width: 42rem;
 }
 
 /* ─── Dark ───────────────────────────────────────────────────────── */
@@ -115,6 +120,114 @@ body {
   /* Blockquote */
   --bq-border: #505050;
   --bq-bg: rgba(255, 255, 255, 0.03);
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   APPEARANCE OVERRIDES
+   Chosen in Admin → Appearance and applied as data-* attributes on
+   <html> by the pre-paint script. Keeping the palettes here (rather
+   than in JS) means the bootstrap script only sets attributes.
+   ─────────────────────────────────────────────────────────────────── */
+
+/* ─── Accent palettes ────────────────────────────────────────────── */
+:root[data-accent="violet"] {
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+  --accent-subtle: #f5f3ff;
+  --accent-muted: rgba(124, 58, 237, 0.12);
+}
+
+:root[data-accent="emerald"] {
+  --accent: #059669;
+  --accent-hover: #047857;
+  --accent-subtle: #ecfdf5;
+  --accent-muted: rgba(5, 150, 105, 0.12);
+}
+
+:root[data-accent="amber"] {
+  --accent: #d97706;
+  --accent-hover: #b45309;
+  --accent-subtle: #fffbeb;
+  --accent-muted: rgba(217, 119, 6, 0.12);
+}
+
+:root[data-accent="rose"] {
+  --accent: #e11d48;
+  --accent-hover: #be123c;
+  --accent-subtle: #fff1f2;
+  --accent-muted: rgba(225, 29, 72, 0.12);
+}
+
+:root[data-accent="slate"] {
+  --accent: #475569;
+  --accent-hover: #334155;
+  --accent-subtle: #f8fafc;
+  --accent-muted: rgba(71, 85, 105, 0.12);
+}
+
+/* Dark variants — declared after the light ones so they win at equal
+   specificity when both selectors match. */
+.dark[data-accent="violet"] {
+  --accent: #a78bfa;
+  --accent-hover: #c4b5fd;
+  --accent-subtle: rgba(167, 139, 250, 0.12);
+  --accent-muted: rgba(167, 139, 250, 0.18);
+}
+
+.dark[data-accent="emerald"] {
+  --accent: #34d399;
+  --accent-hover: #6ee7b7;
+  --accent-subtle: rgba(52, 211, 153, 0.12);
+  --accent-muted: rgba(52, 211, 153, 0.18);
+}
+
+.dark[data-accent="amber"] {
+  --accent: #fbbf24;
+  --accent-hover: #fcd34d;
+  --accent-subtle: rgba(251, 191, 36, 0.12);
+  --accent-muted: rgba(251, 191, 36, 0.18);
+}
+
+.dark[data-accent="rose"] {
+  --accent: #fb7185;
+  --accent-hover: #fda4af;
+  --accent-subtle: rgba(251, 113, 133, 0.12);
+  --accent-muted: rgba(251, 113, 133, 0.18);
+}
+
+.dark[data-accent="slate"] {
+  --accent: #94a3b8;
+  --accent-hover: #cbd5e1;
+  --accent-subtle: rgba(148, 163, 184, 0.12);
+  --accent-muted: rgba(148, 163, 184, 0.18);
+}
+
+/* ─── Reading scale ─────────────────────────────────────────────── */
+:root[data-reading-size="sm"] {
+  --reading-font-size: 0.9375rem;
+}
+
+:root[data-reading-size="lg"] {
+  --reading-font-size: 1.125rem;
+  --reading-line-height: 1.85;
+}
+
+:root[data-reading-width="narrow"] {
+  --reading-max-width: 34rem;
+}
+
+:root[data-reading-width="wide"] {
+  --reading-max-width: 52rem;
+}
+
+/* ─── Reduced motion ────────────────────────────────────────────── */
+:root[data-reduce-motion="true"] *,
+:root[data-reduce-motion="true"] *::before,
+:root[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 /* ───────────────────────────────────────────────────────────────────
@@ -253,8 +366,8 @@ body {
 .prose-memoir {
   color: var(--ink-primary);
   font-family: var(--font-sans);
-  font-size: 1rem;
-  line-height: 1.8;
+  font-size: var(--reading-font-size);
+  line-height: var(--reading-line-height);
 }
 
 .prose-memoir h1,
@@ -644,6 +757,9 @@ body {
 .memoir-editor-canvas {
   min-height: 28rem;
   caret-color: var(--accent);
+  /* The editor keeps a fixed scale: reading preferences are for readers. */
+  font-size: 1rem;
+  line-height: 1.8;
 }
 
 .memoir-editor-canvas > * {
@@ -743,8 +859,8 @@ body {
 /* ─── Mobile / narrow viewports ──────────────────────────────────── */
 @media (max-width: 640px) {
   .prose-memoir {
-    font-size: 0.9375rem;
-    line-height: 1.75;
+    font-size: calc(var(--reading-font-size) - 0.0625rem);
+    line-height: calc(var(--reading-line-height) - 0.05);
     overflow-wrap: anywhere;
     word-break: break-word;
   }

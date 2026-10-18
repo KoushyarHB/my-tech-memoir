@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import { ThemeProvider, ThemeScript } from '@/components/theme'
+import { AppearanceProvider } from '@/features/appearance/hooks'
+import { AppearanceScript } from '@/features/appearance/components'
 import SessionProvider from '@/components/providers/session-provider'
 import QueryProvider from '@/components/providers/query-provider'
 import { Toaster } from '@/components/ui/sonner'
@@ -50,7 +51,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("dark font-sans", geist.variable, lora.variable, jetbrainsMono.variable)} suppressHydrationWarning>
       <head>
-        <ThemeScript />
+        <AppearanceScript />
       </head>
       <body
         className="min-h-screen flex flex-col transition-colors duration-200"
@@ -61,10 +62,10 @@ export default function RootLayout({
       >
         <SessionProvider>
           <QueryProvider>
-            <ThemeProvider>
+            <AppearanceProvider>
               {children}
               <Toaster />
-            </ThemeProvider>
+            </AppearanceProvider>
           </QueryProvider>
         </SessionProvider>
       </body>

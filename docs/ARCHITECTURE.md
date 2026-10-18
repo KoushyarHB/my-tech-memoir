@@ -65,6 +65,7 @@ features/<domain>/
 | `bookmarks` | Per-user bookmarks |
 | `users` | User administration: list, roles, stats |
 | `admin` | Dashboard + admin shell. Composes the domains above. |
+| `appearance` | Theme, accent, reading scale and motion preferences (browser-local). |
 | `auth` | Session types and sign-in UI |
 
 `admin` is a **consumer** domain: it owns the dashboard and the admin chrome,
@@ -230,6 +231,33 @@ The page server-renders the default range and passes it as `initialData`; the
 selector calls `GET /api/dashboard/trends?range=…`, keyed per range so returning
 to a previously viewed window is instant.
 
+### Appearance preferences
+
+`features/appearance` owns every visual preference in one store:
+theme (`light`/`dark`/`system`), accent palette, reading size, reading width and
+reduced motion. They are **browser-local** (not per-account), so they live in
+`localStorage` under `mtm.appearance` and are validated on read — a corrupt or
+outdated payload falls back to defaults instead of throwing.
+
+Two rules keep it simple:
+
+1. **JS sets attributes, CSS owns values.** The provider and the pre-paint
+   script only write `class="dark"` and `data-accent` / `data-reading-size` /
+   `data-reading-width` / `data-reduce-motion` on `<html>`. All palettes and
+   scales live in `globals.css`, so there is no colour data duplicated in JS and
+   the bootstrap script cannot drift from the stylesheet.
+2. **Apply before paint.** `AppearanceScript` runs in `<head>`, so the first
+   frame already has the right theme and text size — no flash, no layout shift.
+   The provider then takes over for runtime changes.
+
+Reading preferences drive CSS variables (`--reading-font-size`,
+`--reading-line-height`, `--reading-max-width`) consumed by `.prose-memoir` and
+the article container. The editor canvas pins its own scale, so authoring is
+unaffected.
+
+Legacy `localStorage.theme` values are migrated on first load, and the header /
+topbar theme toggles read the same context.
+
 ---
 
 ## 6. Error handling
@@ -283,6 +311,10 @@ never a second implementation of the same query.
 - `npm run verify:filters` — checks that `api-select` emits `field = "value"`
   (not `CONTAINS`), that the server parses it into a relation filter, and that
   the control renders its placeholder/clear affordance correctly.
+- `npm run verify:appearance` — validates preference parsing/migration, runs
+  the pre-paint script against a fake DOM (defaults, legacy key, system theme,
+  corrupt payload), and renders the Appearance form to check every section and
+  option is present.
 - `npx tsx --env-file=.env scripts/verify-tags-filter-live.ts` — optional live
   check that filtering posts by a tag id matches a direct count.
 - `npx tsx --env-file=.env scripts/verify-dashboard-live.ts` — optional live

@@ -14,7 +14,7 @@ import {
   Sun,
   UserRound,
 } from "lucide-react";
-import { useTheme } from "@/components/theme";
+import { useAppearance } from "@/features/appearance/hooks";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
 import LanguageSwitcher from "@/components/layout/language-switcher";
@@ -31,7 +31,7 @@ function canAccessDashboard(role?: string | null) {
 }
 
 export default function Header() {
-  const { resolvedTheme, toggleTheme, mounted } = useTheme();
+  const { resolvedTheme, toggleTheme, mounted } = useAppearance();
   const { data: session, status } = useSession();
   const t = useTranslations("common");
   const tHome = useTranslations("home");

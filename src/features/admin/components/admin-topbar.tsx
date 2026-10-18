@@ -2,7 +2,7 @@
 
 import { Moon, PanelLeft, PanelLeftClose, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/components/theme";
+import { useAppearance } from "@/features/appearance/hooks";
 
 type AdminTopbarProps = {
   userName?: string | null;
@@ -17,7 +17,7 @@ export function AdminTopbar({
   showSidebarToggle = true,
   onToggleSidebar,
 }: AdminTopbarProps) {
-  const { resolvedTheme, toggleTheme, mounted } = useTheme();
+  const { resolvedTheme, toggleTheme, mounted } = useAppearance();
   const isDark = resolvedTheme === "dark";
 
   return (
