@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { DataTableColumnFilter } from "./data-table-column-filter";
+import { DataTableApiSelectFilter } from "./data-table-api-select-filter";
 import { DataTablePagination } from "./data-table-pagination";
 import { buildFilterExpression, hasActiveColumnFilters } from "./data-table-filters";
 import "./types";
@@ -394,7 +395,22 @@ export function DataTable<TData>({
                       align === "center" && "text-center"
                     )}
                   >
-                    <DataTableColumnFilter column={header.column} />
+                    {header.column.getCanFilter() &&
+                    header.column.columnDef.meta?.filterVariant ===
+                      "api-select" &&
+                    header.column.columnDef.meta.filterEndpoint ? (
+                      <DataTableApiSelectFilter
+                        column={header.column}
+                        endpoint={
+                          header.column.columnDef.meta.filterEndpoint
+                        }
+                        placeholder={
+                          header.column.columnDef.meta.filterPlaceholder
+                        }
+                      />
+                    ) : (
+                      <DataTableColumnFilter column={header.column} />
+                    )}
                   </TableHead>
                 );
               })}

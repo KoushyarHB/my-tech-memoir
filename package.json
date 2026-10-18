@@ -13,6 +13,7 @@
     "db:backfill-content-json": "tsx scripts/backfill-content-json.ts",
     "verify:query": "tsx scripts/verify-query-layer.ts",
     "verify:dashboard": "tsx scripts/verify-dashboard-ranges.ts",
+    "verify:filters": "tsx scripts/verify-api-select-filter.ts && tsx scripts/verify-api-select-render.tsx",
     "promote-admin": "tsx scripts/promote-admin.ts"
   },
   "prisma": {

@@ -8,7 +8,12 @@ export type DataTableFilterOption = {
 
 export type DataTableColumnMeta = {
   align?: "left" | "right" | "center";
-  filterVariant?: "text" | "select";
+  /**
+   * - `text` — free-text input (default)
+   * - `select` — fixed option list from `filterOptions`
+   * - `api-select` — searchable options fetched from `filterEndpoint`
+   */
+  filterVariant?: "text" | "select" | "api-select";
   filterOptions?: DataTableFilterOption[];
   filterPlaceholder?: string;
   /**
@@ -16,8 +21,14 @@ export type DataTableColumnMeta = {
    * the domain's `*_FILTER_FIELDS`.
    */
   filterField?: string;
-  /** Defaults to `contains` for text filters and `eq` for selects. */
+  /** Defaults to `contains` for text, `eq` for select and api-select. */
   filterOperator?: FilterOperator;
+  /**
+   * Paginated list endpoint for `api-select`, e.g. `/api/tags`. The filter
+   * requests `?page&pageSize&search` and reads `items[].id` / `items[].name`,
+   * matching the tms-frontend `api-select` filter contract.
+   */
+  filterEndpoint?: string;
 };
 
 declare module "@tanstack/react-table" {

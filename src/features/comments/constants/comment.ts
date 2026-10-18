@@ -18,8 +18,8 @@ export const COMMENT_FILTER_FIELDS = [
 
 export const COMMENT_FILTER_MAP: FilterFieldMap = {
   status: { path: "status", type: "enum" },
-  postId: { path: "postId", type: "string" },
-  userId: { path: "userId", type: "string" },
+  postId: { path: "postId", type: "string", caseSensitive: true },
+  userId: { path: "userId", type: "string", caseSensitive: true },
   authorName: { path: "authorName", type: "string" },
   createdAt: { path: "createdAt", type: "date" },
 };

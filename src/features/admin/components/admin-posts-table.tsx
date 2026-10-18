@@ -6,6 +6,7 @@ import * as XLSX from "xlsx";
 import { Download, Eye, Pencil } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   DataTable,
   DataTableColumnHeader,
@@ -95,8 +96,6 @@ export function AdminPostsTable({
         cell: ({ row }) => {
           const post = row.original;
           const displayTitle = post.title.trim() || "Untitled draft";
-          const tagPreview = post.tags.slice(0, 2);
-          const extraTags = Math.max(0, post.tags.length - tagPreview.length);
 
           return (
             <div className="min-w-0 space-y-1.5 whitespace-normal pr-2">
@@ -109,16 +108,61 @@ export function AdminPostsTable({
               <p className="truncate font-mono text-[11px] leading-none text-ink-tertiary">
                 /{post.slug}
               </p>
-              {tagPreview.length > 0 ? (
-                <p className="truncate text-[11px] leading-none text-ink-tertiary/90">
-                  {tagPreview.map((tag) => tag.name).join(" · ")}
-                  {extraTags > 0 ? ` · +${extraTags}` : ""}
-                </p>
-              ) : null}
             </div>
           );
         },
         size: 320,
+      },
+      {
+        id: "tags",
+        accessorFn: (row) => row.tags.map((tag) => tag.name).join(", "),
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Tags" />
+        ),
+        // Tags are filtered server-side by id through the api-select filter.
+        enableSorting: false,
+        meta: {
+          filterVariant: "api-select",
+          filterEndpoint: "/api/tags",
+          filterField: "tagId",
+          filterOperator: "eq",
+          filterPlaceholder: "All tags",
+        },
+        cell: ({ row }) => {
+          const tags = row.original.tags;
+          if (tags.length === 0) {
+            return <span className="text-xs text-ink-tertiary">—</span>;
+          }
+
+          const preview = tags.slice(0, 2);
+          const extra = tags.length - preview.length;
+
+          return (
+            <div className="flex flex-wrap items-center gap-1 whitespace-normal">
+              {preview.map((tag) => (
+                <Badge
+                  key={tag.id}
+                  variant="secondary"
+                  className="max-w-full truncate text-[10px] font-normal"
+                >
+                  {tag.name}
+                </Badge>
+              ))}
+              {extra > 0 ? (
+                <span
+                  className="text-[10px] text-ink-tertiary"
+                  title={tags
+                    .slice(preview.length)
+                    .map((tag) => tag.name)
+                    .join(", ")}
+                >
+                  +{extra}
+                </span>
+              ) : null}
+            </div>
+          );
+        },
+        size: 180,
       },
       {
         id: "status",

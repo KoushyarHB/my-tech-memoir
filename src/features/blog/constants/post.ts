@@ -40,7 +40,7 @@ export const POST_FILTER_MAP: FilterFieldMap = {
   createdAt: { path: "createdAt", type: "date" },
   updatedAt: { path: "updatedAt", type: "date" },
   tag: { path: "tag.slug", type: "string", relation: "tags" },
-  tagId: { path: "tagId", type: "string", relation: "tags" },
+  tagId: { path: "tagId", type: "string", relation: "tags", caseSensitive: true },
 };
 
 export const POST_TITLE_MAX_LENGTH = 200;

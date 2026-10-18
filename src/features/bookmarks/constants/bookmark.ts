@@ -12,6 +12,6 @@ export const BOOKMARK_SEARCH_FIELDS = ["post.title", "post.excerpt"] as const;
 export const BOOKMARK_FILTER_FIELDS = ["postId", "createdAt"] as const;
 
 export const BOOKMARK_FILTER_MAP: FilterFieldMap = {
-  postId: { path: "postId", type: "string" },
+  postId: { path: "postId", type: "string", caseSensitive: true },
   createdAt: { path: "createdAt", type: "date" },
 };

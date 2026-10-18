@@ -152,6 +152,30 @@ meta: { filterField: "published", filterOperator: "eq", filterVariant: "select" 
 `DataTable` turns those into the `filters` string via `onFiltersChange`; the view
 never assembles filter strings by hand.
 
+### Filter variants
+
+| Variant | Renders | Value stored |
+|---|---|---|
+| `text` | free-text input | the typed string |
+| `select` | fixed list from `filterOptions` | the option value |
+| `api-select` | searchable, server-backed list | the option's **id** |
+
+`api-select` mirrors tms-frontend's `ApiSelectFilter`: it calls
+`filterEndpoint` with `?page&pageSize&search` and maps `items[].id` → value,
+`items[].name` → label. Search is debounced 300 ms and further pages load on
+scroll. Because the id is the filter value, the expression stays a scalar
+(`tagId = "…"`) and the label is derived from the loaded options rather than
+mirrored in state — so the table's "Clear filters" resets the control for free.
+
+```ts
+meta: {
+  filterVariant: "api-select",
+  filterEndpoint: "/api/tags",
+  filterField: "tagId",
+  filterOperator: "eq",
+}
+```
+
 Cache keys include the whole query object, so every page/sort/filter combination
 is its own cache entry, and `keepPreviousData` keeps the current rows on screen
 while the next page loads.
@@ -256,6 +280,11 @@ never a second implementation of the same query.
 - `npx tsx scripts/verify-pagination-footer.tsx` — renders the table footer in
   isolation to confirm the page-size dropdown renders (and no native
   `<select>` sneaks back in).
+- `npm run verify:filters` — checks that `api-select` emits `field = "value"`
+  (not `CONTAINS`), that the server parses it into a relation filter, and that
+  the control renders its placeholder/clear affordance correctly.
+- `npx tsx --env-file=.env scripts/verify-tags-filter-live.ts` — optional live
+  check that filtering posts by a tag id matches a direct count.
 - `npx tsx --env-file=.env scripts/verify-dashboard-live.ts` — optional live
   check that bucketed totals match raw row counts.
 - `npx tsc --noEmit` — type check.

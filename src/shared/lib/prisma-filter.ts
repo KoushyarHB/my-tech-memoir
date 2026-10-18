@@ -21,6 +21,11 @@ export type FilterFieldDescriptor = {
    * filtered by `tag.slug`. Rendered as `{ tags: { some: ... } }`.
    */
   relation?: string;
+  /**
+   * Match exactly, without `mode: "insensitive"`. Use for identifiers (ids,
+   * slugs) where a case-insensitive comparison would defeat the unique index.
+   */
+  caseSensitive?: boolean;
 };
 
 export type FilterFieldMap = Record<string, FilterFieldDescriptor>;
@@ -69,8 +74,9 @@ function buildLeaf(
   descriptor: FilterFieldDescriptor,
   predicate: FilterPredicate
 ): PrismaWhere {
-  const { type, path } = descriptor;
+  const { type, path, caseSensitive } = descriptor;
   const label = predicate.field;
+  const insensitive = type === "string" && !caseSensitive;
 
   switch (predicate.operator) {
     case "isNull":
@@ -81,7 +87,7 @@ function buildLeaf(
       const value = coerce(predicate.value ?? null, type, label);
       return nest(
         path,
-        type === "string"
+        insensitive
           ? { equals: value, mode: "insensitive" }
           : { equals: value }
       );
@@ -90,7 +96,7 @@ function buildLeaf(
       const value = coerce(predicate.value ?? null, type, label);
       return nest(
         path,
-        type === "string"
+        insensitive
           ? { not: { equals: value, mode: "insensitive" } }
           : { not: { equals: value } }
       );
@@ -137,7 +143,7 @@ function buildLeaf(
       const values = raw.map((entry) => coerce(entry, type, label));
       return nest(
         path,
-        type === "string" ? { in: values, mode: "insensitive" } : { in: values }
+        insensitive ? { in: values, mode: "insensitive" } : { in: values }
       );
     }
     default:

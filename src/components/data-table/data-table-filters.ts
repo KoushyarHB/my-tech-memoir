@@ -48,7 +48,8 @@ export function buildFilterExpression(
       const field = meta?.filterField ?? filter.id;
       const variant = meta?.filterVariant ?? "text";
       const operator =
-        meta?.filterOperator ?? (variant === "select" ? "eq" : "contains");
+        meta?.filterOperator ??
+        (variant === "text" ? "contains" : "eq");
 
       if (operator === "isNull" || operator === "isNotNull") {
         return `${field} ${OPERATOR_TOKEN[operator]}`;
