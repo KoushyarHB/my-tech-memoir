@@ -21,13 +21,21 @@ import type { CreateTagRequest, GetTagDto, GetTagStatsDto } from "../types";
  */
 export function useTagsPage(
   query: Partial<PaginationQuery>,
-  initialData?: PaginatedResult<GetTagDto>
+  {
+    initialData,
+    enabled = true,
+  }: {
+    initialData?: PaginatedResult<GetTagDto>;
+    /** Set false to defer the request (e.g. an empty search box). */
+    enabled?: boolean;
+  } = {}
 ) {
   return useQuery({
     queryKey: queryKeys.tags.page(query),
     queryFn: () => fetchTagsPage(query),
     initialData,
     placeholderData: keepPreviousData,
+    enabled,
     staleTime: 60_000,
   });
 }

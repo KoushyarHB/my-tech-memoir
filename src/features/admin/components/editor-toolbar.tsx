@@ -345,7 +345,9 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         <BlockMenu editor={editor} />
       </FloatingMenu>
 
-      <div className="sticky top-12 z-20 flex items-center justify-between rounded-t-[0.9rem] border-b border-border bg-card/95 px-3 py-2 backdrop-blur-sm lg:top-14">
+      {/* Pins below the admin topbar (h-12 / lg:h-14) plus the sticky editor
+          page header (5.25rem tall from sm up), so they stack instead of overlap. */}
+      <div className="sticky top-12 z-20 flex items-center justify-between rounded-t-[0.9rem] border-b border-border bg-card/95 px-3 py-2 backdrop-blur-sm sm:top-[calc(3rem+5.25rem)] lg:top-[calc(3.5rem+5.25rem)]">
         <div className="flex items-center gap-2 text-xs text-ink-tertiary">
           <span className="inline-flex size-2 rounded-full bg-emerald-500" />
           <span>Type <kbd className="rounded border border-border px-1 font-mono text-[10px]">/</kbd> for blocks</span>

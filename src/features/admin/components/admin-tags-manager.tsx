@@ -36,9 +36,8 @@ export function AdminTagsManager({
     query.search.trim() === "" &&
     query.pageSize === TAG_PAGE_SIZE;
 
-  const { data, isFetching, isLoading, refetch } = useTagsPage(
-    apiQuery,
-    isInitialQuery
+  const { data, isFetching, isLoading, refetch } = useTagsPage(apiQuery, {
+    initialData: isInitialQuery
       ? {
           items: initialTags,
           page: 1,
@@ -47,8 +46,8 @@ export function AdminTagsManager({
           totalPages:
             stats.total === 0 ? 0 : Math.ceil(stats.total / query.pageSize),
         }
-      : undefined
-  );
+      : undefined,
+  });
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");

@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PostEditor } from "./post-editor";
-import { Save, Send, ArrowLeft, X, Eye } from "lucide-react";
+import { Save, Send, ArrowLeft, X, Eye, Search, Loader2 } from "lucide-react";
 import { slugify } from "@/shared/lib/slugify";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -19,6 +19,8 @@ import type { TiptapDocument } from "@/features/blog/types/document";
 import { EMPTY_TIPTAP_DOCUMENT, hasDocumentText } from "@/features/blog/types/document";
 import { TiptapContent } from "@/features/blog/components";
 import { useSavePost } from "@/features/blog/hooks/use-post-mutations";
+import { useTagsPage } from "@/features/tags/hooks/use-tags";
+import { TAG_PAGE_SIZE } from "@/features/tags/constants/tag";
 import { documentToMarkdown, markdownToDocument } from "./markdown";
 
 type Tag = { id: string; name: string; slug: string };
@@ -83,6 +85,9 @@ function isHugeContentDeletion(previousHtml: string, nextHtml: string): boolean 
 /** Chars typed after a wipe before auto-save resumes (confirms intent). */
 const AUTO_SAVE_RESUME_CHARS = 40;
 
+/** Wait before a tag search keystroke becomes a request (matches the table filters). */
+const TAG_SEARCH_DEBOUNCE_MS = 300;
+
 function makeSnapshot(input: {
   title: string;
   slug: string;
@@ -125,6 +130,8 @@ export function PostEditorPage({
   const [sourceError, setSourceError] = useState<string | null>(null);
   const [published, setPublished] = useState(initialPublished);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initialTagIds);
+  const [tagSearch, setTagSearch] = useState("");
+  const [tagSearchTerm, setTagSearchTerm] = useState("");
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!initialSlug);
   const [savePhase, setSavePhase] = useState<SavePhase>("idle");
   const [currentPostId, setCurrentPostId] = useState(postId);
@@ -142,6 +149,25 @@ export function PostEditorPage({
   );
 
   const effectiveSlug = slugManuallyEdited ? slug : slugify(title);
+
+  // Tag search is a server query: the draft is debounced, then sent as
+  // `?search=` to /api/tags (name + slug match, done by Prisma). An empty box
+  // never hits the network — the server-rendered tag list is already complete.
+  useEffect(() => {
+    const next = tagSearch.trim();
+    if (next === tagSearchTerm) return;
+
+    const timer = setTimeout(
+      () => setTagSearchTerm(next),
+      next === "" ? 0 : TAG_SEARCH_DEBOUNCE_MS
+    );
+    return () => clearTimeout(timer);
+  }, [tagSearch, tagSearchTerm]);
+
+  const tagSearchQuery = useTagsPage(
+    { search: tagSearchTerm, page: 1, pageSize: TAG_PAGE_SIZE },
+    { enabled: tagSearchTerm.length > 0 }
+  );
 
   // Derive dirty state during render (no ref access, no effect)
   const currentSnapshot = makeSnapshot({
@@ -390,10 +416,26 @@ export function PostEditorPage({
   // Derive display state for the indicator
   const showUnsaved = isDirty && savePhase !== "saving" && savePhase !== "saved";
 
+  // Server results for the applied term; selected tags the search did not
+  // return are pinned to the end so they can still be unselected.
+  const searchingTags = tagSearchTerm.length > 0;
+  const tagMatches = tagSearchQuery.data?.items ?? [];
+  const visibleTags = searchingTags
+    ? [
+        ...tagMatches,
+        ...selectedTagIds
+          .filter((id) => !tagMatches.some((tag) => tag.id === id))
+          .map((id) => availableTags.find((tag) => tag.id === id))
+          .filter((tag): tag is Tag => Boolean(tag)),
+      ]
+    : availableTags;
+
   return (
     <div className="mx-auto max-w-6xl px-3 py-4 sm:px-5 sm:py-8">
-      {/* Header */}
-      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+      {/* Header — pins right below the admin topbar (h-12, lg:h-14) while scrolling.
+          Negative margins cancel the page padding so the background covers the
+          full strip; pt/pb keep the original spacing. */}
+      <div className="mb-4 flex flex-col gap-3 sm:sticky sm:top-12 sm:z-20 sm:-mx-5 sm:-mt-8 sm:mb-0 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:bg-(--bg-base) sm:px-5 sm:pt-8 sm:pb-6 lg:top-14">
         <Button variant="ghost" size="sm" onClick={handleBackClick}>
           <ArrowLeft className="size-4" />
           <span className="hidden sm:inline">Back to dashboard</span>
@@ -531,8 +573,11 @@ export function PostEditorPage({
           ) : null}
         </div>
 
-        {/* Meta sidebar */}
-        <div className="space-y-4">
+        {/* Meta sidebar — sticky on lg where it shares the row with the editor.
+            5.25rem = header pt-8 + button h-7 + pb-6, so it pins flush under
+            the sticky page header. Max-height keeps tall sidebars reachable on
+            short viewports (no scrollbar appears when it fits). */}
+        <div className="space-y-4 lg:sticky lg:top-[calc(3.5rem+5.25rem)] lg:max-h-[calc(100vh-9.5rem)] lg:self-start lg:overflow-y-auto">
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">Post settings</CardTitle>
@@ -588,29 +633,116 @@ export function PostEditorPage({
             <CardHeader>
               <CardTitle className="text-sm">Tags</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {availableTags.map((tag) => {
-                  const selected = selectedTagIds.includes(tag.id);
-                  return (
+            <CardContent className="space-y-3">
+              {availableTags.length > 0 && (
+                <div className="relative">
+                  <Search
+                    className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-ink-tertiary"
+                    aria-hidden
+                  />
+                  <Input
+                    type="text"
+                    value={tagSearch}
+                    onChange={(e) => setTagSearch(e.target.value)}
+                    placeholder="Search tags…"
+                    aria-label="Search tags"
+                    aria-busy={tagSearchQuery.isFetching}
+                    className="h-8 border-border bg-transparent pr-14 pl-8 text-xs shadow-none placeholder:text-ink-tertiary/80 focus-visible:border-(--border-hover) focus-visible:ring-0 dark:border-(--border-hover) dark:bg-transparent"
+                  />
+                  <div className="absolute top-1/2 right-1.5 flex -translate-y-1/2 items-center gap-1">
+                    {tagSearchQuery.isFetching && (
+                      <Loader2
+                        className="size-3.5 animate-spin text-ink-tertiary"
+                        aria-hidden
+                      />
+                    )}
+                    {tagSearch.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTagSearch("");
+                          setTagSearchTerm("");
+                        }}
+                        className="inline-flex size-5 items-center justify-center rounded-md text-ink-tertiary transition-colors hover:bg-(--bg-muted) hover:text-ink-primary"
+                        aria-label="Clear tag search"
+                      >
+                        <X className="size-3.5" strokeWidth={2} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {visibleTags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {visibleTags.map((tag) => {
+                    const selected = selectedTagIds.includes(tag.id);
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => toggleTag(tag.id)}
+                      >
+                        <Badge variant={selected ? "default" : "secondary"}>
+                          {selected && <X className="size-3" />}
+                          {tag.name}
+                        </Badge>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {availableTags.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  No tags yet. Create some via the API.
+                </p>
+              )}
+
+              {availableTags.length > 0 &&
+                searchingTags &&
+                !tagSearchQuery.isFetching &&
+                tagMatches.length === 0 && (
+                  <div className="rounded-lg border border-dashed border-border px-3 py-4 text-center">
+                    <p className="text-xs text-ink-secondary">
+                      No tags match “{tagSearchTerm}”
+                    </p>
                     <button
-                      key={tag.id}
                       type="button"
-                      onClick={() => toggleTag(tag.id)}
+                      onClick={() => {
+                        setTagSearch("");
+                        setTagSearchTerm("");
+                      }}
+                      className="mt-1.5 text-[11px] text-ink-tertiary underline decoration-dotted underline-offset-2 transition-colors hover:text-ink-primary"
                     >
-                      <Badge variant={selected ? "default" : "secondary"}>
-                        {selected && <X className="size-3" />}
-                        {tag.name}
-                      </Badge>
+                      Clear search
                     </button>
-                  );
-                })}
-                {availableTags.length === 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    No tags yet. Create some via the API.
-                  </p>
+                  </div>
                 )}
-              </div>
+
+              {tagSearchQuery.isError && (
+                <div className="rounded-lg border border-dashed border-destructive/40 px-3 py-4 text-center">
+                  <p className="text-xs text-destructive">
+                    Could not search tags.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void tagSearchQuery.refetch()}
+                    className="mt-1.5 text-[11px] text-ink-tertiary underline decoration-dotted underline-offset-2 transition-colors hover:text-ink-primary"
+                  >
+                    Try again
+                  </button>
+                </div>
+              )}
+
+              {tagSearchQuery.data &&
+              tagSearchQuery.data.totalItems > tagSearchQuery.data.items.length ? (
+                <p className="text-[11px] text-ink-tertiary">
+                  Showing {tagSearchQuery.data.items.length} of{" "}
+                  {tagSearchQuery.data.totalItems} matches. Keep typing to narrow
+                  it down.
+                </p>
+              ) : null}
             </CardContent>
           </Card>
         </div>
