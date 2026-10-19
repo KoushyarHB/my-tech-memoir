@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PostEditor } from "./post-editor";
+import { EditorScrollControls } from "./editor-scroll-controls";
 import { Save, Send, ArrowLeft, X, Eye, Search, Loader2 } from "lucide-react";
 import { slugify } from "@/shared/lib/slugify";
 import Link from "next/link";
@@ -135,6 +136,7 @@ export function PostEditorPage({
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!initialSlug);
   const [savePhase, setSavePhase] = useState<SavePhase>("idle");
   const [currentPostId, setCurrentPostId] = useState(postId);
+  const editorColumnRef = useRef<HTMLDivElement>(null);
 
   // Last-saved snapshot lives in state so we can diff during render
   const [lastSaved, setLastSaved] = useState<SavedSnapshot>(
@@ -511,7 +513,7 @@ export function PostEditorPage({
       {/* Main layout */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-[1fr_300px]">
         {/* Editor */}
-         <div className="min-w-0">
+         <div ref={editorColumnRef} className="min-w-0">
            <div className="mb-3 flex items-center justify-end gap-1 border-b border-border pb-2">
              {(["write", "preview", "source"] as const).map((mode) => (
                <Button key={mode} type="button" size="sm" variant={editorMode === mode ? "secondary" : "ghost"} onClick={() => switchMode(mode)}>
@@ -571,6 +573,7 @@ export function PostEditorPage({
               </div>
             </div>
           ) : null}
+          <EditorScrollControls targetRef={editorColumnRef} />
         </div>
 
         {/* Meta sidebar — sticky on lg where it shares the row with the editor.
