@@ -1,6 +1,8 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { CloudCheck, Monitor, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -34,6 +36,9 @@ export function AppearanceForm() {
     reset,
     isDefault,
   } = useAppearance();
+
+  const { status } = useSession();
+  const authenticated = status === "authenticated";
 
   function handleReset() {
     reset();
@@ -98,8 +103,30 @@ export function AppearanceForm() {
 
         <section className="rounded-xl border border-border bg-(--bg-elevated) p-4">
           <h2 className="text-sm font-medium text-ink-primary">Preferences</h2>
-          <p className="mt-1 text-xs leading-relaxed text-ink-tertiary">
-            Saved in this browser only — they follow the device, not the account.
+          <p className="mt-1 flex items-start gap-1.5 text-xs leading-relaxed text-ink-tertiary">
+            {authenticated ? (
+              <>
+                <CloudCheck className="mt-0.5 size-3.5 shrink-0 text-emerald-500" />
+                <span>
+                  Synced to your account, so these follow you to other devices.
+                  Cached in this browser for instant loading.
+                </span>
+              </>
+            ) : (
+              <>
+                <Monitor className="mt-0.5 size-3.5 shrink-0" />
+                <span>
+                  Saved in this browser only.{" "}
+                  <Link
+                    href="/signin"
+                    className="underline underline-offset-2 hover:text-ink-secondary"
+                  >
+                    Sign in
+                  </Link>{" "}
+                  to keep them across devices.
+                </span>
+              </>
+            )}
           </p>
           <Button
             type="button"

@@ -23,6 +23,11 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  /// Per-account appearance preferences (theme, accent, reading scale, motion).
+  /// Null means the user has never customised anything, which lets a first
+  /// sign-in adopt that browser's existing local preferences.
+  appearance Json?
+
   accounts      Account[]
   sessions      Session[]
   authoredPosts PostAuthor[]

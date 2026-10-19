@@ -1,18 +1,22 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { SessionProvider } from "next-auth/react";
 import { AppearanceProvider } from "../src/features/appearance/hooks";
 import { AppearanceForm } from "../src/features/appearance/components";
 
 /**
  * Renders the Appearance page body (provider + form) without a browser.
  * Catches wiring errors, missing sections, and empty option lists.
+ *
+ * `SessionProvider` is required now that the appearance store reconciles with
+ * the account; a null session exercises the anonymous branch.
  */
 const html = renderToStaticMarkup(
-  React.createElement(
-    AppearanceProvider,
-    null,
-    React.createElement(AppearanceForm)
-  )
+  <SessionProvider session={null}>
+    <AppearanceProvider>
+      <AppearanceForm />
+    </AppearanceProvider>
+  </SessionProvider>
 );
 
 const required = [

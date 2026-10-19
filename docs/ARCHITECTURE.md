@@ -234,20 +234,35 @@ to a previously viewed window is instant.
 
 `features/appearance` owns every visual preference in one store:
 theme (`light`/`dark`/`system`), accent palette, reading size, reading width and
-reduced motion. They are **browser-local** (not per-account), so they live in
-`localStorage` under `mtm.appearance` and are validated on read — a corrupt or
-outdated payload falls back to defaults instead of throwing.
+reduced motion.
+
+**Three layers, one source of truth each:**
+
+| Layer | Scope | Role |
+|---|---|---|
+| `localStorage` (`mtm.appearance`) | device | anonymous + offline fallback |
+| `mtm_appearance` cookie | device | what the pre-paint script reads |
+| `User.appearance` (JSON) | **account** | shared across devices |
+
+Signed-in users are authoritative on the account row. The cookie exists because
+the pre-paint script runs in `<head>` and **cannot query the database** — so
+server-stored preferences are mirrored into a readable cookie the script can
+parse synchronously. Without it, a stored theme would flash on every cold load.
 
 Two rules keep it simple:
 
 1. **JS sets attributes, CSS owns values.** The provider and the pre-paint
    script only write `class="dark"` and `data-accent` / `data-reading-size` /
    `data-reading-width` / `data-reduce-motion` on `<html>`. All palettes and
-   scales live in `globals.css`, so there is no colour data duplicated in JS and
-   the bootstrap script cannot drift from the stylesheet.
-2. **Apply before paint.** `AppearanceScript` runs in `<head>`, so the first
-   frame already has the right theme and text size — no flash, no layout shift.
-   The provider then takes over for runtime changes.
+   scales live in `globals.css`, so there is no colour data duplicated in JS.
+2. **Server writes come from user intent only.** `update()` and `reset()`
+   schedule the debounced `PATCH /api/appearance`; the persist effect never
+   does. Otherwise signing in would re-run that effect and could overwrite
+   stored preferences with local defaults before the reconcile request returns.
+
+`User.appearance` is **nullable on purpose**: `NULL` means "never customised",
+which lets a first sign-in adopt the browser's existing preferences instead of
+resetting them to defaults.
 
 Reading preferences drive CSS variables (`--reading-font-size`,
 `--reading-line-height`, `--reading-max-width`) consumed by `.prose-memoir` and
@@ -256,6 +271,13 @@ unaffected.
 
 Legacy `localStorage.theme` values are migrated on first load, and the header /
 topbar theme toggles read the same context.
+
+**Known cost:** the root layout deliberately does *not* read cookies, so
+preferences are not rendered server-side. A device visiting for the first time
+therefore paints defaults for a moment before the reconcile request lands; every
+load after that is instant because the cookie exists. Reading cookies in the
+root layout would remove that flash entirely, at the price of making every route
+dynamic — including `/about`, which is currently statically generated.
 
 ### Comment moderation
 
@@ -349,8 +371,12 @@ never a second implementation of the same query.
   the control renders its placeholder/clear affordance correctly.
 - `npm run verify:appearance` — validates preference parsing/migration, runs
   the pre-paint script against a fake DOM (defaults, legacy key, system theme,
-  corrupt payload), and renders the Appearance form to check every section and
-  option is present.
+  corrupt payload), checks cookie encoding round-trips and that the script
+  reads the cookie before storage in every header position, and renders the
+  Appearance form to check every section and option is present.
+- `npx tsx --env-file=.env scripts/verify-appearance-live.ts` — optional live
+  check: creates a throwaway user, saves and re-reads preferences, confirms
+  invalid values clamp, reset nulls the column, and two users stay isolated.
 - `npm run verify:moderation` — exercises the auto-moderator (clean, link,
   promotional, shouting, repetition, trust penalties, score clamping, status
   transitions) and renders the moderation view to confirm tabs, tiles, signals
