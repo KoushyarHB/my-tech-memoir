@@ -18,6 +18,7 @@
     "verify:appearance": "tsx scripts/verify-appearance.ts && tsx scripts/verify-appearance-render.tsx && tsx scripts/verify-appearance-sync.ts && tsx scripts/verify-appearance-cookie-header.ts",
     "verify:moderation": "tsx scripts/verify-moderation.ts && tsx scripts/verify-comments-render.tsx",
     "verify:about": "tsx scripts/verify-about-render.tsx",
+    "verify:skeleton": "tsx scripts/verify-post-list-skeleton-render.tsx",
     "promote-admin": "tsx scripts/promote-admin.ts"
   },
   "prisma": {

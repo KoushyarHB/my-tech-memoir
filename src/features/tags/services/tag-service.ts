@@ -22,6 +22,10 @@ export async function createTag(input: CreateTagRequest): Promise<GetTagDto> {
   return api.post<GetTagDto>("/api/tags", input);
 }
 
+export async function deleteTag(tagId: string): Promise<void> {
+  return api.delete(`/api/tags/${tagId}`);
+}
+
 export async function fetchTagStats(): Promise<GetTagStatsDto> {
   return api.get<GetTagStatsDto>("/api/tags/stats");
 }

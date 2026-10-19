@@ -2,6 +2,8 @@ import { slugify } from "@/shared/lib/slugify";
 import { TAG_NAME_MAX_LENGTH } from "../constants/tag";
 import type { CreateTagRequest, GetTagDto } from "../types";
 import {
+  deleteTagRecord,
+  findTagById,
   findTagByNameInsensitive,
   findTagBySlugExact,
   insertTag,
@@ -70,6 +72,28 @@ export async function createTag(input: CreateTagRequest): Promise<GetTagDto> {
         "A tag with this name or slug already exists",
         409
       );
+    }
+    throw error;
+  }
+}
+
+export async function deleteTag(id: string): Promise<void> {
+  const tag = await findTagById(id);
+  if (!tag) {
+    throw new TagValidationError("Tag not found", 404);
+  }
+
+  try {
+    await deleteTagRecord(id);
+  } catch (error) {
+    // Deleted between the existence check and the delete.
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "P2025"
+    ) {
+      throw new TagValidationError("Tag not found", 404);
     }
     throw error;
   }

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { PaginatedResult, PaginationQuery } from "@/shared/types/pagination";
-import { createTag, fetchTagStats, fetchTagsPage } from "../services/tag-service";
+import { createTag, deleteTag, fetchTagStats, fetchTagsPage } from "../services/tag-service";
 import type { CreateTagRequest, GetTagDto, GetTagStatsDto } from "../types";
 
 /**
@@ -56,5 +56,18 @@ export function useTagMutations() {
     },
   });
 
-  return { createMutation };
+  const deleteMutation = useMutation({
+    mutationFn: (tagId: string) => deleteTag(tagId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
+      // Post DTOs embed their tags, so open post lists are stale too.
+      queryClient.invalidateQueries({ queryKey: queryKeys.posts.all });
+      toast.success("Tag deleted");
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Failed to delete tag"));
+    },
+  });
+
+  return { createMutation, deleteMutation };
 }

@@ -152,6 +152,11 @@ export async function insertTag(input: {
   return toDto(tag);
 }
 
+/** Removes a tag; `PostTag` rows cascade, so posts simply lose the label. */
+export async function deleteTagRecord(id: string): Promise<void> {
+  await db.tag.delete({ where: { id } });
+}
+
 /** Aggregates used by the admin metric tiles. */
 export async function getTagStats(): Promise<{
   total: number;

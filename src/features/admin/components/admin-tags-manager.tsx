@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useTagMutations, useTagStats, useTagsPage } from "@/features/tags/hooks/use-tags";
 import { TAG_PAGE_SIZE } from "@/features/tags/constants/tag";
 import type { GetTagDto, GetTagStatsDto } from "@/features/tags/types";
+import { TagDeleteButton } from "@/app/admin/tag-delete-button";
 import { AdminMetrics } from "./admin-metrics";
 
 type AdminTagsManagerProps = {
@@ -89,6 +90,13 @@ export function AdminTagsManager({
 
   function submitSearch() {
     update({ search: searchDraft.trim(), page: 1 });
+  }
+
+  // Deleting the only tag on a page would leave the list empty, so step back.
+  function handleTagDeleted() {
+    if (tags.length === 1 && query.page > 1) {
+      update({ page: query.page - 1 });
+    }
   }
 
   return (
@@ -235,13 +243,16 @@ export function AdminTagsManager({
                       {tag.slug}
                     </p>
                   </div>
-                  <Link
-                    href={`/blog/tag/${tag.slug}`}
-                    className="mt-4 inline-flex items-center gap-1 text-xs text-ink-secondary transition-colors hover:text-ink-primary"
-                  >
-                    View on site
-                    <ArrowUpRight className="size-3.5" />
-                  </Link>
+                  <div className="mt-4 flex items-center justify-between gap-2">
+                    <Link
+                      href={`/blog/tag/${tag.slug}`}
+                      className="inline-flex items-center gap-1 text-xs text-ink-secondary transition-colors hover:text-ink-primary"
+                    >
+                      View on site
+                      <ArrowUpRight className="size-3.5" />
+                    </Link>
+                    <TagDeleteButton tag={tag} onDeleted={handleTagDeleted} />
+                  </div>
                 </li>
               ))}
             </ul>

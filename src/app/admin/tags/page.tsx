@@ -26,8 +26,8 @@ export default async function AdminTagsPage() {
           Tags
         </h1>
         <p className="mt-1 max-w-xl text-sm text-ink-secondary">
-          Manage the labels available when writing posts. Only admins can add
-          tags here.
+          Manage the labels available when writing posts. Only admins can add or
+          delete tags here.
         </p>
       </div>
 
