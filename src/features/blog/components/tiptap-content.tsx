@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { TiptapDocument, TiptapMark, TiptapNode } from "../types/document";
+import { isBlockNode } from "../types/document";
 import { cn } from "@/lib/utils";
 
 function applyMarks(text: ReactNode, marks: TiptapMark[] = []): ReactNode {
@@ -37,8 +38,13 @@ function TiptapNodeView({ node }: { node: TiptapNode }): ReactNode {
   switch (node.type) {
     case "text":
       return applyMarks(node.text ?? "", node.marks);
-    case "paragraph":
-      return <p>{children}</p>;
+    case "paragraph": {
+      // A block inside a paragraph renders as <p><p> (or <p><figure>), which is
+      // invalid HTML and triggers a hydration error. Older documents may still
+      // contain that shape, so fall back to <div> instead of breaking the page.
+      const hasBlockChild = (node.content ?? []).some(isBlockNode);
+      return hasBlockChild ? <div>{children}</div> : <p>{children}</p>;
+    }
     case "heading": {
       const level = node.attrs?.level === 1 || node.attrs?.level === 2 || node.attrs?.level === 3 ? node.attrs.level : 2;
       const Heading = `h${level}` as "h1" | "h2" | "h3";

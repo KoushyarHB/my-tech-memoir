@@ -53,6 +53,42 @@ const MARK_TYPES = new Set([
   "textStyle",
 ]);
 
+/** Inline nodes — the only nodes a paragraph or heading may contain. */
+export const INLINE_NODE_TYPES = new Set(["text", "hardBreak"]);
+
+/**
+ * Block nodes — what a block container (doc, list item, table cell, callout,
+ * blockquote) may contain.
+ */
+export const BLOCK_NODE_TYPES = new Set([
+  "paragraph",
+  "heading",
+  "bulletList",
+  "orderedList",
+  "blockquote",
+  "codeBlock",
+  "horizontalRule",
+  "image",
+  "table",
+  "callout",
+  "taskList",
+]);
+
+/** Containers whose children must all be block nodes. */
+const BLOCK_CONTAINER_TYPES = new Set([
+  "doc",
+  "listItem",
+  "taskItem",
+  "blockquote",
+  "tableCell",
+  "tableHeader",
+  "callout",
+]);
+
+export function isBlockNode(node: TiptapNode): boolean {
+  return BLOCK_NODE_TYPES.has(node.type);
+}
+
 /** Hex colors only — TipTap Color uses textStyle.color; reject CSS expressions. */
 function isSafeTextColor(color: string): boolean {
   return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(color.trim());
@@ -75,6 +111,69 @@ function isSafeHref(href: string): boolean {
   return false;
 }
 
+/**
+ * Nesting rules. The renderer maps `paragraph` to `<p>`, so a paragraph inside
+ * a paragraph (or any block inside one) is invalid HTML and React reports a
+ * hydration error. Reject those shapes before they are ever stored.
+ */
+function validatePlacement(type: string, children: TiptapNode[], path: string) {
+  const fail = (child: TiptapNode, index: number, expected: string) => {
+    throw new Error(
+      `A ${type} cannot contain a <${child.type}> at ${path}.content[${index}]; expected ${expected}`
+    );
+  };
+
+  if (type === "paragraph" || type === "heading") {
+    children.forEach((child, index) => {
+      if (!INLINE_NODE_TYPES.has(child.type)) fail(child, index, "inline content");
+    });
+    return;
+  }
+  if (type === "codeBlock") {
+    children.forEach((child, index) => {
+      if (child.type !== "text") fail(child, index, "text");
+    });
+    return;
+  }
+  if (type === "bulletList" || type === "orderedList") {
+    children.forEach((child, index) => {
+      if (child.type !== "listItem") fail(child, index, "list items");
+    });
+    return;
+  }
+  if (type === "taskList") {
+    children.forEach((child, index) => {
+      if (child.type !== "taskItem") fail(child, index, "task items");
+    });
+    return;
+  }
+  if (type === "table") {
+    children.forEach((child, index) => {
+      if (child.type !== "tableRow") fail(child, index, "table rows");
+    });
+    return;
+  }
+  if (type === "tableRow") {
+    children.forEach((child, index) => {
+      if (child.type !== "tableCell" && child.type !== "tableHeader") {
+        fail(child, index, "table cells");
+      }
+    });
+    return;
+  }
+  if (type === "image" || type === "horizontalRule" || type === "text" || type === "hardBreak") {
+    if (children.length > 0) {
+      throw new Error(`A ${type} cannot have children at ${path}`);
+    }
+    return;
+  }
+  if (BLOCK_CONTAINER_TYPES.has(type)) {
+    children.forEach((child, index) => {
+      if (!BLOCK_NODE_TYPES.has(child.type)) fail(child, index, "block content");
+    });
+  }
+}
+
 function validateNode(node: unknown, path: string, isRoot = false): node is TiptapNode {
   if (!isRecord(node) || typeof node.type !== "string") {
     throw new Error(`Invalid document node at ${path}`);
@@ -91,6 +190,7 @@ function validateNode(node: unknown, path: string, isRoot = false): node is Tipt
       throw new Error(`Node content must be an array at ${path}`);
     }
     node.content.forEach((child, index) => validateNode(child, `${path}.content[${index}]`));
+    validatePlacement(node.type, node.content as TiptapNode[], path);
   }
   if (node.marks !== undefined) {
     if (!Array.isArray(node.marks)) {

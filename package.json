@@ -12,6 +12,7 @@
     "db:check": "tsx scripts/check-db.ts",
     "db:backfill-content-json": "tsx scripts/backfill-content-json.ts",
     "verify:query": "tsx scripts/verify-query-layer.ts",
+    "verify:markdown": "tsx scripts/verify-markdown.ts",
     "verify:dashboard": "tsx scripts/verify-dashboard-ranges.ts",
     "verify:filters": "tsx scripts/verify-api-select-filter.ts && tsx scripts/verify-api-select-render.tsx",
     "verify:appearance": "tsx scripts/verify-appearance.ts && tsx scripts/verify-appearance-render.tsx && tsx scripts/verify-appearance-sync.ts && tsx scripts/verify-appearance-cookie-header.ts",
