@@ -31,7 +31,7 @@ export default async function BlogPage({ params, searchParams }: Props) {
 
   const page = Math.max(1, Number(pageParam) || 1);
 
-  const { items: posts, totalItems, totalPages, page: currentPage } =
+  const { items: posts, totalPages, page: currentPage } =
     await getPostsPage({ page, pageSize: DEFAULT_PAGE_SIZE });
 
   return (
@@ -45,12 +45,6 @@ export default async function BlogPage({ params, searchParams }: Props) {
           posts.map((post) => <PostCard key={post.id} post={post} />)
         )}
       </div>
-
-      {totalItems > 0 ? (
-        <p className="mt-6 text-center text-xs tabular-nums text-ink-tertiary">
-          {totalItems} {totalItems === 1 ? "post" : "posts"}
-        </p>
-      ) : null}
 
       <PaginationLinks
         page={currentPage}
