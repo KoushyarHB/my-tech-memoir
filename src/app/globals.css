@@ -90,7 +90,12 @@ body {
 
   /* Text */
   --ink-primary: #e8e8e8;
-  --ink-secondary: #a0a0a0;
+  /* Body ink, raised from #a0a0a0. Bold runs (`.prose-memoir strong`) and the
+     editor's "Ink" swatch both resolve to --ink-primary, so at 7:1 body against
+     15:1 emphasis the gap read as "some sentences are whiter than the rest"
+     rather than as emphasis. 12:1 keeps the relationship light mode already has
+     (6.9:1 body against 12:1 emphasis). */
+  --ink-secondary: #cfcfcf;
   --ink-tertiary: #707070;
   --ink-inverse: #121212;
 

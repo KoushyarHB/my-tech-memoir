@@ -14,9 +14,13 @@
  * looks like.
  *
  * Resolving the stored value back to its token at render time fixes both
- * themes with no content migration. The chromatic swatches stay literal on
- * purpose: they are accents that read fine on either background, and "Blue"
- * must keep meaning blue — the theme accent is near-white in dark mode.
+ * themes with no content migration. The three neutral swatches are the ink
+ * scale — Ink (primary), Body (secondary) and Gray (tertiary) — so the colour a
+ * paragraph already uses is selectable, instead of the only "dark" option being
+ * the one that turns into bright white in dark mode. The chromatic swatches
+ * stay literal on purpose: they are accents that read fine on either
+ * background, and "Blue" must keep meaning blue — the theme accent is
+ * near-white in dark mode.
  */
 
 export type TextColorSwatch = {
@@ -28,6 +32,7 @@ export type TextColorSwatch = {
 export const TEXT_COLOR_SWATCHES: readonly TextColorSwatch[] = [
   { label: "Default", value: null },
   { label: "Ink", value: "#2a2926" },
+  { label: "Body", value: "#504e4a" },
   { label: "Gray", value: "#787570" },
   { label: "Blue", value: "#2563eb" },
   { label: "Teal", value: "#0d9488" },
@@ -41,6 +46,7 @@ export const TEXT_COLOR_SWATCHES: readonly TextColorSwatch[] = [
 /** Palette values that are design tokens in disguise, and what they mean. */
 const THEME_TOKEN_BY_COLOR: Record<string, string> = {
   "#2a2926": "var(--ink-primary)",
+  "#504e4a": "var(--ink-secondary)",
   "#787570": "var(--ink-tertiary)",
 };
 

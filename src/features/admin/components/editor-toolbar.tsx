@@ -130,7 +130,7 @@ function ColorPicker({ editor, onClose }: { editor: Editor; onClose: () => void 
   const current = String(editor.getAttributes("textStyle").color ?? "");
 
   return (
-    <div className="flex items-center gap-1 rounded-lg border border-border bg-popover p-1.5 shadow-lg">
+    <div className="flex max-w-[min(92vw,21rem)] flex-wrap items-center justify-center gap-1 rounded-lg border border-border bg-popover p-1.5 shadow-lg">
       {TEXT_COLOR_SWATCHES.map((swatch) => {
         const active = swatch.value
           ? resolveTextColor(current).toLowerCase() === resolveTextColor(swatch.value).toLowerCase()

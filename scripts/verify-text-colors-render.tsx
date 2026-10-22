@@ -96,7 +96,7 @@ function checkApiContract() {
   assert("hex colours are accepted", isAllowedTextColor("#2a2926") && isAllowedTextColor("#abc"));
   assert("the rgb() form a copy/paste produces is accepted", isAllowedTextColor("rgb(42, 41, 38)") && isAllowedTextColor("rgba(42, 41, 38, 0.4)"));
   assert("out-of-range rgb is rejected", !isAllowedTextColor("rgb(300, 0, 0)"));
-  assert("theme tokens are accepted", isAllowedTextColor("var(--ink-primary)") && isAllowedTextColor("var(--ink-tertiary)"));
+  assert("theme tokens are accepted", isAllowedTextColor("var(--ink-primary)") && isAllowedTextColor("var(--ink-secondary)") && isAllowedTextColor("var(--ink-tertiary)"));
   assert("arbitrary CSS is still rejected", !isAllowedTextColor("red") && !isAllowedTextColor("var(--evil)") && !isAllowedTextColor("expression(alert(1))"));
 
   const valid = validateTiptapDocument(STYLED_DOCUMENT);
@@ -146,8 +146,9 @@ function checkPalette() {
   const palette = TEXT_COLOR_SWATCHES.filter((swatch) => swatch.value);
   const resolved = palette.map((swatch) => ({ label: swatch.label, rendered: resolveTextColor(swatch.value as string) }));
 
-  assert("the two neutral swatches render as tokens", resolved.filter((entry) => entry.rendered.startsWith("var(--")).length === 2);
+  assert("the three neutral swatches render as tokens", resolved.filter((entry) => entry.rendered.startsWith("var(--")).length === 3);
   assert("swatch previews resolve through the theme", resolveTextColor("#2a2926") === "var(--ink-primary)" && resolveTextColor("#787570") === "var(--ink-tertiary)");
+  assert("the body ink a paragraph already uses is selectable", resolveTextColor("#504e4a") === "var(--ink-secondary)");
   assert("default swatch clears the mark", TEXT_COLOR_SWATCHES.some((swatch) => swatch.value === null));
   assert("unknown colours pass through unchanged", resolveTextColor("#123456") === "#123456");
   assert("empty colour resolves to empty", resolveTextColor("") === "");
