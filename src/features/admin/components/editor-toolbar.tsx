@@ -35,20 +35,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import {
+  TEXT_COLOR_SWATCHES,
+  resolveTextColor,
+} from "@/features/blog/constants/text-colors";
 import { uploadEditorImage } from "./upload-editor-image";
-
-const TEXT_COLORS = [
-  { label: "Default", value: null },
-  { label: "Ink", value: "#2a2926" },
-  { label: "Gray", value: "#787570" },
-  { label: "Blue", value: "#2563eb" },
-  { label: "Teal", value: "#0d9488" },
-  { label: "Green", value: "#16a34a" },
-  { label: "Amber", value: "#d97706" },
-  { label: "Red", value: "#dc2626" },
-  { label: "Violet", value: "#7c3aed" },
-  { label: "Pink", value: "#db2777" },
-] as const;
 
 const CODE_LANGUAGES = [
   { value: "plain", label: "Plain text" },
@@ -140,9 +131,9 @@ function ColorPicker({ editor, onClose }: { editor: Editor; onClose: () => void 
 
   return (
     <div className="flex items-center gap-1 rounded-lg border border-border bg-popover p-1.5 shadow-lg">
-      {TEXT_COLORS.map((swatch) => {
+      {TEXT_COLOR_SWATCHES.map((swatch) => {
         const active = swatch.value
-          ? current.toLowerCase() === swatch.value.toLowerCase()
+          ? resolveTextColor(current).toLowerCase() === resolveTextColor(swatch.value).toLowerCase()
           : !current;
         return (
           <button
@@ -162,7 +153,7 @@ function ColorPicker({ editor, onClose }: { editor: Editor; onClose: () => void 
             )}
             style={
               swatch.value
-                ? { backgroundColor: swatch.value }
+                ? { backgroundColor: resolveTextColor(swatch.value) }
                 : {
                     background:
                       "linear-gradient(to bottom right, transparent calc(50% - 0.5px), var(--border) calc(50% - 0.5px), var(--border) calc(50% + 0.5px), transparent calc(50% + 0.5px)), var(--bg-elevated)",
@@ -320,7 +311,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
                 <Baseline className="size-4" />
                 <span
                   className="absolute -bottom-0.5 h-0.5 w-3.5 rounded-full"
-                  style={{ backgroundColor: activeColor || "currentColor" }}
+                  style={{ backgroundColor: resolveTextColor(activeColor) || "currentColor" }}
                 />
               </span>
             </ActionButton>

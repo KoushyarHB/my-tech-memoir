@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { TiptapDocument, TiptapMark, TiptapNode } from "../types/document";
 import { isBlockNode } from "../types/document";
+import { resolveTextColor } from "../constants/text-colors";
 import { cn } from "@/lib/utils";
 
 function applyMarks(text: ReactNode, marks: TiptapMark[] = []): ReactNode {
@@ -13,8 +14,10 @@ function applyMarks(text: ReactNode, marks: TiptapMark[] = []): ReactNode {
     if (mark.type === "highlight") return <mark key={key}>{content}</mark>;
     if (mark.type === "textStyle") {
       const color = typeof mark.attrs?.color === "string" ? mark.attrs.color : undefined;
+      // Palette neutrals resolve to design tokens so a styled sentence follows
+      // the theme instead of freezing to its light-mode hex (see constants/text-colors.ts).
       return color ? (
-        <span key={key} style={{ color }}>
+        <span key={key} style={{ color: resolveTextColor(color) }}>
           {content}
         </span>
       ) : (

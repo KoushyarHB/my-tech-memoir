@@ -10,7 +10,6 @@ import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
-import { Color } from "@tiptap/extension-color";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { common, createLowlight } from "lowlight";
 import { useEffect, useRef } from "react";
@@ -20,6 +19,7 @@ import type { TiptapDocument } from "@/features/blog/types/document";
 import { hasDocumentText } from "@/features/blog/types/document";
 import { SlashCommandExtension } from "./slash-command";
 import { Callout } from "./callout";
+import { ThemedColor } from "./themed-color";
 
 const lowlight = createLowlight(common);
 
@@ -75,7 +75,7 @@ export function PostEditor({
         link: false,
       }),
       TextStyle,
-      Color,
+      ThemedColor,
       Link.configure({
         openOnClick: false,
         HTMLAttributes: { class: "text-primary underline" },

@@ -1,3 +1,5 @@
+import { isAllowedTextColor } from "../constants/text-colors";
+
 export type TiptapMark = {
   type: "bold" | "italic" | "strike" | "code" | "link" | "highlight" | "textStyle";
   attrs?: Record<string, unknown>;
@@ -89,9 +91,13 @@ export function isBlockNode(node: TiptapNode): boolean {
   return BLOCK_NODE_TYPES.has(node.type);
 }
 
-/** Hex colors only — TipTap Color uses textStyle.color; reject CSS expressions. */
+/**
+ * Accepted `textStyle.color` values: a hex colour, the `rgb()` form that
+ * `style.color` reads back as, or one of the palette's theme tokens
+ * (`var(--ink-primary)`); arbitrary CSS is still rejected.
+ */
 function isSafeTextColor(color: string): boolean {
-  return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(color.trim());
+  return isAllowedTextColor(color);
 }
 
 const CALLOUT_VARIANTS = new Set(["info", "tip", "warning", "danger"]);

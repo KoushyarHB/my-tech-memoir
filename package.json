@@ -19,6 +19,7 @@
     "verify:moderation": "tsx scripts/verify-moderation.ts && tsx scripts/verify-comments-render.tsx",
     "verify:about": "tsx scripts/verify-about-render.tsx",
     "verify:skeleton": "tsx scripts/verify-post-list-skeleton-render.tsx",
+    "verify:colors": "tsx scripts/verify-text-colors-render.tsx",
     "promote-admin": "tsx scripts/promote-admin.ts"
   },
   "prisma": {

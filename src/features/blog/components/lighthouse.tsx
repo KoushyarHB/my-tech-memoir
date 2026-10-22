@@ -14,6 +14,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TiptapContent } from "./tiptap-content";
+import { resolveTextColorsInHtml } from "../constants/text-colors";
 import type { TiptapDocument } from "../types/document";
 
 type LighthouseImage = {
@@ -69,7 +70,7 @@ export function Lighthouse({ html, document, className }: LighthouseProps) {
   return (
     <>
       <div ref={rootRef} className={cn("lighthouse-content", className)}>
-        {document ? <TiptapContent document={document} /> : <div className="prose-memoir" dangerouslySetInnerHTML={{ __html: html ?? "" }} />}
+        {document ? <TiptapContent document={document} /> : <div className="prose-memoir" dangerouslySetInnerHTML={{ __html: resolveTextColorsInHtml(html ?? "") }} />}
       </div>
 
       <Dialog
