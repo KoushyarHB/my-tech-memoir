@@ -52,7 +52,7 @@ export function CommentDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[min(90dvh,46rem)] w-[min(100vw-2rem,42rem)] overflow-y-auto p-0">
+      <DialogContent className="max-h-[min(90dvh,46rem)] w-[min(100vw-2rem,42rem)] overflow-y-auto p-0 sm:max-w-2xl">
         {comment ? (
           <CommentDetailBody comment={comment} onOpenChange={onOpenChange} />
         ) : null}
@@ -287,7 +287,7 @@ function CommentDetailBody({
         </div>
       </div>
 
-      <DialogFooter className="sticky bottom-0 flex-wrap items-center gap-2 border-t border-border bg-(--bg-elevated) px-5 py-3">
+      <DialogFooter className="sticky bottom-0 m-0 flex-wrap items-center gap-2 border-t border-border bg-(--bg-elevated) px-5 py-3">
         <Button
           variant="ghost"
           size="sm"
